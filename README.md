@@ -39,25 +39,131 @@ Screenshot contract: `docs/screenshots.json`.
 
 ## Technical Shape
 
-- Service providers: `Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider`.
-- Config files: `packages/ai-orchestrator/config/capell-ai-orchestrator.php`.
-- Migrations: `packages/ai-orchestrator/database/migrations/2026_05_10_190870_02_create_ai_generation_histories_table.php`, `packages/ai-orchestrator/database/migrations/2026_06_08_000001_add_cost_fields_to_ai_generation_histories_table.php`, `packages/ai-orchestrator/database/migrations/2026_07_10_000001_add_site_id_to_ai_generation_histories_table.php`, `packages/ai-orchestrator/database/migrations/2026_07_10_000002_create_ai_generation_requests_table.php`, `packages/ai-orchestrator/database/migrations/2026_07_10_000003_encrypt_ai_generation_history_payloads.php`, `packages/ai-orchestrator/database/migrations/2026_07_10_000003_encrypt_ai_generation_requests_table.php`, `packages/ai-orchestrator/database/migrations/2026_07_20_000001_create_ai_managed_provider_calls_table.php`.
-- Settings migrations: `packages/ai-orchestrator/database/settings/2026_05_10_190871_01_create_ai-orchestrator_settings.php`.
-- Settings classes: `AIOrchestratorSettings`.
-- Models: `AIGenerationHistory`, `AiGenerationRequest`, `ManagedProviderCall`.
-- Filament classes: `AIOrchestratorCapabilityCatalogPage`, `AIOrchestratorSettingsSchema`.
-- Extension contracts: `AIOrchestratorModule`, `AIOrchestratorPolicyGuardrail`, `AiActionContextInterface`, `AiCreatorContextInterface`, `ProviderOutputValidator`, `VersionedContract`.
-- Events: `AIOrchestratorCapabilityRunRecorded`, `AiGenerationCompleted`, `AiGenerationFailed`, `AiGenerationStarted`.
-- Listeners: `LogAiGeneration`, `NotifyAiFailure`.
-- Actions: `BuildManagedProviderExecutionReceiptAction`, `GeneratorPageContentAction`, `PruneAiGenerationPayloadsAction`, `RecordAiGenerationAction`, `SuggestMetaDescriptionsAction`, `SuggestPageTitlesAction`, `GenerateAiAssistantFieldsAction`, `ListAIOrchestratorCapabilitiesAction`, `QueueAiAssistantGenerationAction`, `RegisterAIOrchestratorModuleAction`, `ResolveAIOrchestratorRuntimeSettingsAction`, `RunAIOrchestratorCapabilityAction`.
-- Data objects: `AIOrchestratorCapabilityData`, `AIOrchestratorRunData`, `AIOrchestratorRuntimeSettingsData`, `AiGenerationInputData`, `AiGenerationResultData`, `ManagedProviderCallClaimData`, `ManagedProviderExecutionReceiptData`, `MeasuredUsageData`, `ProviderAttemptEvidenceData`, `ProviderCallAllowanceData`, `ProviderCallAuthorizationData`, `ProviderExecutionResultData`, `and 6 more`.
-- Jobs: `RunAiAssistantGenerationJob`.
-- Command signatures: `capell:ai-orchestrator:prune-generation-payloads`.
-- Scheduled commands: `capell:ai-orchestrator:prune-generation-payloads (daily; package registered)`.
-- Console command classes: `PruneAiGenerationPayloadsCommand`.
-- Manifest contributions: `admin-page: Capell\AIOrchestrator\Manifest\AiOrchestratorAdminPageContribution`, `console-command: Capell\AIOrchestrator\Manifest\AiOrchestratorPruneScheduleContribution`, `scheduled-job: Capell\AIOrchestrator\Manifest\AiOrchestratorPruneScheduleContribution`.
-- Health checks: `Capell\AIOrchestrator\Health\AiOrchestratorHealthCheck`.
-- Blade views: `packages/ai-orchestrator/resources/views/filament/pages/capability-catalog.blade.php`.
+### Service providers
+
+- `Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider`
+
+### Config files
+
+- `packages/ai-orchestrator/config/capell-ai-orchestrator.php`
+
+### Migrations
+
+- `packages/ai-orchestrator/database/migrations/2026_05_10_190870_02_create_ai_generation_histories_table.php`
+- `packages/ai-orchestrator/database/migrations/2026_06_08_000001_add_cost_fields_to_ai_generation_histories_table.php`
+- `packages/ai-orchestrator/database/migrations/2026_07_10_000001_add_site_id_to_ai_generation_histories_table.php`
+- `packages/ai-orchestrator/database/migrations/2026_07_10_000002_create_ai_generation_requests_table.php`
+- `packages/ai-orchestrator/database/migrations/2026_07_10_000003_encrypt_ai_generation_history_payloads.php`
+- `packages/ai-orchestrator/database/migrations/2026_07_10_000003_encrypt_ai_generation_requests_table.php`
+- `packages/ai-orchestrator/database/migrations/2026_07_20_000001_create_ai_managed_provider_calls_table.php`
+
+### Settings migrations
+
+- `packages/ai-orchestrator/database/settings/2026_05_10_190871_01_create_ai-orchestrator_settings.php`
+- `packages/ai-orchestrator/database/settings/2026_09_04_213000_01_encrypt_ai_orchestrator_api_key.php`
+
+### Settings classes
+
+- `AIOrchestratorSettings`
+
+### Models
+
+- `AIGenerationHistory`
+- `AiGenerationRequest`
+- `ManagedProviderCall`
+
+### Filament classes
+
+- `AIOrchestratorCapabilityCatalogPage`
+- `AIOrchestratorSettingsSchema`
+
+### Extension contracts
+
+- `AIOrchestratorModule`
+- `AIOrchestratorPolicyGuardrail`
+- `AiActionContextInterface`
+- `AiCreatorContextInterface`
+- `ProviderOutputValidator`
+- `VersionedContract`
+
+### Events
+
+- `AIOrchestratorCapabilityRunRecorded`
+- `AiGenerationCompleted`
+- `AiGenerationFailed`
+- `AiGenerationStarted`
+
+### Listeners
+
+- `LogAiGeneration`
+- `NotifyAiFailure`
+
+### Actions
+
+- `BuildManagedProviderExecutionReceiptAction`
+- `GeneratorPageContentAction`
+- `PruneAiGenerationPayloadsAction`
+- `RecordAiGenerationAction`
+- `SuggestMetaDescriptionsAction`
+- `SuggestPageTitlesAction`
+- `GenerateAiAssistantFieldsAction`
+- `ListAIOrchestratorCapabilitiesAction`
+- `QueueAiAssistantGenerationAction`
+- `RegisterAIOrchestratorModuleAction`
+- `ResolveAIOrchestratorRuntimeSettingsAction`
+- `RunAIOrchestratorCapabilityAction`
+
+### Data objects
+
+- `AIOrchestratorCapabilityData`
+- `AIOrchestratorRunData`
+- `AIOrchestratorRuntimeSettingsData`
+- `AiGenerationInputData`
+- `AiGenerationResultData`
+- `ManagedProviderCallClaimData`
+- `ManagedProviderExecutionReceiptData`
+- `MeasuredUsageData`
+- `ProviderAttemptEvidenceData`
+- `ProviderCallAllowanceData`
+- `ProviderCallAuthorizationData`
+- `ProviderExecutionResultData`
+- `ProviderIdempotencyHeaderData`
+- `TerminalSettlementResultData`
+- `UsableVersionAttachmentData`
+- `ValidatedProviderOutputData`
+- `AiAssistantGenerationData`
+- `AiAssistantGenerationResultData`
+
+### Jobs
+
+- `RunAiAssistantGenerationJob`
+
+### Command signatures
+
+- `capell:ai-orchestrator:prune-generation-payloads`
+
+### Scheduled commands
+
+- `capell:ai-orchestrator:prune-generation-payloads (daily; package registered)`
+
+### Console command classes
+
+- `PruneAiGenerationPayloadsCommand`
+
+### Manifest contributions
+
+- `admin-page: Capell\AIOrchestrator\Manifest\AiOrchestratorAdminPageContribution`
+- `console-command: Capell\AIOrchestrator\Manifest\AiOrchestratorPruneScheduleContribution`
+- `scheduled-job: Capell\AIOrchestrator\Manifest\AiOrchestratorPruneScheduleContribution`
+
+### Health checks
+
+- `Capell\AIOrchestrator\Health\AiOrchestratorHealthCheck`
+
+### Blade views
+
+- `packages/ai-orchestrator/resources/views/filament/pages/capability-catalog.blade.php`
+
 
 ## Data Model
 
@@ -73,7 +179,7 @@ Screenshot contract: `docs/screenshots.json`.
 - Required packages: `capell-app/admin`, `capell-app/core`.
 - Admin navigation: declares `admin-page: AiOrchestratorAdminPageContribution`; each Filament page or resource controls its own navigation visibility.
 - Admin/editor extensions: none declared.
-- Permissions: none declared in `capell.json`.
+- Permissions: no package permission declarations or Shield gates detected; host access rules still apply.
 - Public routes: none declared.
 - Database changes: package migrations are declared.
 - Config: `config/capell-ai-orchestrator.php`.
@@ -100,8 +206,7 @@ Screenshot contract: `docs/screenshots.json`.
 ## Quick Start
 
 1. Install the package: `composer require capell-app/ai-orchestrator`.
-2. Run the required setup: `php artisan migrate`.
-3. Open the package admin page or resource and verify AI Orchestrator is available.
+2. Open the package admin page or resource and verify AI Orchestrator is available.
 
 ## Next Steps
 
