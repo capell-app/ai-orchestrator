@@ -98,6 +98,14 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         });
     }
 
+    public function registerSettingsRepository(): void
+    {
+        config()->set('settings.repositories.ai-orchestrator', [
+            ...(array) config('settings.repositories.database'),
+            'type' => AIOrchestratorSettingsRepository::class,
+        ]);
+    }
+
     #[Override]
     protected function isPackageInstalled(): bool
     {
@@ -110,10 +118,14 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         $this->app->singleton(AIOrchestratorPolicyGuardrailRegistry::class);
         $this->app->singleton(ManagedProviderCallRepository::class);
 
-        config()->set('settings.repositories.ai-orchestrator', [
-            ...(array) config('settings.repositories.database'),
-            'type' => AIOrchestratorSettingsRepository::class,
-        ]);
+        // Deferred to booting: during registration spatie/laravel-settings may
+        // not have merged its defaults yet, and a nested config()->set() here
+        // would create `settings` holding only this repository. mergeConfigFrom
+        // merges top-level keys only, so the `database` repository would then be
+        // lost for that boot (it broke `artisan config:cache` in production).
+        $this->app->booting(function (): void {
+            $this->registerSettingsRepository();
+        });
 
         return $this;
     }
