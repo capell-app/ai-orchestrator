@@ -16,6 +16,7 @@ use Capell\AIOrchestrator\Integrations\LayoutBuilder\LayoutBuilderAIOrchestrator
 use Capell\AIOrchestrator\Listeners\Ai\LogAiGeneration;
 use Capell\AIOrchestrator\Listeners\Ai\NotifyAiFailure;
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
+use Capell\AIOrchestrator\Settings\AIOrchestratorSettingsRepository;
 use Capell\AIOrchestrator\Support\Admin\AiAssistantPageResourceExtender;
 use Capell\AIOrchestrator\Support\Ai\AIGenerationCache;
 use Capell\AIOrchestrator\Support\Ai\AiRateLimiter;
@@ -51,6 +52,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     {
         return [
             '2026_05_10_190871_01_create_ai-orchestrator_settings',
+            '2026_09_04_213000_01_encrypt_ai_orchestrator_api_key',
         ];
     }
 
@@ -72,6 +74,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             ]);
     }
 
+    #[Override]
     public function registeringPackage(): void
     {
         parent::registeringPackage();
@@ -84,6 +87,8 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             if (! $this->isPackageInstalled()) {
                 return;
             }
+
+            $this->app->tag([AiAssistantPageResourceExtender::class], ResourceHeaderActionExtender::TAG);
 
             $this
                 ->registerServices()
@@ -105,7 +110,10 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         $this->app->singleton(AIOrchestratorPolicyGuardrailRegistry::class);
         $this->app->singleton(ManagedProviderCallRepository::class);
 
-        $this->app->tag([AiAssistantPageResourceExtender::class], ResourceHeaderActionExtender::TAG);
+        config()->set('settings.repositories.ai-orchestrator', [
+            ...(array) config('settings.repositories.database'),
+            'type' => AIOrchestratorSettingsRepository::class,
+        ]);
 
         return $this;
     }

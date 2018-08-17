@@ -6,7 +6,6 @@ namespace Capell\AIOrchestrator\Models;
 
 use Capell\AIOrchestrator\Enums\AiGenerationRequestStatus;
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 
@@ -23,10 +22,6 @@ use Override;
  * @property CarbonImmutable $expires_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- *
- * @method static Builder<static>|AiGenerationRequest newModelQuery()
- * @method static Builder<static>|AiGenerationRequest newQuery()
- * @method static Builder<static>|AiGenerationRequest query()
  */
 final class AiGenerationRequest extends Model
 {

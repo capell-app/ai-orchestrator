@@ -32,9 +32,6 @@ use Override;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  *
- * @method static Builder<static>|AIGenerationHistory newModelQuery()
- * @method static Builder<static>|AIGenerationHistory newQuery()
- * @method static Builder<static>|AIGenerationHistory query()
  * @method static Builder<static>|AIGenerationHistory whereAction($value)
  * @method static Builder<static>|AIGenerationHistory whereCompletionTokens($value)
  * @method static Builder<static>|AIGenerationHistory whereCreatedAt($value)

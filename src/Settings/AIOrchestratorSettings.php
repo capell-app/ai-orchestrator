@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Capell\AIOrchestrator\Settings;
 
 use Capell\Core\Contracts\SettingsContract;
+use Override;
 use Spatie\LaravelSettings\Settings;
 
 class AIOrchestratorSettings extends Settings implements SettingsContract
@@ -35,7 +36,13 @@ class AIOrchestratorSettings extends Settings implements SettingsContract
         return 'ai-orchestrator';
     }
 
+    public static function repository(): ?string
+    {
+        return 'ai-orchestrator';
+    }
+
     /** @return list<string> */
+    #[Override]
     public static function encrypted(): array
     {
         return ['ai_api_key'];

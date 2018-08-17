@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
+use Capell\AIOrchestrator\Support\Admin\AiAssistantPageResourceExtender;
+use Illuminate\Support\Facades\Log;
+use Mockery\MockInterface;
 use Spatie\LaravelSettings\Migrations\SettingsMigrator;
 use Spatie\LaravelSettings\Models\SettingsProperty;
 
@@ -73,4 +76,44 @@ it('encrypts an empty default api key too, so a fresh unconfigured install still
     $migration->up();
 
     expect(resolve(AIOrchestratorSettings::class)->ai_api_key)->toBe('');
+});
+
+it('treats an invalid empty api key payload as unset during capability resolution', function (): void {
+    test()->registerAndMigrateSettings(
+        ['2026_05_10_190871_01_create_ai-orchestrator_settings'],
+        dirname(__DIR__, 3) . '/database/settings',
+    );
+
+    /** @var SettingsMigrator $settingsMigrator */
+    $settingsMigrator = resolve(SettingsMigrator::class);
+
+    $settingsMigrator->deleteIfExists('ai-orchestrator.ai_api_key');
+    $settingsMigrator->add('ai-orchestrator.ai_api_key', '');
+    $settingsMigrator->deleteIfExists('ai-orchestrator.prompts');
+    $settingsMigrator->add('ai-orchestrator.prompts', [
+        'title_generation' => false,
+        'content_generation' => false,
+        'meta_description' => false,
+    ]);
+
+    Log::spy();
+
+    $enabledFields = null;
+    $exception = null;
+
+    try {
+        $enabledFields = new ReflectionMethod(AiAssistantPageResourceExtender::class, 'enabledFields')
+            ->invoke(new AiAssistantPageResourceExtender);
+    } catch (Throwable $throwable) {
+        $exception = $throwable;
+    }
+
+    expect($exception)->toBeNull()
+        ->and($enabledFields)->toBe([])
+        ->and(resolve(AIOrchestratorSettings::class)->ai_api_key)->toBe('');
+
+    $logger = Log::getFacadeRoot();
+    throw_unless($logger instanceof MockInterface, RuntimeException::class, 'Expected a spied logger.');
+
+    $logger->shouldHaveReceived('warning')->once();
 });
