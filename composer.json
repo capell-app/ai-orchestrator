@@ -1,0 +1,42 @@
+{
+    "name": "capell-app/assistant",
+    "description": "AI Assistant for Capell",
+    "keywords": [
+        "capell",
+        "assistant",
+        "laravel",
+        "filamentphp",
+        "cms"
+    ],
+    "homepage": "https://github.com/capell-app/assistant",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Howdu",
+            "email": "cms.multi2@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "capell-app/admin": "*",
+        "capell-app/frontend": "*",
+        "openai-php/laravel": "^0.10|^0.18"
+    },
+    "autoload": {
+        "psr-4": {
+            "Capell\\Assistant\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Capell\\Assistant\\Providers\\AssistantServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "prefer-stable": true
+}
