@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="Unit" suffix="Test.php">
+        <directory>tests/Unit</directory>
+    </testsuite>
+    <testsuite name="Feature" suffix="Test.php">
+        <directory>tests/Feature</directory>
+    </testsuite>
+</testsuites>

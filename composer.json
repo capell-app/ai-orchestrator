@@ -23,10 +23,24 @@
         "capell-app/frontend": "*",
         "openai-php/laravel": "^0.10|^0.18"
     },
+    "require-dev": {
+        "pestphp/pest": "^2.34",
+        "laravel/pint": "^1.13"
+    },
     "autoload": {
         "psr-4": {
             "Capell\\Assistant\\": "src/"
         }
+    },
+    "scripts": {
+        "test": "pest",
+        "test:watch": "pest --watch",
+        "lint": "pint",
+        "lint:check": "pint --check",
+        "preflight": [
+            "@test",
+            "@lint:check"
+        ]
     },
     "extra": {
         "laravel": {

@@ -1,0 +1,11 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "simplified_null_return": true
+    },
+    "exclude": [
+        "vendor",
+        "storage",
+        "bootstrap"
+    ]
+}
