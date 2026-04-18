@@ -24,6 +24,10 @@ use Capell\Assistant\Settings\AssistantSettings;
 use Capell\Assistant\Support\ContentTargetResolver;
 use Capell\Assistant\Support\SectionRegistry;
 use Capell\Assistant\Targets\FlatJsonTarget;
+use Capell\Admin\Contracts\Extenders\PageHeaderActionExtender;
+use Capell\Admin\Contracts\Extenders\SiteHeaderActionExtender;
+use Capell\Assistant\Support\Admin\AiCreatorPageExtender;
+use Capell\Assistant\Support\Admin\AiCreatorSiteExtender;
 use Capell\Assistant\Support\Admin\PageContentEditorConfigurator;
 use Capell\Assistant\Support\Admin\PageTitleWithSlugInputExtender;
 use Capell\Assistant\Support\AiFeatureRegistry;
@@ -32,6 +36,7 @@ use Capell\Assistant\Support\AiResponseParser;
 use Capell\Assistant\Support\AiTokenCounter;
 use Capell\Assistant\Support\Cache\AIGenerationCache;
 use Capell\Assistant\Support\Cache\RateLimitCache;
+use Capell\Assistant\Support\Pipelines\AiCreatorPipeline;
 use Capell\Assistant\Support\PrismProvider;
 use Capell\Assistant\Support\PromptRepository;
 use Capell\Core\Facades\CapellCore;
@@ -118,6 +123,13 @@ class AssistantServiceProvider extends AbstractPackageServiceProvider
             $app->make(AssistantSettings::class),
         ));
 
+        $this->app->singleton(AiCreatorPipeline::class, fn (Application $app): AiCreatorPipeline => new AiCreatorPipeline(
+            $app->make(PromptRepository::class),
+            $app->make(PrismProvider::class),
+            $app->make(AiRateLimiter::class),
+            $app->make(SectionRegistry::class),
+        ));
+
         /** @var AiFeatureRegistry $registry */
         $registry = $this->app->make(AiFeatureRegistry::class);
         foreach ((array) config('capell-assistant.features', []) as $name => $feature) {
@@ -164,6 +176,14 @@ class AssistantServiceProvider extends AbstractPackageServiceProvider
         $this->app->tag([
             PageTitleWithSlugInputExtender::class,
         ], 'capell-admin:page-title-with-slug-input');
+
+        $this->app->tag([
+            AiCreatorPageExtender::class,
+        ], PageHeaderActionExtender::TAG);
+
+        $this->app->tag([
+            AiCreatorSiteExtender::class,
+        ], SiteHeaderActionExtender::TAG);
 
         // Optional: register schema component replacers for DefaultPageSchema if needed in future
         // $this->app->tag([SomeReplacer::class], 'capell-admin:schema-component-replacers:page');
