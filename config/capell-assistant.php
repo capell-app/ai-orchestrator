@@ -5,11 +5,18 @@ declare(strict_types=1);
 use Capell\Assistant\Actions\GeneratorPageContentAction;
 
 return [
-    'openai' => [
+    'prism' => [
+        'provider' => env('AI_PROVIDER', 'openai'),
+        'model' => env('AI_MODEL', 'gpt-4o'),
         'max_retries' => 3,
         'retry_delay_ms' => 500,
-        'default_model' => 'gpt-4-turbo',
-        'max_tokens' => 512,
+        'max_tokens' => 4096,
+        'image_provider' => env('AI_IMAGE_PROVIDER', 'openai'),
+        'image_model' => env('AI_IMAGE_MODEL', 'dall-e-3'),
+        'image_size' => env('AI_IMAGE_SIZE', '1024x1024'),
+    ],
+    'ai_creator' => [
+        'enabled' => env('AI_CREATOR_ENABLED', true),
     ],
     'prompts' => [
         'title_generation' => [
@@ -32,18 +39,23 @@ return [
     'features' => [
         'title_generation' => [
             'enabled' => true,
-            'model' => 'gpt-4-turbo',
+            'model' => 'gpt-4o',
             'handler' => 'Capell\\Admin\\Actions\\AI\\GeneratePageTitleAction',
         ],
         'meta_description' => [
             'enabled' => true,
-            'model' => 'gpt-4-turbo',
+            'model' => 'gpt-4o',
             'handler' => 'Capell\\Admin\\Actions\\AI\\GenerateMetaDescriptionAction',
         ],
         'content_generation' => [
             'enabled' => true,
-            'model' => 'gpt-4-turbo',
+            'model' => 'gpt-4o',
             'handler' => GeneratorPageContentAction::class,
+        ],
+        'ai_creator' => [
+            'enabled' => true,
+            'model' => 'gpt-4o',
+            'handler' => null,
         ],
     ],
     'cache' => [
