@@ -17,7 +17,13 @@ use Capell\Assistant\Handlers\ClearCircuitBreakerHandler;
 use Capell\Assistant\Listeners\LogAiGeneration;
 use Capell\Assistant\Listeners\NotifyAiFailure;
 use Capell\Assistant\Models\AIGenerationHistory;
+use Capell\Assistant\Models\AiCreatorContext;
+use Capell\Assistant\Models\AiCreatorSession;
+use Capell\Assistant\Policies\AiCreatorPolicy;
 use Capell\Assistant\Settings\AssistantSettings;
+use Capell\Assistant\Support\ContentTargetResolver;
+use Capell\Assistant\Support\SectionRegistry;
+use Capell\Assistant\Targets\FlatJsonTarget;
 use Capell\Assistant\Support\Admin\PageContentEditorConfigurator;
 use Capell\Assistant\Support\Admin\PageTitleWithSlugInputExtender;
 use Capell\Assistant\Support\AiFeatureRegistry;
@@ -94,6 +100,23 @@ class AssistantServiceProvider extends AbstractPackageServiceProvider
         ));
 
         $this->app->singleton(RateLimitCache::class, fn (\Illuminate\Foundation\Application $app): RateLimitCache => new RateLimitCache((string) config('cache.default')));
+
+        $this->app->singleton(SectionRegistry::class, fn (): SectionRegistry => new SectionRegistry);
+
+        $this->app->singleton(ContentTargetResolver::class, function (Application $app): ContentTargetResolver {
+            $resolver = new ContentTargetResolver;
+            $resolver->register($app->make(FlatJsonTarget::class));
+
+            foreach ($app->tagged('capell-assistant:content-targets') as $target) {
+                $resolver->register($target);
+            }
+
+            return $resolver;
+        });
+
+        $this->app->singleton(AiCreatorPolicy::class, fn (Application $app): AiCreatorPolicy => new AiCreatorPolicy(
+            $app->make(AssistantSettings::class),
+        ));
 
         /** @var AiFeatureRegistry $registry */
         $registry = $this->app->make(AiFeatureRegistry::class);
@@ -198,6 +221,8 @@ class AssistantServiceProvider extends AbstractPackageServiceProvider
     private function registerModels(): self
     {
         CapellCore::registerModel('AIGenerationHistory', AIGenerationHistory::class);
+        CapellCore::registerModel('AiCreatorContext', AiCreatorContext::class);
+        CapellCore::registerModel('AiCreatorSession', AiCreatorSession::class);
 
         return $this;
     }
