@@ -8,7 +8,7 @@ use Capell\Assistant\Contracts\AiActionContextInterface;
 use Capell\Assistant\Models\AIGenerationHistory;
 use Capell\Assistant\Support\AiRateLimiter;
 use Capell\Assistant\Support\AiResponse;
-use Capell\Assistant\Support\OpenAIProvider;
+use Capell\Assistant\Support\PrismProvider;
 use Capell\Assistant\Support\PromptRepository;
 use Illuminate\Pipeline\Pipeline;
 use InvalidArgumentException;
@@ -17,7 +17,7 @@ class GenerateContentPipeline
 {
     public function __construct(
         private readonly PromptRepository $prompts,
-        private readonly OpenAIProvider $provider,
+        private readonly PrismProvider $provider,
         private readonly AiRateLimiter $rateLimiter,
     ) {}
 
@@ -77,9 +77,9 @@ class GenerateContentPipeline
         ];
 
         $params = [
-            'model' => (string) ($prompt['model'] ?? config('capell-assistant.openai.default_model')),
+            'model' => (string) ($prompt['model'] ?? config('capell-assistant.prism.model')),
             'messages' => $messages,
-            'max_tokens' => (int) config('capell-assistant.openai.max_tokens', 512),
+            'max_tokens' => (int) config('capell-assistant.prism.max_tokens', 4096),
             'temperature' => 0.7,
         ];
 

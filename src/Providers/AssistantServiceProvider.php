@@ -26,7 +26,7 @@ use Capell\Assistant\Support\AiResponseParser;
 use Capell\Assistant\Support\AiTokenCounter;
 use Capell\Assistant\Support\Cache\AIGenerationCache;
 use Capell\Assistant\Support\Cache\RateLimitCache;
-use Capell\Assistant\Support\OpenAIProvider;
+use Capell\Assistant\Support\PrismProvider;
 use Capell\Assistant\Support\PromptRepository;
 use Capell\Core\Facades\CapellCore;
 use Capell\Core\Support\Packages\AbstractPackageServiceProvider;
@@ -71,9 +71,9 @@ class AssistantServiceProvider extends AbstractPackageServiceProvider
         });
     }
 
-    protected function registerOpenAiCmsIntegrationServices(): self
+    protected function registerAiServices(): self
     {
-        $this->app->singleton(OpenAIProvider::class, fn (Application $app): OpenAIProvider => new OpenAIProvider((array) config('capell-assistant.openai', [])));
+        $this->app->singleton(PrismProvider::class, fn (Application $app): PrismProvider => new PrismProvider((array) config('capell-assistant.prism', [])));
 
         $this->app->singleton(PromptRepository::class, fn (Application $app): PromptRepository => new PromptRepository((array) config('capell-assistant.prompts', [])));
 
@@ -106,7 +106,7 @@ class AssistantServiceProvider extends AbstractPackageServiceProvider
         return $this;
     }
 
-    protected function registerOpenAiCmsIntegrationEventListeners(): self
+    protected function registerAiEventListeners(): self
     {
         $events = $this->app->make(Dispatcher::class);
         $events->listen(
@@ -153,8 +153,8 @@ class AssistantServiceProvider extends AbstractPackageServiceProvider
         return $this
             ->registerAdminEvents()
             ->registerAdminExtenders()
-            ->registerOpenAiCmsIntegrationServices()
-            ->registerOpenAiCmsIntegrationEventListeners();
+            ->registerAiServices()
+            ->registerAiEventListeners();
     }
 
     private function isPackageInstalled(): bool
