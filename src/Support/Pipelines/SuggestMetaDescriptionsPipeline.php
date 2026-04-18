@@ -72,12 +72,12 @@ class SuggestMetaDescriptionsPipeline
         ]);
 
         $params = [
-            'model' => (string) ($prompt['model'] ?? config('capell-assistant.openai.default_model')),
+            'model' => (string) ($prompt['model'] ?? config('capell-assistant.prism.model')),
             'messages' => [
                 ['role' => 'system', 'content' => (string) ($prompt['system'] ?? '')],
                 ['role' => 'user', 'content' => $userMessage . "\nPlease provide 3 meta description options as a simple bullet list."],
             ],
-            'max_tokens' => (int) config('capell-assistant.openai.max_tokens', 128),
+            'max_tokens' => (int) config('capell-assistant.prism.max_tokens', 128),
             'temperature' => 0.7,
         ];
 

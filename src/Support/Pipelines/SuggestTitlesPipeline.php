@@ -78,9 +78,9 @@ class SuggestTitlesPipeline
         ];
 
         $params = [
-            'model' => (string) ($prompt['model'] ?? config('capell-assistant.openai.default_model')),
+            'model' => (string) ($prompt['model'] ?? config('capell-assistant.prism.model')),
             'messages' => $messages,
-            'max_tokens' => (int) config('capell-assistant.openai.max_tokens', 128),
+            'max_tokens' => (int) config('capell-assistant.prism.max_tokens', 128),
             'temperature' => 0.7,
         ];
 
