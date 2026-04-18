@@ -8,9 +8,11 @@
 
 ## Overview
 
-AI Creator is a conversational wizard inside a dedicated Filament panel section. It guides non-technical users through describing a page they want to build, optionally accepts a URL or image as inspiration, then generates a structured layout composed of properly separated CMS sections. Nothing goes live without human approval through the existing Workspace workflow.
+AI Creator is a conversational wizard delivered as a Filament action (modal/slide-over), attachable to any resource in the admin panel. It guides non-technical users through describing a page they want to build, optionally accepts a URL or image as inspiration, then generates a structured layout composed of properly separated CMS sections. Nothing goes live without human approval through the existing Workspace workflow.
 
-A companion feature, AI Image Generator, provides both a standalone image generation page and a reusable inline action attachable to any Filament image/media field.
+The wizard opens in context — on a page resource it creates content for that page, on a site resource it can ask "how many pages would you like to create?" and scaffold multiple pages. Both actions are also callable programmatically by passing data objects, with no UI required.
+
+There are no dedicated assistant panel pages. All AI features surface as actions registered against existing admin resources via the extender tag pattern.
 
 ---
 
@@ -156,35 +158,69 @@ One row per wizard session. Persists across browser closes so users can resume.
 
 ---
 
-## 5. AI Creator Wizard (Filament Page)
+## 5. AI Creator Wizard (Action-based)
 
-### Entry point
-`AiCreatorPage` — a standalone Filament page registered in the assistant panel section. Not injected into the existing page edit resource.
+### Entry point — `AiCreatorAction`
+A Filament wizard action (multi-step modal/slide-over). No dedicated panel page. The action is registered against existing admin resources via the extender tag pattern:
 
-### Stage 0 — Dashboard (before first input)
-- **Resume cards** for any `in_progress` sessions belonging to the current user/site
-- **Starter prompts** generated from `SectionRegistry::forAi()` + recent site history (e.g. "Build a product landing page", "Create a team about page")
-- **Recent completions** — last 3 submitted layouts with their workspace status
+```php
+// In AssistantServiceProvider::boot()
+$this->app->tag([AiCreatorAction::class], 'capell-admin:page-actions');
+$this->app->tag([AiCreatorAction::class], 'capell-admin:site-actions');
+```
+
+Admin iterates tagged actions and injects them into the relevant resource header/table row actions at boot. The assistant has no knowledge of admin internals; admin has no knowledge of assistant.
+
+### Programmatic invocation
+The action wraps a standalone `GenerateAiLayoutAction` that accepts a data object:
+
+```php
+GenerateAiLayoutAction::make()->handle(new AiCreatorData(
+    siteId: $site->id,
+    intent: 'Build a contact page',
+    pageCount: 1,
+));
+```
+
+This allows other parts of the system (jobs, other actions, tests) to trigger layout generation without a UI.
+
+### Context-aware behaviour
+The action inspects the resource it is mounted on:
+
+| Mounted on | Opening question |
+|---|---|
+| Page resource | "What would you like this page to contain?" |
+| Site resource | "How many pages would you like to create?" + brief description per page |
+| Article / blog resource | "Describe the article — I'll suggest a structure and draft the content" |
+
+When mounted on a site, a `pageCount` step is shown first. Each page then runs its own clarification loop and generates independently, with progress shown inline.
+
+### Stage 0 — Action opening step
+Before the first input the wizard shows (inside the modal):
+- **Resume card** if an `in_progress` session exists for this record + user
+- **Starter prompts** derived from `SectionRegistry::forAi()` + recent site history
+- **Recent completions** — last 3 submitted layouts with workspace status badges
 
 ### Wizard flow
-1. User describes what they want (or picks a starter prompt)
+1. User describes what they want (or picks a starter prompt / resumes existing session)
 2. AI inspects `AiCreatorContext` for the site — skips brand/tone questions if context exists
 3. AI asks one clarifying question at a time (max 4 before proceeding)
 4. AI proposes a layout: named sections in order, each mapped to a type from the registry
-5. User can adjust the proposal (reorder, add, remove sections)
+5. User can adjust the proposal (reorder, add, remove sections) within the modal
 6. AI generates field content for each section
-7. User reviews generated content, can edit inline
-8. User submits for approval → workspace draft created
+7. User reviews generated content inline, can edit before submitting
+8. "Submit for Review" → workspace draft created, modal closes with status notification
 
 ### Output rules
 - Sections are always individual units — never an HTML blob
 - Every generated field carries `ai_placeholder: true` in its metadata
-- Image fields are always placeholders (no AI-generated images inline during wizard — those come from `AiImageGeneratorAction` afterward)
-- All prompts include a copyright guardrail: generate original content only, no reproduction of real brand copy
+- Image fields are always placeholders — filled afterward via `AiImageGeneratorAction`
+- All prompts include a copyright guardrail: generate original content only
 
 ### Files
-- `src/Filament/Pages/AiCreatorPage.php`
+- `src/Filament/Actions/AiCreatorAction.php`
 - `src/Actions/GenerateAiLayoutAction.php`
+- `src/DataObjects/AiCreatorData.php`
 - `src/Support/Pipelines/AiCreatorPipeline.php`
 - `src/Support/Prompts/` — prompt templates
 
@@ -192,35 +228,34 @@ One row per wizard session. Persists across browser closes so users can resume.
 
 ## 6. AI Image Generator
 
-### Two entry points
+No dedicated panel page. Image generation surfaces only as an inline action.
 
-#### 6a. Standalone page (`AiImageGeneratorPage`)
-A dedicated Filament page in the AI Creator section.
-- Free-form text prompt field
-- Optional: select a page/article to draw title + content context automatically
-- Generates one or more image variants
-- User saves selected image(s) to the media library
-- No auto-assignment — user assigns from media library manually
+### `AiImageGeneratorAction`
+A reusable Filament action attachable to any image/media field in any form. Also callable programmatically via a data object:
 
-#### 6b. Inline field action (`AiImageGeneratorAction`)
-A reusable Filament action attachable to any image/media field in any form.
+```php
+GenerateAiImageAction::make()->handle(new AiImageData(
+    prompt: 'A professional hero banner for a law firm',
+    contextFields: ['title' => 'Contact Us', 'body' => '...'],
+    size: '1792x1024',
+));
+```
 
-**Context gathering:** the action receives nearby Filament form field values (page title, body, etc.) as context, passed explicitly from the parent action/resource. It also inspects the layout to understand what other media fields exist at the same level.
+**Context gathering:** the action receives nearby Filament form field values (page title, body, etc.) as context, passed explicitly from the parent form/resource. It inspects the layout to understand what other media fields exist at the same level and uses that to weight the prompt.
+
+**Priority for context:** page title > page body/content > layout section field label > fallback generic description.
 
 **UX flow:**
 1. User clicks "Generate with AI" on an image field
 2. Modal opens showing an auto-composed prompt (editable) derived from context fields
 3. "Generate" produces an image preview inside the modal
 4. User can edit the prompt and click "Regenerate" as many times as needed
-5. "Accept" closes the modal and updates the field value directly
-6. The generated image is saved to the media library and the field reference is updated
-
-**Priority for context:** page title > page body/content > layout section field label > fallback generic description.
+5. "Accept" closes the modal, saves the image to the media library, and updates the field reference directly
 
 ### Files
-- `src/Filament/Pages/AiImageGeneratorPage.php`
 - `src/Filament/Actions/AiImageGeneratorAction.php`
 - `src/Actions/GenerateAiImageAction.php`
+- `src/DataObjects/AiImageData.php`
 
 ---
 
@@ -236,9 +271,7 @@ When the user completes the AI Creator wizard and clicks "Submit for Review":
 5. Workspace metadata includes `ai_origin: true` and `ai_session_id`
 
 ### Status display
-After submission, the AI Creator page shows a read-only status card:
-- Workspace status (pending / approved / rejected)
-- "View in Workspace →" link to the admin compare/diff page
+After submission, the `AiCreatorAction` modal closes and a Filament notification is shown with the workspace status and a "View in Workspace →" link to the admin compare/diff page. The resource record itself gains a workspace status badge via the existing admin extender pattern.
 
 ### Admin extender interface
 Admin exposes a `WorkspaceActionExtenderInterface` (or extends the existing extender pattern used by admin's service provider). The assistant registers any workspace-level Filament actions it needs at boot, through its own service provider, without admin importing assistant classes.
@@ -289,28 +322,31 @@ The same cascade applies to `ai_provider`, `ai_model`, and image settings — pe
 - DB migrations + models (`AiCreatorContext`, `AiCreatorSession`)
 - `AssistantSettings` additions + settings Filament page update
 
-### Phase 2 — AI Creator Wizard
-- `AiCreatorPage` Filament page
+### Phase 2 — AI Creator Action + Wizard
+- `AiCreatorAction` (Filament wizard action) registered on page + site resources via tags
+- `AiCreatorData` DTO for programmatic invocation
 - `GenerateAiLayoutAction` + `AiCreatorPipeline`
 - Prompt templates with copyright guardrails + section registry injection
+- Context-aware opening step (page vs site vs article)
 - Session persistence (resume, stage tracking)
 - Brand context loading (skip questions if context exists)
 
 ### Phase 3 — Workspace Integration
-- `SubmitAiCreatorDraftAction` + `AiDraftSubmittedForApproval` event
-- Admin `capell-admin:workspace-actions` tag + extender interface (minimal admin change)
-- Status card on AI Creator page post-submission
+- `SubmitAiCreatorDraftAction` (calls admin's `SubmitForApprovalAction` directly)
+- Admin `capell-admin:page-actions` + `capell-admin:site-actions` tags (minimal admin change, follows existing pattern)
+- Post-submission notification with workspace link
 
 ### Phase 4 — Image Generator
-- `AiImageGeneratorPage` (standalone)
 - `AiImageGeneratorAction` (inline field action, context-aware, preview modal)
+- `AiImageData` DTO for programmatic invocation
 - `GenerateAiImageAction` + image provider pipeline
 
 ### Phase 5 — Polish
 - `MosaicTarget` in mosaic package
 - Starter prompts from section registry + history
-- Resume cards on Stage 0 dashboard
+- Resume cards in action opening step
 - Per-site/store settings cascade
+- Multi-page scaffolding from site-level action
 
 ---
 
@@ -327,12 +363,13 @@ src/Models/AiCreatorContext.php
 src/Models/AiCreatorSession.php
 src/Policies/AiCreatorPolicy.php
 src/Settings/AssistantSettings.php               (updated)
-src/Filament/Pages/AiCreatorPage.php
-src/Filament/Pages/AiImageGeneratorPage.php
+src/Filament/Actions/AiCreatorAction.php
 src/Filament/Actions/AiImageGeneratorAction.php
 src/Actions/GenerateAiLayoutAction.php
 src/Actions/GenerateAiImageAction.php
 src/Actions/SubmitAiCreatorDraftAction.php
+src/DataObjects/AiCreatorData.php
+src/DataObjects/AiImageData.php
 src/Support/Pipelines/AiCreatorPipeline.php
 database/migrations/create_ai_creator_contexts_table.php
 database/migrations/create_ai_creator_sessions_table.php
