@@ -51,21 +51,28 @@ class PrismProvider implements ServiceContract
                 $systemPrompt = '';
                 $userMessage = '';
 
+                $userMessages = [];
                 foreach ($messages as $message) {
                     if ($message['role'] === 'system') {
                         $systemPrompt = $message['content'];
                     } elseif ($message['role'] === 'user') {
-                        $userMessage = $message['content'];
+                        $userMessages[] = $message['content'];
                     }
                 }
+                $userMessage = implode("\n\n", $userMessages);
 
                 $model = $params['model'] ?? $this->config['model'] ?? 'gpt-4o';
                 $providerName = $this->config['provider'] ?? 'openai';
+
+                $maxTokens = isset($params['max_tokens']) ? (int) $params['max_tokens'] : (int) ($this->config['max_tokens'] ?? 512);
+                $temperature = isset($params['temperature']) ? (float) $params['temperature'] : 0.7;
 
                 $response = Prism::text()
                     ->using($this->resolveProvider($providerName), $model)
                     ->withSystemPrompt($systemPrompt)
                     ->withPrompt($userMessage)
+                    ->withMaxTokens($maxTokens)
+                    ->usingTemperature($temperature)
                     ->generate();
 
                 $duration = microtime(true) - $startTime;
