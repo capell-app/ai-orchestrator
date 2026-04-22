@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Capell\Assistant\Console\Commands;
 
-use Capell\Core\Support\Migration\MigrationFileManagerInterface;
+use Capell\Core\Support\Migration\MigrationFilesystemInterface;
 use Illuminate\Console\Command;
 
 class InstallCommand extends Command
 {
     protected $signature = 'capell:assistant-install';
 
-    public function __construct(private readonly MigrationFileManagerInterface $fileManager)
+    public function __construct(private readonly MigrationFilesystemInterface $fileManager)
     {
         parent::__construct();
     }
@@ -43,6 +43,7 @@ class InstallCommand extends Command
             '--type' => 'settings',
             '--items' => [
                 'create_assistant_settings',
+                '2026_04_18_000001_update_assistant_settings_add_ai_creator',
             ],
             '--path' => $settings,
         ]);

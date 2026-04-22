@@ -1,0 +1,21 @@
+{
+    "label": "Assistant",
+    "slug": "assistant",
+    "kind": "addon",
+    "order": 40,
+    "dependsOn": [],
+    "description": "AI-assisted editorial tooling for content creation.",
+    "icon": null,
+    "url": "https://capell.app",
+    "scopes": [],
+    "commands": {
+        "install": "capell:assistant-install",
+        "afterInstall": null,
+        "afterInstallParams": [],
+        "setup": null,
+        "setupParams": [],
+        "upgrade": null,
+        "demo": null,
+        "demoParams": []
+    }
+}

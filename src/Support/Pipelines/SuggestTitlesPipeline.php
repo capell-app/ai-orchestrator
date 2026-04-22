@@ -9,7 +9,7 @@ use Capell\Assistant\Models\AIGenerationHistory;
 use Capell\Assistant\Support\AiRateLimiter;
 use Capell\Assistant\Support\AiResponse;
 use Capell\Assistant\Support\AiResponseParser;
-use Capell\Assistant\Support\OpenAIProvider;
+use Capell\Assistant\Support\PrismProvider;
 use Capell\Assistant\Support\PromptRepository;
 use Illuminate\Pipeline\Pipeline;
 use InvalidArgumentException;
@@ -18,7 +18,7 @@ class SuggestTitlesPipeline
 {
     public function __construct(
         private readonly PromptRepository $prompts,
-        private readonly OpenAIProvider $provider,
+        private readonly PrismProvider $provider,
         private readonly AiResponseParser $parser,
         private readonly AiRateLimiter $rateLimiter,
     ) {}
@@ -78,9 +78,9 @@ class SuggestTitlesPipeline
         ];
 
         $params = [
-            'model' => (string) ($prompt['model'] ?? config('capell-assistant.openai.default_model')),
+            'model' => (string) ($prompt['model'] ?? config('capell-assistant.prism.model')),
             'messages' => $messages,
-            'max_tokens' => (int) config('capell-assistant.openai.max_tokens', 128),
+            'max_tokens' => config('capell-assistant.prism.max_tokens', 128),
             'temperature' => 0.7,
         ];
 
@@ -116,9 +116,10 @@ class SuggestTitlesPipeline
                 'output' => implode("\n", (array) ($payload['result'] ?? [])),
                 'prompt_tokens' => (int) ($response->metadata['prompt_tokens'] ?? 0),
                 'completion_tokens' => (int) ($response->metadata['completion_tokens'] ?? 0),
-                'total_tokens' => (int) $response->tokensUsed,
-                'duration' => (float) $response->duration,
-                'page_id' => $context->getPageId(),
+                'total_tokens' => $response->tokensUsed,
+                'duration' => $response->duration,
+                'pageable_id' => $context->getPageId(),
+                'pageable_type' => $context->getPageType(),
                 'language_id' => $context->getLanguageId(),
                 'metadata' => array_merge($response->metadata, [
                     'ai_messages' => $payload['ai_messages'] ?? null,

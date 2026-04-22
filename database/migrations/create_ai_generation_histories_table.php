@@ -20,8 +20,10 @@ return new class extends Migration
             $table->unsignedInteger('completion_tokens')->default(0);
             $table->unsignedInteger('total_tokens')->default(0);
             $table->float('duration')->default(0);
+            $table->boolean('failed')->default(false);
+            $table->text('error_message')->nullable();
             $table->json('metadata')->nullable();
-            $table->unsignedBigInteger('page_id')->nullable();
+            $table->nullableMorphs('pageable');
             $table->unsignedBigInteger('language_id')->nullable();
             $table->timestamps();
         });

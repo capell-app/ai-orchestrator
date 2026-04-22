@@ -1,0 +1,111 @@
+<svg viewBox="0 0 1200 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @keyframes orbGlow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+      @keyframes nodeGlow { 0%, 100% { r: 3.5; opacity: 0.5; } 50% { r: 5; opacity: 1; } }
+      @keyframes connectionFlow { 0%, 100% { stroke-dashoffset: 100; opacity: 0.2; } 50% { opacity: 0.7; } }
+      @keyframes ringPulse { 0% { r: 3; opacity: 1; } 100% { r: 12; opacity: 0; } }
+      .glow-orb { animation: orbGlow 4s ease-in-out infinite; }
+      .glow-1 { animation-delay: 0s; }
+      .glow-2 { animation-delay: 1.2s; }
+      .node { animation: nodeGlow 2s ease-in-out infinite; }
+      .node-1 { animation-delay: 0s; }
+      .node-2 { animation-delay: 0.3s; }
+      .node-3 { animation-delay: 0.6s; }
+      .node-4 { animation-delay: 0.9s; }
+      .node-5 { animation-delay: 1.2s; }
+      .node-6 { animation-delay: 1.5s; }
+      .connection { animation: connectionFlow 2.5s ease-in-out infinite; stroke-dasharray: 100; }
+      .connection-1 { animation-delay: 0s; }
+      .connection-2 { animation-delay: 0.4s; }
+      .connection-3 { animation-delay: 0.8s; }
+      .connection-4 { animation-delay: 1.2s; }
+      .pulse-ring { animation: ringPulse 2s ease-out infinite; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <defs>
+    <linearGradient id="bgGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#161b22;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d1117;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="280" fill="url(#bgGrad3)"/>
+
+  <!-- Grid background -->
+  <defs>
+    <pattern id="techGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="280" fill="url(#techGrid)"/>
+
+  <!-- Glow orbs -->
+  <circle class="glow-orb glow-1" cx="150" cy="140" r="150" fill="url(#glow1)" opacity="0.1"/>
+  <circle class="glow-orb glow-2" cx="1050" cy="140" r="125" fill="url(#glow2)" opacity="0.1"/>
+
+  <defs>
+    <radialGradient id="glow1">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow2">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Badge -->
+  <rect x="80" y="80" width="110" height="24" fill="rgba(16, 185, 129, 0.15)" rx="12"/>
+  <text x="135" y="100" font-size="11" font-weight="700" fill="#10b981" text-anchor="middle" text-transform="uppercase" letter-spacing="0.5">AI Powered</text>
+
+  <!-- Content -->
+  <text x="80" y="160" font-size="50" font-weight="800" fill="white" letter-spacing="-0.5" font-family="Hoefler Text, Georgia, serif">Assistant</text>
+  <text x="80" y="210" font-size="15" fill="rgba(255,255,255,0.75)" font-weight="500">Intelligent editorial tools for generating content, suggesting titles, metadata, and enhancing your authoring workflow.</text>
+
+  <!-- Neural network -->
+  <g transform="translate(850, 50)">
+    <!-- Background -->
+    <rect x="0" y="0" width="260" height="200" fill="rgba(255,255,255,0.02)" rx="4"/>
+
+    <!-- Connections -->
+    <line class="connection connection-1" x1="30" y1="40" x2="110" y2="30" stroke="rgba(16, 185, 129, 0.5)" stroke-width="1"/>
+    <line class="connection connection-1" x1="30" y1="80" x2="110" y2="70" stroke="rgba(59, 130, 246, 0.5)" stroke-width="1"/>
+    <line class="connection connection-1" x1="30" y1="120" x2="110" y2="110" stroke="rgba(16, 185, 129, 0.5)" stroke-width="1"/>
+
+    <line class="connection connection-2" x1="110" y1="30" x2="190" y2="40" stroke="rgba(59, 130, 246, 0.5)" stroke-width="1"/>
+    <line class="connection connection-2" x1="110" y1="70" x2="190" y2="80" stroke="rgba(16, 185, 129, 0.5)" stroke-width="1"/>
+    <line class="connection connection-2" x1="110" y1="110" x2="190" y2="120" stroke="rgba(59, 130, 246, 0.5)" stroke-width="1"/>
+
+    <line class="connection connection-3" x1="30" y1="40" x2="30" y2="120" stroke="rgba(59, 130, 246, 0.3)" stroke-width="0.5"/>
+    <line class="connection connection-3" x1="190" y1="40" x2="190" y2="120" stroke="rgba(59, 130, 246, 0.3)" stroke-width="0.5"/>
+
+    <line class="connection connection-4" x1="110" y1="30" x2="110" y2="110" stroke="rgba(59, 130, 246, 0.2)" stroke-width="0.5"/>
+
+    <!-- Input nodes -->
+    <circle class="node node-1" cx="30" cy="40" r="3.5" fill="#10b981"/>
+    <circle class="node node-2" cx="30" cy="80" r="3.5" fill="#3b82f6"/>
+    <circle class="node node-3" cx="30" cy="120" r="3.5" fill="#10b981"/>
+
+    <!-- Hidden layer nodes -->
+    <circle class="node node-4" cx="110" cy="30" r="3.5" fill="#3b82f6"/>
+    <circle class="node node-5" cx="110" cy="70" r="3.5" fill="#10b981"/>
+    <circle class="node node-6" cx="110" cy="110" r="3.5" fill="#3b82f6"/>
+
+    <!-- Output nodes -->
+    <circle class="node node-1" cx="190" cy="40" r="3.5" fill="#10b981"/>
+    <circle class="node node-2" cx="190" cy="80" r="3.5" fill="#3b82f6"/>
+    <circle class="node node-3" cx="190" cy="120" r="3.5" fill="#10b981"/>
+
+    <!-- Pulse rings -->
+    <circle class="pulse-ring" cx="110" cy="70" r="3" fill="none" stroke="#10b981" stroke-width="0.5"/>
+    <circle class="pulse-ring" cx="110" cy="70" r="3" fill="none" stroke="#3b82f6" stroke-width="0.5" style="animation-delay: 0.3s"/>
+
+    <!-- Labels -->
+    <text x="30" y="160" font-size="9" fill="rgba(255,255,255,0.6)" text-anchor="middle" font-weight="600">Input</text>
+    <text x="110" y="160" font-size="9" fill="rgba(255,255,255,0.6)" text-anchor="middle" font-weight="600">Processing</text>
+    <text x="190" y="160" font-size="9" fill="rgba(255,255,255,0.6)" text-anchor="middle" font-weight="600">Output</text>
+  </g>
+</svg>

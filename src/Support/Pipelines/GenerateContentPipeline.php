@@ -8,7 +8,7 @@ use Capell\Assistant\Contracts\AiActionContextInterface;
 use Capell\Assistant\Models\AIGenerationHistory;
 use Capell\Assistant\Support\AiRateLimiter;
 use Capell\Assistant\Support\AiResponse;
-use Capell\Assistant\Support\OpenAIProvider;
+use Capell\Assistant\Support\PrismProvider;
 use Capell\Assistant\Support\PromptRepository;
 use Illuminate\Pipeline\Pipeline;
 use InvalidArgumentException;
@@ -17,7 +17,7 @@ class GenerateContentPipeline
 {
     public function __construct(
         private readonly PromptRepository $prompts,
-        private readonly OpenAIProvider $provider,
+        private readonly PrismProvider $provider,
         private readonly AiRateLimiter $rateLimiter,
     ) {}
 
@@ -65,8 +65,8 @@ class GenerateContentPipeline
 
         $userMessage = strtr((string) ($prompt['user_template'] ?? ''), [
             '{{current_title}}' => (string) ($options['current_title'] ?? ''),
-            '{{keywords}}' => (string) ($context->getKeywords() ?? ''),
-            '{{content}}' => (string) ($context->getContent() ?? ''),
+            '{{keywords}}' => $context->getKeywords() ?? '',
+            '{{content}}' => $context->getContent() ?? '',
             '{{target_length}}' => ($options['target_length'] ?? null) !== null ? (string) $options['target_length'] : 'auto',
             '{{refactor}}' => ((bool) ($options['refactor'] ?? true)) ? 'yes' : 'no',
         ]);
@@ -77,9 +77,9 @@ class GenerateContentPipeline
         ];
 
         $params = [
-            'model' => (string) ($prompt['model'] ?? config('capell-assistant.openai.default_model')),
+            'model' => (string) ($prompt['model'] ?? config('capell-assistant.prism.model')),
             'messages' => $messages,
-            'max_tokens' => (int) config('capell-assistant.openai.max_tokens', 512),
+            'max_tokens' => config('capell-assistant.prism.max_tokens', 4096),
             'temperature' => 0.7,
         ];
 
@@ -117,9 +117,10 @@ class GenerateContentPipeline
                 'output' => (string) ($payload['result'] ?? ''),
                 'prompt_tokens' => (int) ($response->metadata['prompt_tokens'] ?? 0),
                 'completion_tokens' => (int) ($response->metadata['completion_tokens'] ?? 0),
-                'total_tokens' => (int) $response->tokensUsed,
-                'duration' => (float) $response->duration,
-                'page_id' => $context->getPageId(),
+                'total_tokens' => $response->tokensUsed,
+                'duration' => $response->duration,
+                'pageable_id' => $context->getPageId(),
+                'pageable_type' => $context->getPageType(),
                 'language_id' => $context->getLanguageId(),
                 'metadata' => array_merge($response->metadata, [
                     'ai_messages' => $payload['ai_messages'] ?? null,
@@ -157,7 +158,7 @@ class GenerateContentPipeline
 
         // Convert external absolute links to plain text or '#'
         // Preserve relative links (/, ./, ../) and anchors (#...)
-        $clean = preg_replace_callback('#<a\s+[^>]*href\s*=\s*( ["\'])([^"\']+)\1[^>]*>(.*?)</a>#is', function (array $m): string {
+        $clean = preg_replace_callback('#<a\s+[^>]*href\s*=\s*(["\'])([^"\']+)\1[^>]*>(.*?)</a>#is', function (array $m): string {
             $href = $m[2];
             $text = trim(strip_tags($m[3]));
 
