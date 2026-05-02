@@ -1,69 +1,28 @@
 # Capell Assistant
 
-![Assistant Hero Banner](./HERO_BANNER.svg)
+**Product group:** Capell Commercial
+**Tier:** Premium
 
-OpenAI-powered content drafting for Capell. Helps editors generate page titles, meta descriptions, and long-form content from the admin panel, with rate limiting, an audit log, and a usage dashboard widget.
+Capell Assistant is the commercial AI orchestration package for Capell. It keeps provider connectors, prompt templates, approval levels, and package-specific capabilities behind one Assistant surface instead of scattering separate AI layers across Mosaic, Blog, SEO, and future packages.
 
-**[Full documentation →](https://docs.capell.app/packages/assistant/)**
+## Install
 
-## Overview
+```bash
+composer require capell-app/assistant
+```
 
-- AI-assisted drafting for titles, meta descriptions, and page content
-- Rate limiting per user and per workspace
-- Audit log table (`ai_generation_histories`) for tracking usage
-- Filament usage widget for monitoring AI activity
-- Admin utilities for testing the OpenAI connection and managing the cache
+## Package Integration Pattern
 
-## Features
+Assistant owns the AI module registry. Optional package integrations live in Assistant and only register when the target package is installed.
 
-- Filament form actions
-    - Generate title suggestion on page create/edit
-    - Generate meta description suggestion on page create/edit
-    - Generate long-form content draft via TinyMCE integration
-- Rate limiting
-    - Configurable per-user and global limits in `config/capell-assistant.php`
-- Audit log
-    - Every generation is logged to `ai_generation_histories` with user, action, tokens used, and result
-- Filament widget
-    - `AiUsageWidget` displays a summary of AI usage per workspace
-- Commands
-    - `capell:assistant-install` — publish config and migrations, run migrations
-    - `capell:admin-test-openai` — verify your OpenAI API key is working
-    - `capell:admin-clear-ai-cache` — clear cached AI responses
-    - `capell:admin-monitor-ai-usage` — output a usage summary to the console
+| Integration | Behaviour                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Mosaic      | Exposes layout-plan previewing through Assistant while Mosaic remains a Foundation package with no commercial dependency. |
 
-## Requirements
+Mosaic still owns layout presets and creator actions. Assistant wraps those actions for AI runs, so the package boundary stays simple: Foundation packages expose normal Actions; Assistant decides which of those Actions are available to prompts.
 
-- Capell Admin and Frontend packages installed
-- `openai-php/laravel` package (`composer require openai-php/laravel`)
-- An OpenAI API key in your `.env`: `OPENAI_API_KEY=sk-...`
+## Tests
 
-## Installation
-
-1. Install the package dependency:
-
-    ```bash
-    composer require openai-php/laravel
-    ```
-
-2. Run the Capell Assistant installer:
-
-    ```bash
-    php artisan capell:assistant-install
-    ```
-
-    This will:
-    - Publish `config/capell-assistant.php`
-    - Publish and run the `ai_generation_histories` migration
-
-3. Add your OpenAI key to `.env`:
-
-    ```env
-    OPENAI_API_KEY=sk-...
-    ```
-
-4. (Optional) Verify the connection:
-
-    ```bash
-    php artisan capell:admin-test-openai
-    ```
+```bash
+php -d memory_limit=-1 vendor/bin/pest packages/commercial/assistant/tests --no-coverage
+```

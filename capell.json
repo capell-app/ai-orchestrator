@@ -1,21 +1,13 @@
 {
-    "label": "Assistant",
-    "slug": "assistant",
-    "kind": "addon",
-    "order": 40,
-    "dependsOn": [],
-    "description": "AI-assisted editorial tooling for content creation.",
-    "icon": null,
-    "url": "https://capell.app",
-    "scopes": [],
-    "commands": {
-        "install": "capell:assistant-install",
-        "afterInstall": null,
-        "afterInstallParams": [],
-        "setup": null,
-        "setupParams": [],
-        "upgrade": null,
-        "demo": null,
-        "demoParams": []
+    "name": "capell-app/assistant",
+    "kind": "package",
+    "capell-version": "^4.0",
+    "productGroup": "Capell Commercial",
+    "tier": "premium",
+    "bundle": "commercial",
+    "contexts": ["admin"],
+    "requires": ["capell-app/admin"],
+    "providers": {
+        "shared": ["Capell\\Assistant\\Providers\\AssistantServiceProvider"]
     }
 }
