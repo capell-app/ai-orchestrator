@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Capell\Assistant\Providers;
 
-use Capell\Assistant\Integrations\Mosaic\MosaicAssistantModule;
 use Capell\Assistant\Support\AssistantModuleRegistry;
 use Capell\Core\Facades\CapellCore;
 use Capell\Core\Support\Packages\AbstractPackageServiceProvider;
-use Capell\Mosaic\Actions\PreviewLayoutPlanAction;
 use Composer\InstalledVersions;
 use Spatie\LaravelPackageTools\Package;
 
@@ -26,35 +24,27 @@ class AssistantServiceProvider extends AbstractPackageServiceProvider
     public function registeringPackage(): void
     {
         $this
-            ->registerServices()
             ->registerPackageMetadata();
+
+        $this->app->booted(function (): void {
+            if (! $this->isPackageInstalled()) {
+                return;
+            }
+
+            $this->registerServices();
+        });
+    }
+
+    private function isPackageInstalled(): bool
+    {
+        return CapellCore::isPackageInstalled(static::$packageName);
     }
 
     private function registerServices(): self
     {
         $this->app->singleton(AssistantModuleRegistry::class);
 
-        $this->app->afterResolving(
-            AssistantModuleRegistry::class,
-            function (AssistantModuleRegistry $registry): void {
-                $this->registerOptionalMosaicModule($registry);
-            },
-        );
-
         return $this;
-    }
-
-    private function registerOptionalMosaicModule(AssistantModuleRegistry $registry): void
-    {
-        if (! class_exists(PreviewLayoutPlanAction::class)) {
-            return;
-        }
-
-        if (! CapellCore::isPackageInstalled('capell-app/mosaic')) {
-            return;
-        }
-
-        $registry->register(new MosaicAssistantModule);
     }
 
     private function registerPackageMetadata(): self
