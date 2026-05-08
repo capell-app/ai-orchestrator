@@ -25,6 +25,7 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     public function registeringPackage(): void
     {
         $this
+            ->registerBindings()
             ->registerPackageMetadata();
 
         $this->app->booted(function (): void {
@@ -41,10 +42,15 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         return CapellCore::isPackageInstalled(static::$packageName);
     }
 
-    private function registerServices(): self
+    private function registerBindings(): self
     {
         $this->app->singleton(AIOrchestratorModuleRegistry::class);
 
+        return $this;
+    }
+
+    private function registerServices(): self
+    {
         $this->app->afterResolving(
             AIOrchestratorModuleRegistry::class,
             function (AIOrchestratorModuleRegistry $registry): void {
