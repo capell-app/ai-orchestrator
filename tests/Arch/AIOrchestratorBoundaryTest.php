@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Symfony\Component\Finder\Finder;
 
-arch('ai-orchestrator shared package surface does not import layout-builder')
+arch('ai-orchestrator package does not import removed layout-builder namespace')
     ->expect('Capell\AIOrchestrator')
     ->not->toUse('Capell\LayoutBuilder');
 

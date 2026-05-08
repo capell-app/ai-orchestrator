@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Capell\AIOrchestrator\Providers;
 
+use Capell\AIOrchestrator\Integrations\LayoutBuilder\LayoutBuilderAIOrchestratorModule;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\Core\Facades\CapellCore;
 use Capell\Core\Support\Packages\AbstractPackageServiceProvider;
@@ -43,6 +44,13 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     private function registerServices(): self
     {
         $this->app->singleton(AIOrchestratorModuleRegistry::class);
+
+        $this->app->afterResolving(
+            AIOrchestratorModuleRegistry::class,
+            function (AIOrchestratorModuleRegistry $registry): void {
+                $registry->register(new LayoutBuilderAIOrchestratorModule);
+            },
+        );
 
         return $this;
     }
