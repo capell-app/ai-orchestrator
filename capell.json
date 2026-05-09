@@ -7,13 +7,9 @@
     "tier": "premium",
     "bundle": "commercial",
     "description": "AIOrchestrator provides the orchestration layer for Capell AI modules and capability execution.",
-    "surfaces": [
-        "admin"
-    ],
+    "surfaces": ["admin"],
     "dependencies": {
-        "requires": [
-            "capell-app/admin"
-        ],
+        "requires": ["capell-app/admin"],
         "optional": [],
         "conflicts": []
     },
