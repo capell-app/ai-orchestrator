@@ -1,4 +1,5 @@
 {
+    "manifest-version": 2,
     "name": "capell-app/ai-orchestrator",
     "kind": "package",
     "capell-version": "^4.0",
@@ -6,11 +7,46 @@
     "tier": "premium",
     "bundle": "commercial",
     "description": "AIOrchestrator provides the orchestration layer for Capell AI modules and capability execution.",
-    "contexts": ["admin"],
-    "requires": ["capell-app/admin"],
+    "surfaces": [
+        "admin"
+    ],
+    "dependencies": {
+        "requires": [
+            "capell-app/admin"
+        ],
+        "optional": [],
+        "conflicts": []
+    },
+    "lifecycle": {
+        "activation": "manual",
+        "defaultStatus": "available",
+        "requiresInstallCommand": false
+    },
     "providers": {
-        "shared": [
+        "metadata": [],
+        "install": [],
+        "runtime": [
             "Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider"
-        ]
-    }
+        ],
+        "admin": [],
+        "frontend": []
+    },
+    "database": {
+        "migrations": false,
+        "settings": false,
+        "requiredTables": []
+    },
+    "commands": {
+        "install": null,
+        "setup": null,
+        "setupParams": [],
+        "demo": null,
+        "demoParams": [],
+        "health": null
+    },
+    "settings": [],
+    "permissions": [],
+    "capabilities": [],
+    "assets": [],
+    "healthChecks": []
 }
