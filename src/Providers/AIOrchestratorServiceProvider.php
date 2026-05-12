@@ -25,8 +25,7 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     public function registeringPackage(): void
     {
         $this
-            ->registerBindings()
-            ->registerPackageMetadata();
+            ->registerBindings();
 
         $this->app->booted(function (): void {
             if (! $this->isPackageInstalled()) {
@@ -56,20 +55,6 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             function (AIOrchestratorModuleRegistry $registry): void {
                 $registry->register(new LayoutBuilderAIOrchestratorModule);
             },
-        );
-
-        return $this;
-    }
-
-    private function registerPackageMetadata(): self
-    {
-        CapellCore::registerPackage(
-            static::$packageName,
-            type: static::getType(),
-            serviceProviderClass: static::class,
-            path: realpath(__DIR__ . '/../..'),
-            version: $this->getVersion(),
-            description: fn (): string => 'AIOrchestrator provides the orchestration layer for Capell ai-orchestrator modules and capability execution.',
         );
 
         return $this;
