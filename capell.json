@@ -13,14 +13,9 @@
         "bundle": "commercial"
     },
     "namespace": "Capell\\AIOrchestrator",
-    "surfaces": [
-        "admin"
-    ],
+    "surfaces": ["admin"],
     "dependencies": {
-        "requires": [
-            "capell-app/admin",
-            "capell-app/core"
-        ],
+        "requires": ["capell-app/admin", "capell-app/core"],
         "optional": [],
         "conflicts": []
     },
@@ -47,10 +42,7 @@
     },
     "settings": [],
     "permissions": [],
-    "capabilities": [
-        "ai-orchestrator",
-        "ai-orchestrator-admin"
-    ],
+    "capabilities": ["ai-orchestrator", "ai-orchestrator-admin"],
     "performance": {
         "frontendRenderBudgetMs": 0,
         "adminQueryBudget": 40,
@@ -73,9 +65,6 @@
     "marketplace": {
         "summary": "AIOrchestrator provides the orchestration layer for Capell AI modules and capability execution.",
         "screenshots": [],
-        "categories": [
-            "admin",
-            "commercial"
-        ]
+        "categories": ["admin", "commercial"]
     }
 }

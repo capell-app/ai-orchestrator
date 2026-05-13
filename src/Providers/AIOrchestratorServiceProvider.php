@@ -8,7 +8,6 @@ use Capell\AIOrchestrator\Integrations\LayoutBuilder\LayoutBuilderAIOrchestrator
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\Core\Facades\CapellCore;
 use Capell\Core\Support\Packages\AbstractPackageServiceProvider;
-use Composer\InstalledVersions;
 use Spatie\LaravelPackageTools\Package;
 
 class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
@@ -58,14 +57,5 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         );
 
         return $this;
-    }
-
-    private function getVersion(): string
-    {
-        if (! class_exists(InstalledVersions::class)) {
-            return '0.0.0';
-        }
-
-        return CapellCore::getInstalledPrettyVersion(static::$packageName) ?? '0.0.0';
     }
 }
