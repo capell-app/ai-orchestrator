@@ -19,6 +19,7 @@
         "php": "^8.2",
         "capell-app/admin": "*",
         "capell-app/core": "*",
+        "capell-app/layout-builder": "*",
         "lorisleiva/laravel-actions": "^2.8",
         "spatie/laravel-data": "^4.5",
         "spatie/laravel-package-tools": "^1.14.1"
