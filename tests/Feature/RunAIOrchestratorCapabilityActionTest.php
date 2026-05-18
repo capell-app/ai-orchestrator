@@ -7,6 +7,7 @@ use Capell\AIOrchestrator\Actions\RunAIOrchestratorCapabilityAction;
 use Capell\AIOrchestrator\Contracts\AIOrchestratorModule;
 use Capell\AIOrchestrator\Data\AIOrchestratorCapabilityData;
 use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
+use Capell\AIOrchestrator\Tests\Fixtures\Autoload\AIOrchestratorRunActionFixture;
 
 it('runs a capability through the registered package action', function (): void {
     RegisterAIOrchestratorModuleAction::run(new class implements AIOrchestratorModule
@@ -46,17 +47,3 @@ it('runs a capability through the registered package action', function (): void 
         'page' => 'home',
     ]);
 });
-
-class AIOrchestratorRunActionFixture
-{
-    /**
-     * @return array<string, string>
-     */
-    public static function run(AIOrchestratorRunData $run): array
-    {
-        return [
-            'prompt' => $run->prompt,
-            'page' => (string) $run->context['page'],
-        ];
-    }
-}
