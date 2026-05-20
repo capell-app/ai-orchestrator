@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Capell\Assistant\Enums;
+namespace Capell\AIOrchestrator\Enums;
 
-enum AssistantApprovalLevel: string
+enum AIOrchestratorApprovalLevel: string
 {
     case None = 'none';
     case Draft = 'draft';

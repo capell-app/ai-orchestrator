@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Symfony\Component\Finder\Finder;
 
-arch('assistant shared package surface does not import mosaic')
-    ->expect('Capell\Assistant')
-    ->not->toUse('Capell\Mosaic');
+arch('ai-orchestrator package does not import removed layout-builder namespace')
+    ->expect('Capell\AIOrchestrator')
+    ->not->toUse('Capell\LayoutBuilder');
 
-it('assistant source contains no direct mosaic references', function (): void {
+it('ai-orchestrator source contains no direct layout-builder references', function (): void {
     $packagePath = dirname(__DIR__, 2);
     $violations = [];
 
@@ -16,7 +16,7 @@ it('assistant source contains no direct mosaic references', function (): void {
         ->files()
         ->in($packagePath . '/src')
         ->name('*.php')
-        ->contains('Capell\\Mosaic');
+        ->contains('Capell\\LayoutBuilder');
 
     foreach ($files as $file) {
         $violations[] = str_replace($packagePath . '/', '', $file->getPathname());
@@ -26,6 +26,6 @@ it('assistant source contains no direct mosaic references', function (): void {
 });
 
 arch()
-    ->expect('Capell\Assistant')
+    ->expect('Capell\AIOrchestrator')
     ->classes()
     ->toUseStrictEquality();

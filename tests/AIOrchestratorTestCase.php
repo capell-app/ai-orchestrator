@@ -2,30 +2,31 @@
 
 declare(strict_types=1);
 
-namespace Capell\Assistant\Tests;
+namespace Capell\AIOrchestrator\Tests;
 
-use Capell\Assistant\Providers\AssistantServiceProvider;
+use Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider;
 use Capell\Tests\AbstractTestCase;
 use Illuminate\Foundation\Application;
 use Livewire\LivewireServiceProvider;
 use Override;
 
-class AssistantTestCase extends AbstractTestCase
+class AIOrchestratorTestCase extends AbstractTestCase
 {
     protected function getPackageServiceName(): string
     {
-        return 'capell-assistant';
+        return 'capell-ai-orchestrator';
     }
 
     /**
      * @param  Application  $app
      * @return class-string[]
      */
+    #[Override]
     protected function getPackageProviders(mixed $app): array
     {
         return [
             ...parent::getPackageProviders($app),
-            AssistantServiceProvider::class,
+            AIOrchestratorServiceProvider::class,
             LivewireServiceProvider::class,
         ];
     }

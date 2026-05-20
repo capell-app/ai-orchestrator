@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Capell\Assistant\Data;
+namespace Capell\AIOrchestrator\Data;
 
 use Spatie\LaravelData\Data;
 
-class AssistantRunData extends Data
+class AIOrchestratorRunData extends Data
 {
     /**
      * @param  array<string, mixed>  $context

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Capell\Assistant\Data;
+namespace Capell\AIOrchestrator\Data;
 
-use Capell\Assistant\Enums\AssistantApprovalLevel;
+use Capell\AIOrchestrator\Enums\AIOrchestratorApprovalLevel;
 use Spatie\LaravelData\Data;
 
-class AssistantCapabilityData extends Data
+class AIOrchestratorCapabilityData extends Data
 {
     /**
      * @param  class-string  $actionClass
@@ -17,6 +17,6 @@ class AssistantCapabilityData extends Data
         public string $label,
         public string $description,
         public string $actionClass,
-        public AssistantApprovalLevel $approvalLevel = AssistantApprovalLevel::Draft,
+        public AIOrchestratorApprovalLevel $approvalLevel = AIOrchestratorApprovalLevel::Draft,
     ) {}
 }
