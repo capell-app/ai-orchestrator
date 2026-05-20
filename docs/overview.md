@@ -64,12 +64,12 @@ Lets Capell installations add assisted workflows while keeping approvals and cap
 - Tier: premium
 - Bundle: commercial
 - Contexts: `admin`
-- Requires: `capell-app/admin`
+- Requires: `capell-app/admin`, `capell-app/core`, `capell-app/layout-builder`
 - Optional dependencies: None listed.
 
 ## Admin Surfaces
 
-- None proven in this package directory.
+- None proven in this package directory. This package registers orchestration services and a Layout Builder AI module, but no standalone Filament navigation item.
 
 ## Commands
 
