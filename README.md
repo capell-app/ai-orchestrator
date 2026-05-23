@@ -10,6 +10,18 @@ AI Orchestrator coordinates AI providers, prompts, structured requests, and pack
 - Capell dependencies: `capell-app/admin`, `capell-app/core`
 - Third-party dependencies: `lorisleiva/laravel-actions`, `spatie/laravel-data`, `spatie/laravel-package-tools`
 
+## Why It Helps Your Capell Workflow
+
+- Centralizes provider orchestration so AI-enabled Capell packages do not each invent prompt, provider, and execution plumbing.
+- Gives developers a shared place to add AI capabilities while keeping package features decoupled from a single vendor.
+- Helps owners introduce AI features gradually because consuming packages can depend on a common orchestration layer.
+
+## Best Used With
+
+- [Media AI](../media-ai/README.md)
+- [SEO Suite](../seo-suite/README.md)
+- [Agent Bridge](../agent-bridge/README.md)
+
 ## What It Adds
 
 AIOrchestrator provides the orchestration layer for Capell ai-orchestrator modules and capability execution.
@@ -114,6 +126,7 @@ Screenshots are generated from [docs/screenshots.json](docs/screenshots.json) du
 
 ## Docs
 
+- [docs index](docs/README.md)
 - [credits-and-acknowledgements.md](docs/credits-and-acknowledgements.md)
 - [overview.md](docs/overview.md)
 
