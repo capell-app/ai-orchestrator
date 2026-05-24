@@ -13,16 +13,14 @@
         "bundle": "commercial"
     },
     "namespace": "Capell\\AIOrchestrator",
-    "surfaces": [
-        "admin"
-    ],
+    "surfaces": ["admin"],
     "dependencies": {
         "requires": [
             "capell-app/admin",
             "capell-app/core",
             "capell-app/layout-builder"
         ],
-        "optional": [],
+        "supports": [],
         "conflicts": []
     },
     "providers": {
@@ -48,10 +46,7 @@
     },
     "settings": [],
     "permissions": [],
-    "capabilities": [
-        "ai-orchestrator",
-        "ai-orchestrator-admin"
-    ],
+    "capabilities": ["ai-orchestrator", "ai-orchestrator-admin"],
     "performance": {
         "frontendRenderBudgetMs": 0,
         "adminQueryBudget": 40,
@@ -88,9 +83,6 @@
                 "caption": "AI Orchestrator extension preview"
             }
         ],
-        "categories": [
-            "admin",
-            "commercial"
-        ]
+        "categories": ["admin", "commercial"]
     }
 }
