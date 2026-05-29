@@ -20,7 +20,7 @@
             "capell-app/core",
             "capell-app/layout-builder"
         ],
-        "optional": [],
+        "supports": [],
         "conflicts": []
     },
     "providers": {
@@ -76,7 +76,13 @@
     },
     "marketplace": {
         "summary": "AIOrchestrator provides the orchestration layer for Capell AI modules and capability execution.",
-        "screenshots": [],
+        "screenshots": [
+            {
+                "path": "docs/assets/marketplace/extension-card.jpg",
+                "alt": "AI Orchestrator extension preview image",
+                "caption": "AI Orchestrator extension preview"
+            }
+        ],
         "categories": ["admin", "commercial"]
     }
 }

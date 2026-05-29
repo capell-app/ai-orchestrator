@@ -8,6 +8,7 @@ use Capell\AIOrchestrator\Integrations\LayoutBuilder\LayoutBuilderAIOrchestrator
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\Core\Facades\CapellCore;
 use Capell\Core\Support\Packages\AbstractPackageServiceProvider;
+use Override;
 use Spatie\LaravelPackageTools\Package;
 
 class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
@@ -35,7 +36,8 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         });
     }
 
-    private function isPackageInstalled(): bool
+    #[Override]
+    protected function isPackageInstalled(): bool
     {
         return CapellCore::isPackageInstalled(static::$packageName);
     }
