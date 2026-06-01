@@ -93,7 +93,7 @@ This package has no committed ERD excerpt. Use implementation notes and extensio
 
 ## Screenshot Automation
 
-Deployment should read [screenshots.json](screenshots.json), install the package with demo data, resolve each admin surface or frontend URL, and write images to `public/docs/screenshots/packages/ai-orchestrator`.
+Deployment should read [screenshots.json](screenshots.json), install the package with demo data, resolve each admin surface or frontend URL, and write images to `packages/ai-orchestrator/docs/screenshots`.
 
 - Capability list or prompt surface where provided by a consuming package.
 - core layout builder preview workflow when the integration is enabled.
