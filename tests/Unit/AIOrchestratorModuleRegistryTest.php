@@ -14,12 +14,17 @@ it('registers shallow ai-orchestrator modules and lists their capabilities', fun
     RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture);
 
     $capabilities = ListAIOrchestratorCapabilitiesAction::run();
+
+    if (! is_array($capabilities)) {
+        throw new RuntimeException('AI Orchestrator capabilities must be an array.');
+    }
+
     $capability = collect($capabilities)
         ->first(fn (AIOrchestratorCapabilityData $candidateCapability): bool => $candidateCapability->key === 'test-capability');
 
-    expect($capability)->toBeInstanceOf(AIOrchestratorCapabilityData::class);
-
-    assert($capability instanceof AIOrchestratorCapabilityData);
+    if (! $capability instanceof AIOrchestratorCapabilityData) {
+        throw new RuntimeException('The test capability was not registered.');
+    }
 
     expect($capability->approvalLevel)->toBe(AIOrchestratorApprovalLevel::Draft);
 });

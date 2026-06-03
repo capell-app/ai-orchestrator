@@ -7,6 +7,7 @@ namespace Capell\AIOrchestrator\Tests\Fixtures\Autoload;
 use Capell\AIOrchestrator\Contracts\AIOrchestratorModule;
 use Capell\AIOrchestrator\Data\AIOrchestratorCapabilityData;
 use Capell\AIOrchestrator\Enums\AIOrchestratorApprovalLevel;
+use RuntimeException;
 
 final class AIOrchestratorModuleFixture implements AIOrchestratorModule
 {
@@ -28,6 +29,10 @@ final class AIOrchestratorModuleFixture implements AIOrchestratorModule
 
     public function capabilities(): array
     {
+        if (! class_exists($this->actionClass)) {
+            throw new RuntimeException('The configured AI Orchestrator action fixture does not exist.');
+        }
+
         return [
             new AIOrchestratorCapabilityData(
                 key: $this->capabilityKey,
