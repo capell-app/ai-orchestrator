@@ -15,6 +15,12 @@ class AIOrchestratorModuleRegistry
 
     public function register(AIOrchestratorModule $module): void
     {
+        if (array_key_exists($module->key(), $this->modules)) {
+            throw new InvalidArgumentException(sprintf('AIOrchestrator module [%s] is already registered.', $module->key()));
+        }
+
+        $this->ensureCapabilityKeysAreUnique($module);
+
         $this->modules[$module->key()] = $module;
     }
 
@@ -52,5 +58,22 @@ class AIOrchestratorModuleRegistry
             ->flatMap(fn (AIOrchestratorModule $module): array => $module->capabilities())
             ->values()
             ->all();
+    }
+
+    private function ensureCapabilityKeysAreUnique(AIOrchestratorModule $module): void
+    {
+        $capabilityKeys = [];
+
+        foreach ($module->capabilities() as $capability) {
+            if (array_key_exists($capability->key, $capabilityKeys)) {
+                throw new InvalidArgumentException(sprintf(
+                    'AIOrchestrator module [%s] registers duplicate capability [%s].',
+                    $module->key(),
+                    $capability->key,
+                ));
+            }
+
+            $capabilityKeys[$capability->key] = true;
+        }
     }
 }

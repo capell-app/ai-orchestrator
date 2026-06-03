@@ -1,6 +1,6 @@
 {
     "name": "capell-app/ai-orchestrator",
-    "description": "Capell AIOrchestrator orchestration package",
+    "description": "Shared AI capability registry and execution layer for Capell packages",
     "keywords": [
         "capell",
         "ai-orchestrator",
