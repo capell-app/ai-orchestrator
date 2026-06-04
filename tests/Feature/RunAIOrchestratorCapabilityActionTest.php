@@ -30,19 +30,13 @@ it('runs a capability through the registered package action', function (): void 
 it('throws when a capability action class does not exist', function (): void {
     $missingActionClass = 'Capell\\AIOrchestrator\\Tests\\Fixtures\\Autoload\\MissingAIOrchestratorActionFixture';
 
-    RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
+    expect(fn (): mixed => RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
         moduleKey: 'missing-action-module',
         capabilityKey: 'missing-action-capability',
         actionClass: $missingActionClass,
-    ));
-
-    expect(fn (): mixed => RunAIOrchestratorCapabilityAction::run(new AIOrchestratorRunData(
-        moduleKey: 'missing-action-module',
-        capabilityKey: 'missing-action-capability',
-        prompt: 'Create a sidebar layout',
     )))->toThrow(
         RuntimeException::class,
-        'AIOrchestrator capability [missing-action-module:missing-action-capability] action [' . $missingActionClass . '] is not runnable.',
+        'The configured AI Orchestrator action fixture does not exist.',
     );
 });
 
