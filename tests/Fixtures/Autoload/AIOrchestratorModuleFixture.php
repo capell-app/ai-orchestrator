@@ -29,9 +29,7 @@ final class AIOrchestratorModuleFixture implements AIOrchestratorModule
 
     public function capabilities(): array
     {
-        if (! class_exists($this->actionClass)) {
-            throw new RuntimeException('The configured AI Orchestrator action fixture does not exist.');
-        }
+        throw_unless(class_exists($this->actionClass), RuntimeException::class, 'The configured AI Orchestrator action fixture does not exist.');
 
         return [
             new AIOrchestratorCapabilityData(
