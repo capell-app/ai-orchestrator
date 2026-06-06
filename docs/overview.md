@@ -44,6 +44,8 @@ Lets Capell installations add assisted workflows while keeping approvals and cap
 - Layout Builder preview workflow when the integration is enabled.
 - Approval state where a capability requires review.
 
+Current marketplace media is intentionally empty. The previous promoted PNGs showed generic Extensions/Layout Builder pages rather than a styled AI Orchestrator capability flow, so they remain runner evidence only until a consuming package exposes a real AI capability surface.
+
 ## Pitfalls
 
 - Install the package that supplies the ai-orchestrator surface before expecting UI.
