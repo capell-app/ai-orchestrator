@@ -6,19 +6,19 @@ This page is the consolidated implementation overview for the AIOrchestrator pac
 
 ## What This Package Adds
 
-AIOrchestrator provides the orchestration layer for Capell ai-orchestrator modules and capability execution.
+AI Orchestrator provides the shared layer for Capell AI modules and capability execution.
 
 - AIOrchestrator module registry.
-- Contracts for modules and provider connectors.
+- Contract for package-provided AI modules.
 - Actions for listing, registering, and running capabilities.
-- core layout builder integration module for layout planning preview.
+- Layout Builder integration module for layout planning preview.
 
 ## Developer Notes
 
 Defines the module and capability contracts other packages can use without putting AI workflow logic into resources or controllers.
 
 - AIOrchestratorServiceProvider registers ai-orchestrator services.
-- Contracts: AIOrchestratorModule and AIOrchestratorProviderConnector.
+- Contract: AIOrchestratorModule.
 - Actions: ListAIOrchestratorCapabilitiesAction, RegisterAIOrchestratorModuleAction, RunAIOrchestratorCapabilityAction.
 - Data objects describe capabilities and runs.
 - Enums model approval level.
@@ -41,14 +41,16 @@ Lets Capell installations add assisted workflows while keeping approvals and cap
 ## Screenshot Plan
 
 - Capability list or prompt surface where provided by a consuming package.
-- core layout builder preview workflow when the integration is enabled.
+- Layout Builder preview workflow when the integration is enabled.
 - Approval state where a capability requires review.
+
+Current marketplace media is intentionally empty. The previous promoted PNGs showed generic Extensions/Layout Builder pages rather than a styled AI Orchestrator capability flow, so they remain runner evidence only until a consuming package exposes a real AI capability surface.
 
 ## Pitfalls
 
 - Install the package that supplies the ai-orchestrator surface before expecting UI.
 - Treat capability output as reviewable draft data unless the consuming package proves otherwise.
-- Provider connector configuration belongs to the consuming ai-orchestrator integration.
+- Provider and prompt configuration belongs to the consuming AI integration until a provider abstraction ships here.
 
 ## Verification
 
@@ -96,5 +98,5 @@ This package has no committed ERD excerpt. Use implementation notes and extensio
 Deployment should read [screenshots.json](screenshots.json), install the package with demo data, resolve each admin surface or frontend URL, and write images to `packages/ai-orchestrator/docs/screenshots`.
 
 - Capability list or prompt surface where provided by a consuming package.
-- core layout builder preview workflow when the integration is enabled.
+- Layout Builder preview workflow when the integration is enabled.
 - Approval state where a capability requires review.

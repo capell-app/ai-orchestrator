@@ -1,19 +1,19 @@
 # AI Orchestrator
 
-AI Orchestrator coordinates AI providers, prompts, structured requests, and package integrations that need AI-assisted workflows.
+AI Orchestrator gives Capell packages a shared registry and execution layer for AI-assisted capabilities.
 
 ## At A Glance
 
 - Package: `capell-app/ai-orchestrator`
 - Namespace: `Capell\AIOrchestrator\`
 - Service providers: `packages/ai-orchestrator/src/Providers/AIOrchestratorServiceProvider.php`
-- Capell dependencies: `capell-app/admin`, `capell-app/core`
+- Capell dependencies: `capell-app/admin`, `capell-app/core`, `capell-app/layout-builder`
 - Third-party dependencies: `lorisleiva/laravel-actions`, `spatie/laravel-data`, `spatie/laravel-package-tools`
 
 ## Why It Helps Your Capell Workflow
 
-- Centralizes provider orchestration so AI-enabled Capell packages do not each invent prompt, provider, and execution plumbing.
-- Gives developers a shared place to add AI capabilities while keeping package features decoupled from a single vendor.
+- Centralizes capability registration so AI-enabled Capell packages expose a consistent execution surface.
+- Gives developers a shared place to add AI capabilities without putting workflow logic into resources or controllers.
 - Helps owners introduce AI features gradually because consuming packages can depend on a common orchestration layer.
 
 ## Best Used With
@@ -24,12 +24,12 @@ AI Orchestrator coordinates AI providers, prompts, structured requests, and pack
 
 ## What It Adds
 
-AIOrchestrator provides the orchestration layer for Capell ai-orchestrator modules and capability execution.
+AI Orchestrator provides the shared layer for Capell AI modules and capability execution.
 
 - AIOrchestrator module registry.
-- Contracts for modules and provider connectors.
+- Contract for package-provided AI modules.
 - Actions for listing, registering, and running capabilities.
-- core layout builder integration module for layout planning preview.
+- Layout Builder integration module for layout planning preview.
 
 ## Why It Matters
 
@@ -45,6 +45,7 @@ This package makes its Composer dependencies visible because they are part of th
 
 - [Capell Admin](https://github.com/capell-app/admin)
 - [Capell Core](https://github.com/capell-app/core)
+- [Capell Layout Builder](https://github.com/capell-app/layout-builder)
 
 **Open-source packages used here**
 
@@ -65,13 +66,13 @@ This package makes its Composer dependencies visible because they are part of th
 Screenshots are generated from [docs/screenshots.json](docs/screenshots.json) during package deployment.
 
 - Capability list or prompt surface where provided by a consuming package.
-- core layout builder preview workflow when the integration is enabled.
+- Layout Builder preview workflow when the integration is enabled.
 - Approval state where a capability requires review.
 
 ## Technical Shape
 
 - AIOrchestratorServiceProvider registers ai-orchestrator services.
-- Contracts: AIOrchestratorModule and AIOrchestratorProviderConnector.
+- Contract: AIOrchestratorModule.
 - Actions: ListAIOrchestratorCapabilitiesAction, RegisterAIOrchestratorModuleAction, RunAIOrchestratorCapabilityAction.
 - Data objects describe capabilities and runs.
 - Enums model approval level.
@@ -97,7 +98,7 @@ Screenshots are generated from [docs/screenshots.json](docs/screenshots.json) du
 
 ## Extension Points
 
-- Contracts: `AIOrchestratorModule`, `AIOrchestratorProviderConnector`.
+- Contract: `AIOrchestratorModule`.
 - Register Capell extension points, routes, migrations, settings, render hooks, and resources from service providers.
 
 ## Install Impact
@@ -122,7 +123,7 @@ Screenshots are generated from [docs/screenshots.json](docs/screenshots.json) du
 
 - Install the package that supplies the ai-orchestrator surface before expecting UI.
 - Treat capability output as reviewable draft data unless the consuming package proves otherwise.
-- Provider connector configuration belongs to the consuming ai-orchestrator integration.
+- Provider and prompt configuration belongs to the consuming AI integration until a provider abstraction ships here.
 
 ## Docs
 

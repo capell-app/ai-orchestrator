@@ -1,11 +1,11 @@
 ---
 name: capell-ai-orchestrator-development
-description: Use when editing Capell AIOrchestrator modules, providers, capabilities, or orchestration.
+description: Use when editing Capell AIOrchestrator modules, capabilities, or orchestration.
 ---
 
 # Capell AIOrchestrator
 
-AIOrchestrator module registry, provider contracts, capability execution, and LayoutBuilder planning integration.
+AIOrchestrator module registry, capability execution, and LayoutBuilder planning integration.
 
 ## Look
 
@@ -15,7 +15,7 @@ AIOrchestrator module registry, provider contracts, capability execution, and La
 
 ## Rules
 
-- Keep provider connectors behind contracts.
+- Keep package-provided AI modules behind the AIOrchestratorModule contract.
 - Capability execution belongs in Actions, not UI glue.
 - AIOrchestrator modules should expose previewable, bounded operations.
 - Run `vendor/bin/pest packages/ai-orchestrator/tests`.
