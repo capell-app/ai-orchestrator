@@ -13,9 +13,7 @@
         "bundle": "commercial"
     },
     "namespace": "Capell\\AIOrchestrator",
-    "surfaces": [
-        "admin"
-    ],
+    "surfaces": ["admin"],
     "dependencies": {
         "requires": [
             "capell-app/admin",
@@ -48,10 +46,7 @@
     },
     "settings": [],
     "permissions": [],
-    "capabilities": [
-        "ai-orchestrator",
-        "ai-orchestrator-admin"
-    ],
+    "capabilities": ["ai-orchestrator", "ai-orchestrator-admin"],
     "performance": {
         "frontendRenderBudgetMs": 0,
         "adminQueryBudget": 40,
@@ -82,9 +77,6 @@
     "marketplace": {
         "summary": "The shared AI backbone for Capell packages: register, run, and govern AI-assisted capabilities from one admin-safe layer.",
         "screenshots": [],
-        "categories": [
-            "admin",
-            "commercial"
-        ]
+        "categories": ["admin", "commercial"]
     }
 }
