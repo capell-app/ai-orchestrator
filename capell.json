@@ -20,7 +20,12 @@
             "capell-app/core",
             "capell-app/layout-builder"
         ],
-        "supports": [],
+        "supports": [
+            "capell-app/content-sections",
+            "capell-app/media-ai",
+            "capell-app/seo-suite",
+            "capell-app/translation-manager"
+        ],
         "conflicts": []
     },
     "providers": {
