@@ -1,102 +1,88 @@
-# AIOrchestrator
+# AI Orchestrator
 
-Status: **Available, no schema impact** · Kind: **package** · Tier: **premium** · Bundle: **commercial** · Contexts: **admin** · Product group: **Capell Commercial**
+<!-- prettier-ignore-start -->
 
-This page is the consolidated implementation overview for the AIOrchestrator package. It is extracted from the package README, service providers, migrations, config files, routes, resources, models, actions, and the shared Capell ERD notes where available.
+## What This Plugin Adds
 
-## What This Package Adds
+AI Orchestrator is an **Available**, **No schema impact** Capell package in the **Capell Commercial** product group. It ships as `capell-app/ai-orchestrator` and extends these surfaces: admin.
 
-AI Orchestrator provides the shared layer for Capell AI modules and capability execution.
+Shared AI capability registry and execution layer for Capell packages.
 
-- AIOrchestrator module registry.
-- Contract for package-provided AI modules.
-- Actions for listing, registering, and running capabilities.
-- Layout Builder integration module for layout planning preview.
+After install, the package contributes admin-facing extension points. Docs gap: no concrete Filament resource or page was detected.
 
-## Developer Notes
+Status details:
 
-Defines the module and capability contracts other packages can use without putting AI workflow logic into resources or controllers.
-
-- AIOrchestratorServiceProvider registers ai-orchestrator services.
-- Contract: AIOrchestratorModule.
-- Actions: ListAIOrchestratorCapabilitiesAction, RegisterAIOrchestratorModuleAction, RunAIOrchestratorCapabilityAction.
-- Data objects describe capabilities and runs.
-- Enums model approval level.
-
-## Operational Notes
-
-Lets Capell installations add assisted workflows while keeping approvals and capability boundaries explicit.
-
-- Adds ai-orchestrator service bindings and module registry.
-- No migrations.
-- No routes in this package.
-- No Filament resource is registered by this package alone.
-
-## Data And Retention
-
-- This package does not own database tables.
-- State is passed through data objects and consuming package integrations.
-- Persistence, if needed, belongs to the package that runs the capability.
-
-## Screenshot Plan
-
-- Capability list or prompt surface where provided by a consuming package.
-- Layout Builder preview workflow when the integration is enabled.
-- Approval state where a capability requires review.
-
-Current marketplace media is intentionally empty. The previous promoted PNGs showed generic Extensions/Layout Builder pages rather than a styled AI Orchestrator capability flow, so they remain runner evidence only until a consuming package exposes a real AI capability surface.
-
-## Pitfalls
-
-- Install the package that supplies the ai-orchestrator surface before expecting UI.
-- Treat capability output as reviewable draft data unless the consuming package proves otherwise.
-- Provider and prompt configuration belongs to the consuming AI integration until a provider abstraction ships here.
-
-## Verification
-
-- Run `vendor/bin/pest packages/ai-orchestrator/tests` when package tests exist.
-- Run the relevant host-app migration or package install flow in a disposable database.
-- Open the listed admin or frontend surface and compare it with the screenshot plan.
-
-## Package Manifest
-
-- Composer name: `capell-app/ai-orchestrator`
-- Product group: Capell Commercial
-- Kind: package
+- Status: Available
 - Tier: premium
 - Bundle: commercial
-- Contexts: `admin`
-- Requires: `capell-app/admin`, `capell-app/core`, `capell-app/layout-builder`
-- Optional dependencies: None listed.
+- Composer package: `capell-app/ai-orchestrator`
+- Namespace: `Capell\AIOrchestrator`
+- Theme key: not applicable
 
-## Admin Surfaces
+## Why It Matters
 
-- None proven in this package directory. This package registers orchestration services and a Layout Builder AI module, but no standalone Filament navigation item.
+**For developers:** The package gives developers package-owned service providers, Actions, and Data objects instead of pushing this behaviour into core or application code.
 
-## Commands
+**For teams:** The shared AI backbone for Capell packages: register, run, and govern AI-assisted capabilities from one admin-safe layer.
 
-- None proven in this package directory.
+## Screens And Workflow
 
-## Routes And Config
+Screenshot contract: `screenshots.json`.
 
-- None proven in this package directory.
+- Capability list or prompt surface where provided by a consuming package (admin, optional).
+- LayoutBuilder layout preview workflow if LayoutBuilder integration is enabled (admin, optional).
+- Approval state where a capability requires review (admin, optional).
 
-## Permissions And Gates
+## Technical Shape
 
-- None proven in this package directory.
+- Service providers: `Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider`.
+- Actions: `ListAIOrchestratorCapabilitiesAction`, `RegisterAIOrchestratorModuleAction`, `RunAIOrchestratorCapabilityAction`.
+- Data objects: `AIOrchestratorCapabilityData`, `AIOrchestratorRunData`.
+- Health checks: `Capell\AIOrchestrator\Health\AiOrchestratorHealthCheck`.
 
-## Migrations
+## Data Model
 
-- None proven in this package directory.
+This package has no schema impact. It does not declare package-owned migrations or required tables.
 
-## ERD Excerpt
+Docs gap: document extension points here if the package delegates persistence to a host package.
 
-This package has no committed ERD excerpt. Use implementation notes and extension points instead of inventing schema.
+## Install Impact
 
-## Screenshot Automation
+- Admin navigation: admin-facing extension points are declared, but no concrete Filament class was detected.
+- Permissions: none declared in `capell.json`.
+- Public routes: none detected in package route files.
+- Database changes: no package migrations declared.
+- Settings: no package settings declared.
+- Queues or schedules: none detected in standard package paths.
+- Cache tags: none declared.
+- Commands: none declared.
 
-Deployment should read [screenshots.json](screenshots.json), install the package with demo data, resolve each admin surface or frontend URL, and write images to `packages/ai-orchestrator/docs/screenshots`.
+## Common Pitfalls
 
-- Capability list or prompt surface where provided by a consuming package.
-- Layout Builder preview workflow when the integration is enabled.
-- Approval state where a capability requires review.
+- Verify the package is installed before expecting its provider, views, or extension contributions to run.
+- Keep `composer.json`, `composer.local.json`, `capell.json`, docs, screenshots, and tests aligned when the package surface changes.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Check | Fix |
+| --- | --- | --- | --- |
+| Package surface is missing after install | Provider or manifest is not loaded | Confirm `capell.json`, package `composer.json`, and provider registration | Reinstall the package, refresh Composer autoload, and clear host caches |
+
+## Quick Start
+
+1. Install the package: `composer require capell-app/ai-orchestrator`.
+2. Run the required setup: no package migrations are declared; clear cached config and routes if the host app uses caches.
+3. Verify the package provider is registered and the related frontend, command, or extension point is active.
+
+## Next Steps
+
+- [Package docs index](README.md)
+- [Screenshot contract](screenshots.json)
+- [Marketplace assets](assets/marketplace/)
+- [Capell content language plan](../../../docs/CONTENT_LANGUAGE_PLAN.md)
+- [Capell documentation design system](../../../docs/DESIGN_SYSTEM.md)
+- [Capell and package ERD notes](../../../docs/erd/capell-and-package-erds.md)
+- Related packages: [Layout Builder](../../layout-builder/README.md), [Content Sections](../../content-sections/README.md), [Media Ai](../../media-ai/README.md), [Seo Suite](../../seo-suite/README.md), [Translation Manager](../../translation-manager/README.md).
+- Focused tests: `vendor/bin/pest packages/ai-orchestrator/tests --configuration=phpunit.xml`.
+
+<!-- prettier-ignore-end -->
