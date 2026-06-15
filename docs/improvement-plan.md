@@ -4,7 +4,7 @@
 
 ## 1. Snapshot
 
-AI Orchestrator is a headless shared registry and execution layer for AI-assisted Capell capabilities. It currently registers an `AIOrchestratorModuleRegistry`, adds the Layout Builder module after the package is installed, lists modules/capabilities, runs capability action classes, and emits run-record events for successful and failed executions. Tests cover registry behavior, capability execution, run-record events, package boundaries, and Layout Builder integration. The package is useful as a developer substrate, but consuming packages still own durable approval storage, policy checks, admin surfaces, and screenshots.
+AI Orchestrator is a headless shared registry and execution layer for AI-assisted Capell capabilities. It currently registers an `AIOrchestratorModuleRegistry`, adds the Layout Builder module after the package is installed, lists modules/capabilities, runs capability action classes, checks optional Laravel Gate abilities before execution, and emits run-record events for successful and failed executions. Tests cover registry behavior, capability execution, policy checks, run-record events, package boundaries, and Layout Builder integration. The package is useful as a developer substrate, but consuming packages still own durable approval storage, admin surfaces, and screenshots.
 
 ## 2. Improvements (existing functionality)
 
@@ -23,6 +23,7 @@ Capabilities declared: `ai-orchestrator` and `ai-orchestrator-admin`.
 - **No real health check.** Installers cannot tell whether modules/capabilities are registered.
 - **Done/Shipped: run-record event bridge.** Approval levels exist as data and execution now emits `AIOrchestratorCapabilityRunRecorded` for success/failure; consuming packages own durable approval storage.
 - **No admin catalog.** The package declares an admin surface but contributes no resource/page.
+- **Done/Shipped: policy checks before execution.** Capability metadata can declare `requiredAbility`; callers provide an `actor`, and `RunAIOrchestratorCapabilityAction` checks Laravel Gate before running the action class.
 - **No Marketplace media.** This is currently correct for a headless package, but buyer-facing media needs a real consuming surface.
 
 ## 4. Issues / Risks
@@ -56,7 +57,7 @@ AI Orchestrator should be sold as Capell's shared AI capability backbone. For bu
 | Rewrite docs around headless orchestrator positioning    | Done   | S      | Medium | §2.4, §4.4  |
 | Add approval/audit run persistence                       | Done   | L      | High   | §2.3, §4.3  |
 | Add admin capability catalog surface                     | Next   | M      | Medium | §3, §5      |
-| Add policy/scope checks before capability execution      | Next   | M      | High   | §3          |
+| Add policy/scope checks before capability execution      | Done   | M      | High   | §3          |
 | Add consuming-package screenshot scenarios               | Later  | M      | Medium | §3, §5      |
 | Add provider adapters for external LLM policy guardrails | Later  | L      | Medium | §5          |
 

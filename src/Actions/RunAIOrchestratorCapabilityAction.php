@@ -9,6 +9,8 @@ use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
 use Capell\AIOrchestrator\Enums\AIOrchestratorRunStatus;
 use Capell\AIOrchestrator\Events\AIOrchestratorCapabilityRunRecorded;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Gate;
 use Lorisleiva\Actions\Concerns\AsObject;
 use RuntimeException;
 use Throwable;
@@ -22,6 +24,7 @@ class RunAIOrchestratorCapabilityAction
         $capability = resolve(AIOrchestratorModuleRegistry::class)
             ->capability($run->moduleKey, $run->capabilityKey);
 
+        $this->ensureActionIsAuthorized($run, $capability);
         $this->ensureActionIsRunnable($run, $capability);
 
         try {
@@ -57,6 +60,35 @@ class RunAIOrchestratorCapabilityAction
                 $run->moduleKey,
                 $run->capabilityKey,
                 $capability->actionClass,
+            ),
+        );
+    }
+
+    private function ensureActionIsAuthorized(AIOrchestratorRunData $run, AIOrchestratorCapabilityData $capability): void
+    {
+        if ($capability->requiredAbility === null || $capability->requiredAbility === '') {
+            return;
+        }
+
+        throw_unless(
+            $run->actor !== null,
+            AuthorizationException::class,
+            sprintf(
+                'AIOrchestrator capability [%s:%s] requires ability [%s] but no actor was provided.',
+                $run->moduleKey,
+                $run->capabilityKey,
+                $capability->requiredAbility,
+            ),
+        );
+
+        throw_unless(
+            Gate::forUser($run->actor)->allows($capability->requiredAbility, [$run, $capability]),
+            AuthorizationException::class,
+            sprintf(
+                'AIOrchestrator capability [%s:%s] is not authorized for ability [%s].',
+                $run->moduleKey,
+                $run->capabilityKey,
+                $capability->requiredAbility,
             ),
         );
     }

@@ -15,6 +15,7 @@ final class AIOrchestratorModuleFixture implements AIOrchestratorModule
         private readonly string $moduleKey = 'test-module',
         private readonly string $capabilityKey = 'test-capability',
         private readonly string $actionClass = AIOrchestratorRunActionFixture::class,
+        private readonly ?string $requiredAbility = null,
     ) {}
 
     public function key(): string
@@ -38,6 +39,7 @@ final class AIOrchestratorModuleFixture implements AIOrchestratorModule
                 description: 'Create a test AI Orchestrator result.',
                 actionClass: $this->actionClass,
                 approvalLevel: AIOrchestratorApprovalLevel::Draft,
+                requiredAbility: $this->requiredAbility,
             ),
         ];
     }

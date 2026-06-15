@@ -21,7 +21,7 @@ Status details:
 
 ## Why It Matters
 
-**For developers:** The package gives package authors a central registry, typed run data, approval metadata, run-record events, and capability execution semantics without pushing AI workflow code into core or application code.
+**For developers:** The package gives package authors a central registry, typed run data, approval metadata, optional Gate abilities, run-record events, and capability execution semantics without pushing AI workflow code into core or application code.
 
 **For teams:** AI workflows stay consistent across packages: consuming extensions can register, run, and govern AI-assisted capabilities through one admin-safe layer while keeping their own UI and persistence.
 
@@ -43,7 +43,7 @@ Screenshot contract: `screenshots.json`. Marketplace screenshots intentionally r
 
 ## Extension Boundary
 
-Consuming packages register modules with `RegisterAIOrchestratorModuleAction` or the shared registry. They own the editor workflow, durable approval storage, permission checks, and any public rendering they trigger after a run. AI Orchestrator owns the registry contract, capability metadata, execution dispatch, run-record event bridge, Layout Builder integration module, and diagnostics.
+Consuming packages register modules with `RegisterAIOrchestratorModuleAction` or the shared registry. Capability metadata can declare a `requiredAbility`, and callers pass an authenticated `actor` on `AIOrchestratorRunData`; the run action checks Laravel Gate before executing the capability. Consuming packages still own the editor workflow, durable approval storage, and any public rendering they trigger after a run. AI Orchestrator owns the registry contract, capability metadata, execution dispatch, run-record event bridge, Layout Builder integration module, and diagnostics.
 
 ## Data Model
 

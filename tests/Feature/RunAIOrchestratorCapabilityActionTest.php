@@ -7,10 +7,13 @@ use Capell\AIOrchestrator\Actions\RunAIOrchestratorCapabilityAction;
 use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
 use Capell\AIOrchestrator\Enums\AIOrchestratorRunStatus;
 use Capell\AIOrchestrator\Events\AIOrchestratorCapabilityRunRecorded;
+use Capell\AIOrchestrator\Tests\Fixtures\Autoload\AIOrchestratorActorFixture;
 use Capell\AIOrchestrator\Tests\Fixtures\Autoload\AIOrchestratorModuleFixture;
 use Capell\AIOrchestrator\Tests\Fixtures\Autoload\FailingAIOrchestratorRunActionFixture;
 use Capell\AIOrchestrator\Tests\Fixtures\Autoload\NotRunnableAIOrchestratorActionFixture;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 
 it('runs a capability through the registered package action', function (): void {
     Event::fake([AIOrchestratorCapabilityRunRecorded::class]);
@@ -67,6 +70,76 @@ it('records a failed capability run before rethrowing the exception', function (
             && $event->result === null
             && $event->exception instanceof RuntimeException,
     );
+});
+
+it('authorizes required capability abilities before execution', function (): void {
+    Gate::define(
+        'ai-orchestrator.run-safe-capability',
+        fn (AIOrchestratorActorFixture $actor, AIOrchestratorRunData $run): bool => $run->context['allowed'] ?? false,
+    );
+
+    RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
+        moduleKey: 'authorized-module',
+        capabilityKey: 'authorized-capability',
+        requiredAbility: 'ai-orchestrator.run-safe-capability',
+    ));
+
+    $result = RunAIOrchestratorCapabilityAction::run(new AIOrchestratorRunData(
+        moduleKey: 'authorized-module',
+        capabilityKey: 'authorized-capability',
+        prompt: 'Create a sidebar layout',
+        context: ['page' => 'home', 'allowed' => true],
+        actor: new AIOrchestratorActorFixture,
+    ));
+
+    expect($result)->toBe([
+        'prompt' => 'Create a sidebar layout',
+        'page' => 'home',
+    ]);
+});
+
+it('rejects capabilities that require an actor when none is provided', function (): void {
+    RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
+        moduleKey: 'missing-actor-module',
+        capabilityKey: 'missing-actor-capability',
+        requiredAbility: 'ai-orchestrator.run-safe-capability',
+    ));
+
+    expect(fn (): mixed => RunAIOrchestratorCapabilityAction::run(new AIOrchestratorRunData(
+        moduleKey: 'missing-actor-module',
+        capabilityKey: 'missing-actor-capability',
+        prompt: 'Create a sidebar layout',
+    )))->toThrow(
+        AuthorizationException::class,
+        'AIOrchestrator capability [missing-actor-module:missing-actor-capability] requires ability [ai-orchestrator.run-safe-capability] but no actor was provided.',
+    );
+});
+
+it('rejects capabilities when the actor lacks the required ability before execution', function (): void {
+    Gate::define(
+        'ai-orchestrator.run-denied-capability',
+        fn (AIOrchestratorActorFixture $actor, AIOrchestratorRunData $run): bool => false,
+    );
+    Event::fake([AIOrchestratorCapabilityRunRecorded::class]);
+
+    RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
+        moduleKey: 'denied-module',
+        capabilityKey: 'denied-capability',
+        requiredAbility: 'ai-orchestrator.run-denied-capability',
+    ));
+
+    expect(fn (): mixed => RunAIOrchestratorCapabilityAction::run(new AIOrchestratorRunData(
+        moduleKey: 'denied-module',
+        capabilityKey: 'denied-capability',
+        prompt: 'Create a sidebar layout',
+        context: ['page' => 'home'],
+        actor: new AIOrchestratorActorFixture,
+    )))->toThrow(
+        AuthorizationException::class,
+        'AIOrchestrator capability [denied-module:denied-capability] is not authorized for ability [ai-orchestrator.run-denied-capability].',
+    );
+
+    Event::assertNotDispatched(AIOrchestratorCapabilityRunRecorded::class);
 });
 
 it('throws when a capability action class does not exist', function (): void {

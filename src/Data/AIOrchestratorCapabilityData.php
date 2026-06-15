@@ -18,5 +18,6 @@ class AIOrchestratorCapabilityData extends Data
         public string $description,
         public string $actionClass,
         public AIOrchestratorApprovalLevel $approvalLevel = AIOrchestratorApprovalLevel::Draft,
+        public ?string $requiredAbility = null,
     ) {}
 }
