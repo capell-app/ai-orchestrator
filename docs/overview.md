@@ -4,11 +4,11 @@
 
 ## What This Plugin Adds
 
-AI Orchestrator is an **Available**, **No schema impact** Capell package in the **Capell Commercial** product group. It ships as `capell-app/ai-orchestrator` and extends these surfaces: admin.
+AI Orchestrator is an **Available**, **No schema impact** Capell package in the **Capell Commercial** product group. It ships as `capell-app/ai-orchestrator` and provides an admin-safe headless orchestration layer for consuming Capell packages.
 
-Shared AI capability registry and execution layer for Capell packages.
+A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.
 
-After install, the package contributes admin-facing extension points. Docs gap: no concrete Filament resource or page was detected.
+After install, the package registers services, Actions, Data objects, health diagnostics, and package-owned capability contracts. It does not ship a standalone Filament resource, page, public route, or visitor-facing output; consuming packages provide any editor UI that lists, previews, approves, or runs capabilities.
 
 Status details:
 
@@ -21,13 +21,13 @@ Status details:
 
 ## Why It Matters
 
-**For developers:** The package gives developers package-owned service providers, Actions, and Data objects instead of pushing this behaviour into core or application code.
+**For developers:** The package gives package authors a central registry, typed run data, approval metadata, and capability execution semantics without pushing AI workflow code into core or application code.
 
-**For teams:** The shared AI backbone for Capell packages: register, run, and govern AI-assisted capabilities from one admin-safe layer.
+**For teams:** AI workflows stay consistent across packages: consuming extensions can register, run, and govern AI-assisted capabilities through one admin-safe layer while keeping their own UI and persistence.
 
 ## Screens And Workflow
 
-Screenshot contract: `screenshots.json`.
+Screenshot contract: `screenshots.json`. Marketplace screenshots intentionally remain empty until a consuming package or future admin catalog exposes a real workflow worth capturing.
 
 - Capability list or prompt surface where provided by a consuming package (admin, optional).
 - LayoutBuilder layout preview workflow if LayoutBuilder integration is enabled (admin, optional).
@@ -40,15 +40,17 @@ Screenshot contract: `screenshots.json`.
 - Data objects: `AIOrchestratorCapabilityData`, `AIOrchestratorRunData`.
 - Health checks: `Capell\AIOrchestrator\Health\AiOrchestratorHealthCheck`.
 
+## Extension Boundary
+
+Consuming packages register modules with `RegisterAIOrchestratorModuleAction` or the shared registry. They own the editor workflow, persistence, permission checks, and any public rendering they trigger after a run. AI Orchestrator owns the registry contract, capability metadata, execution dispatch, Layout Builder integration module, and diagnostics.
+
 ## Data Model
 
-This package has no schema impact. It does not declare package-owned migrations or required tables.
-
-Docs gap: document extension points here if the package delegates persistence to a host package.
+This package has no schema impact. It does not declare package-owned migrations or required tables. Approval levels and run results are represented as Data objects; durable approval/audit storage belongs to a consuming governance package until AI Orchestrator ships first-class persistence.
 
 ## Install Impact
 
-- Admin navigation: admin-facing extension points are declared, but no concrete Filament class was detected.
+- Admin navigation: none; consuming packages provide any Filament resource or page that displays registered capabilities.
 - Permissions: none declared in `capell.json`.
 - Public routes: none detected in package route files.
 - Database changes: no package migrations declared.
@@ -72,7 +74,7 @@ Docs gap: document extension points here if the package delegates persistence to
 
 1. Install the package: `composer require capell-app/ai-orchestrator`.
 2. Run the required setup: no package migrations are declared; clear cached config and routes if the host app uses caches.
-3. Verify the package provider is registered and the related frontend, command, or extension point is active.
+3. Verify the package provider is registered, Diagnostics can see the health check, and consuming packages can register their AI Orchestrator modules.
 
 ## Next Steps
 

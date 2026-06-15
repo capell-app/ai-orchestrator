@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'health_duplicate_capability_failed' => 'The module registry accepted duplicate capability keys.',
+    'health_duplicate_capability_label' => 'AI Orchestrator duplicate capability protection',
+    'health_duplicate_capability_passed' => 'The module registry rejects duplicate capability keys.',
+    'health_duplicate_capability_remediation' => 'Ensure AIOrchestratorModuleRegistry validates capability keys before registering modules.',
+    'health_layout_builder_module_failed' => 'The Layout Builder AI module is not registered.',
+    'health_layout_builder_module_label' => 'AI Orchestrator Layout Builder module',
+    'health_layout_builder_module_passed' => 'The Layout Builder AI module is registered.',
+    'health_layout_builder_module_remediation' => 'Ensure AIOrchestratorServiceProvider registers package services after installation, including when the registry was resolved early.',
+    'health_module_registry_failed' => 'No AI Orchestrator modules are registered.',
+    'health_module_registry_label' => 'AI Orchestrator registered modules',
+    'health_module_registry_passed' => ':count AI Orchestrator module(s) are registered.',
+    'health_module_registry_remediation' => 'Install AI Orchestrator and ensure package runtime providers register their modules.',
+    'health_package_installed_failed' => 'AI Orchestrator is not marked as installed.',
+    'health_package_installed_label' => 'AI Orchestrator installation',
+    'health_package_installed_passed' => 'AI Orchestrator is marked as installed.',
+    'health_package_installed_remediation' => 'Install or enable capell-app/ai-orchestrator before relying on AI capability registration.',
+    'health_registry_binding_failed' => 'The AI Orchestrator module registry binding is missing or cannot be resolved.',
+    'health_registry_binding_label' => 'AI Orchestrator registry binding',
+    'health_registry_binding_passed' => 'The AI Orchestrator module registry binding resolves.',
+    'health_registry_binding_remediation' => 'Ensure AIOrchestratorServiceProvider registers the AIOrchestratorModuleRegistry singleton.',
+    'health_runnable_actions_failed' => 'The following AI capabilities do not resolve to runnable action classes: :capabilities.',
+    'health_runnable_actions_label' => 'AI Orchestrator runnable actions',
+    'health_runnable_actions_passed' => 'All registered AI capabilities resolve to runnable action classes.',
+    'health_runnable_actions_registry_missing' => 'registry:missing',
+    'health_runnable_actions_remediation' => 'Ensure every registered AI capability references an existing action class with a run method.',
+];

@@ -19,7 +19,9 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 
     public function configurePackage(Package $package): void
     {
-        $package->name(self::$name);
+        $package
+            ->name(self::$name)
+            ->hasTranslations();
     }
 
     public function registeringPackage(): void
@@ -51,13 +53,28 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 
     private function registerServices(): self
     {
+        if ($this->app->resolved(AIOrchestratorModuleRegistry::class)) {
+            $this->registerLayoutBuilderModule($this->app->make(AIOrchestratorModuleRegistry::class));
+
+            return $this;
+        }
+
         $this->app->afterResolving(
             AIOrchestratorModuleRegistry::class,
             function (AIOrchestratorModuleRegistry $registry): void {
-                $registry->register(new LayoutBuilderAIOrchestratorModule);
+                $this->registerLayoutBuilderModule($registry);
             },
         );
 
         return $this;
+    }
+
+    private function registerLayoutBuilderModule(AIOrchestratorModuleRegistry $registry): void
+    {
+        if (array_key_exists('layout-builder', $registry->modules())) {
+            return;
+        }
+
+        $registry->register(new LayoutBuilderAIOrchestratorModule);
     }
 }
