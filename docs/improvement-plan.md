@@ -49,16 +49,16 @@ AI Orchestrator should be sold as Capell's shared AI capability backbone. For bu
 
 ## 6. Prioritized Roadmap
 
-| Item                                                        | Bucket | Effort | Impact | Section ref |
-| ----------------------------------------------------------- | ------ | ------ | ------ | ----------- |
-| Register modules when registry has already been resolved    | Now    | S      | High   | §2.1, §4.1  |
-| Add real registry/module/capability health diagnostics      | Now    | M      | High   | §2.2, §4.2  |
-| Rewrite docs around headless orchestrator positioning       | Now    | S      | Medium | §2.4, §4.4  |
-| Add approval/audit run persistence                          | Next   | L      | High   | §2.3, §4.3  |
-| Add admin capability catalog surface                        | Next   | M      | Medium | §3, §5      |
-| Add policy/scope checks before capability execution         | Next   | M      | High   | §3          |
-| Add consuming-package screenshot scenarios                  | Later  | M      | Medium | §3, §5      |
-| Add provider adapters for external LLM policy guardrails    | Later  | L      | Medium | §5          |
+| Item                                                     | Bucket | Effort | Impact | Section ref |
+| -------------------------------------------------------- | ------ | ------ | ------ | ----------- |
+| Register modules when registry has already been resolved | Now    | S      | High   | §2.1, §4.1  |
+| Add real registry/module/capability health diagnostics   | Now    | M      | High   | §2.2, §4.2  |
+| Rewrite docs around headless orchestrator positioning    | Now    | S      | Medium | §2.4, §4.4  |
+| Add approval/audit run persistence                       | Next   | L      | High   | §2.3, §4.3  |
+| Add admin capability catalog surface                     | Next   | M      | Medium | §3, §5      |
+| Add policy/scope checks before capability execution      | Next   | M      | High   | §3          |
+| Add consuming-package screenshot scenarios               | Later  | M      | Medium | §3, §5      |
+| Add provider adapters for external LLM policy guardrails | Later  | L      | Medium | §5          |
 
 ## 7. Verification
 
