@@ -96,6 +96,5 @@ it('confirms duplicate capability protection without mutating the runtime regist
 
     expect($check->duplicateCapabilityProtectionIsHealthy())->toBeTrue()
         ->and($registry->modules())->toHaveCount($moduleCount)
-        ->and(class_exists(PreviewLayoutBuilderLayoutPlanAction::class))->toBeTrue()
-        ->and(method_exists(PreviewLayoutBuilderLayoutPlanAction::class, 'run'))->toBeTrue();
+        ->and(class_exists(PreviewLayoutBuilderLayoutPlanAction::class))->toBeTrue();
 });

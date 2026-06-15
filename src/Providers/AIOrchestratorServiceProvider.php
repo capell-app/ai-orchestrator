@@ -61,7 +61,9 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 
         $this->app->afterResolving(
             AIOrchestratorModuleRegistry::class,
-            fn (AIOrchestratorModuleRegistry $registry): mixed => $this->registerLayoutBuilderModule($registry),
+            function (AIOrchestratorModuleRegistry $registry): void {
+                $this->registerLayoutBuilderModule($registry);
+            },
         );
 
         return $this;
