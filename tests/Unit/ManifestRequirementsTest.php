@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Capell\AIOrchestrator\Filament\Pages\AIOrchestratorCapabilityCatalogPage;
+use Capell\AIOrchestrator\Manifest\AiOrchestratorAdminPageContribution;
 use Illuminate\Support\Facades\File;
 
 it('positions the package as headless ai orchestration infrastructure', function (): void {
@@ -20,9 +22,14 @@ it('positions the package as headless ai orchestration infrastructure', function
         ->and(data_get($manifest, 'marketplace.screenshots'))->toBe([])
         ->and(data_get($manifest, 'providers.admin'))->toBe([])
         ->and(data_get($manifest, 'providers.frontend'))->toBe([])
-        ->and(data_get($manifest, 'contributes'))->toBe([])
+        ->and(data_get($manifest, 'contributes'))->toContain([
+            'type' => 'admin-page',
+            'class' => AiOrchestratorAdminPageContribution::class,
+            'pageClass' => AIOrchestratorCapabilityCatalogPage::class,
+            'labelKey' => 'capell-ai-orchestrator::package.catalog_title',
+        ])
         ->and($readme)->toContain('headless orchestration layer')
-        ->and($readme)->toContain('does not ship a standalone Filament resource, page, public route, or visitor-facing output')
+        ->and($readme)->toContain('does not ship capability execution UI, public routes, or visitor-facing output')
         ->and($overview)->toContain('headless orchestration layer')
         ->and($overview)->toContain('Marketplace screenshots intentionally remain empty');
 

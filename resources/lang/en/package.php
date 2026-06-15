@@ -3,6 +3,16 @@
 declare(strict_types=1);
 
 return [
+    'catalog_action' => 'Action',
+    'catalog_approval' => 'Approval',
+    'catalog_capability' => 'Capability',
+    'catalog_empty' => 'No AI Orchestrator capabilities are registered.',
+    'catalog_module' => 'Module',
+    'catalog_navigation_label' => 'AI Orchestrator',
+    'catalog_no_required_ability' => 'None',
+    'catalog_required_ability' => 'Required ability',
+    'catalog_subheading' => 'Review registered AI modules, approval levels, required abilities, and action classes before consuming packages expose workflows.',
+    'catalog_title' => 'AI Orchestrator Capability Catalog',
     'health_duplicate_capability_failed' => 'The module registry accepted duplicate capability keys.',
     'health_duplicate_capability_label' => 'AI Orchestrator duplicate capability protection',
     'health_duplicate_capability_passed' => 'The module registry rejects duplicate capability keys.',

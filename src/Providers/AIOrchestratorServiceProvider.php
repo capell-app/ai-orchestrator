@@ -21,7 +21,8 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     {
         $package
             ->name(self::$name)
-            ->hasTranslations();
+            ->hasTranslations()
+            ->hasViews(self::$name);
     }
 
     public function registeringPackage(): void
