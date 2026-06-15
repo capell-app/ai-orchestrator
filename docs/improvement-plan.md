@@ -4,7 +4,7 @@
 
 ## 1. Snapshot
 
-AI Orchestrator is a headless shared registry and execution layer for AI-assisted Capell capabilities. It currently registers an `AIOrchestratorModuleRegistry`, adds the Layout Builder module after the package is installed, lists modules/capabilities, and runs capability action classes. Tests cover registry behavior, capability execution, package boundaries, and Layout Builder integration. The package is useful as a developer substrate, but the health check is a placeholder, provider registration can miss an already-resolved registry, and there is no approval/audit persistence even though the package language and screenshots describe governance.
+AI Orchestrator is a headless shared registry and execution layer for AI-assisted Capell capabilities. It currently registers an `AIOrchestratorModuleRegistry`, adds the Layout Builder module after the package is installed, lists modules/capabilities, runs capability action classes, and emits run-record events for successful and failed executions. Tests cover registry behavior, capability execution, run-record events, package boundaries, and Layout Builder integration. The package is useful as a developer substrate, but consuming packages still own durable approval storage, policy checks, admin surfaces, and screenshots.
 
 ## 2. Improvements (existing functionality)
 
@@ -12,7 +12,7 @@ AI Orchestrator is a headless shared registry and execution layer for AI-assiste
 
 2. **Implement real health diagnostics.** `AiOrchestratorHealthCheck` only reports compatible API version. Add diagnostics for package installation, registry binding, module count, Layout Builder module availability, duplicate capability protection, and runnable action classes. Evidence: `src/Health/AiOrchestratorHealthCheck.php`, `src/Support/AIOrchestratorModuleRegistry.php`, `src/Actions/RunAIOrchestratorCapabilityAction.php`. - **M**
 
-3. **Add approval and audit execution records.** `RunAIOrchestratorCapabilityAction` executes capability action classes directly after a runnable check. Add a typed run record or event/audit bridge so approval-level decisions are observable and can be surfaced by consuming packages. Evidence: `src/Data/AIOrchestratorRunData.php`, `src/Enums/AIOrchestratorApprovalLevel.php`, `RunAIOrchestratorCapabilityAction`. - **L**
+3. **Add approval and audit execution records.** `RunAIOrchestratorCapabilityAction` executes capability action classes directly after a runnable check. Add a typed run record or event/audit bridge so approval-level decisions are observable and can be surfaced by consuming packages. Evidence: `src/Data/AIOrchestratorRunData.php`, `src/Enums/AIOrchestratorApprovalLevel.php`, `RunAIOrchestratorCapabilityAction`. - **L** **Shipped as a headless event bridge.**
 
 4. **Clarify headless package positioning in docs and screenshots.** README currently states no concrete admin page exists, and screenshot entries are optional consuming-package surfaces. Docs should say this package is an infrastructure layer until a consuming package or admin catalog is installed. Evidence: `README.md`, `docs/screenshots.json`, `capell.json marketplace.screenshots`. - **S**
 
@@ -21,7 +21,7 @@ AI Orchestrator is a headless shared registry and execution layer for AI-assiste
 Capabilities declared: `ai-orchestrator` and `ai-orchestrator-admin`.
 
 - **No real health check.** Installers cannot tell whether modules/capabilities are registered.
-- **No approval workflow persistence.** Approval levels exist as data, but execution is not recorded or gated by a first-class approval store.
+- **Done/Shipped: run-record event bridge.** Approval levels exist as data and execution now emits `AIOrchestratorCapabilityRunRecorded` for success/failure; consuming packages own durable approval storage.
 - **No admin catalog.** The package declares an admin surface but contributes no resource/page.
 - **No Marketplace media.** This is currently correct for a headless package, but buyer-facing media needs a real consuming surface.
 
@@ -54,7 +54,7 @@ AI Orchestrator should be sold as Capell's shared AI capability backbone. For bu
 | Register modules when registry has already been resolved | Done   | S      | High   | §2.1, §4.1  |
 | Add real registry/module/capability health diagnostics   | Done   | M      | High   | §2.2, §4.2  |
 | Rewrite docs around headless orchestrator positioning    | Done   | S      | Medium | §2.4, §4.4  |
-| Add approval/audit run persistence                       | Next   | L      | High   | §2.3, §4.3  |
+| Add approval/audit run persistence                       | Done   | L      | High   | §2.3, §4.3  |
 | Add admin capability catalog surface                     | Next   | M      | Medium | §3, §5      |
 | Add policy/scope checks before capability execution      | Next   | M      | High   | §3          |
 | Add consuming-package screenshot scenarios               | Later  | M      | Medium | §3, §5      |

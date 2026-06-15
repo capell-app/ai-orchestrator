@@ -6,9 +6,12 @@ namespace Capell\AIOrchestrator\Actions;
 
 use Capell\AIOrchestrator\Data\AIOrchestratorCapabilityData;
 use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
+use Capell\AIOrchestrator\Enums\AIOrchestratorRunStatus;
+use Capell\AIOrchestrator\Events\AIOrchestratorCapabilityRunRecorded;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Lorisleiva\Actions\Concerns\AsObject;
 use RuntimeException;
+use Throwable;
 
 class RunAIOrchestratorCapabilityAction
 {
@@ -21,7 +24,27 @@ class RunAIOrchestratorCapabilityAction
 
         $this->ensureActionIsRunnable($run, $capability);
 
-        return $capability->actionClass::run($run);
+        try {
+            $result = $capability->actionClass::run($run);
+        } catch (Throwable $exception) {
+            event(new AIOrchestratorCapabilityRunRecorded(
+                run: $run,
+                capability: $capability,
+                status: AIOrchestratorRunStatus::Failed,
+                exception: $exception,
+            ));
+
+            throw $exception;
+        }
+
+        event(new AIOrchestratorCapabilityRunRecorded(
+            run: $run,
+            capability: $capability,
+            status: AIOrchestratorRunStatus::Succeeded,
+            result: $result,
+        ));
+
+        return $result;
     }
 
     private function ensureActionIsRunnable(AIOrchestratorRunData $run, AIOrchestratorCapabilityData $capability): void

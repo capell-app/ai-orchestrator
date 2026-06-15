@@ -21,7 +21,7 @@ Status details:
 
 ## Why It Matters
 
-**For developers:** The package gives package authors a central registry, typed run data, approval metadata, and capability execution semantics without pushing AI workflow code into core or application code.
+**For developers:** The package gives package authors a central registry, typed run data, approval metadata, run-record events, and capability execution semantics without pushing AI workflow code into core or application code.
 
 **For teams:** AI workflows stay consistent across packages: consuming extensions can register, run, and govern AI-assisted capabilities through one admin-safe layer while keeping their own UI and persistence.
 
@@ -38,15 +38,16 @@ Screenshot contract: `screenshots.json`. Marketplace screenshots intentionally r
 - Service providers: `Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider`.
 - Actions: `ListAIOrchestratorCapabilitiesAction`, `RegisterAIOrchestratorModuleAction`, `RunAIOrchestratorCapabilityAction`.
 - Data objects: `AIOrchestratorCapabilityData`, `AIOrchestratorRunData`.
+- Events: `AIOrchestratorCapabilityRunRecorded` is dispatched after successful and failed capability runs so consuming governance packages can persist audit records without AI Orchestrator owning schema.
 - Health checks: `Capell\AIOrchestrator\Health\AiOrchestratorHealthCheck`.
 
 ## Extension Boundary
 
-Consuming packages register modules with `RegisterAIOrchestratorModuleAction` or the shared registry. They own the editor workflow, persistence, permission checks, and any public rendering they trigger after a run. AI Orchestrator owns the registry contract, capability metadata, execution dispatch, Layout Builder integration module, and diagnostics.
+Consuming packages register modules with `RegisterAIOrchestratorModuleAction` or the shared registry. They own the editor workflow, durable approval storage, permission checks, and any public rendering they trigger after a run. AI Orchestrator owns the registry contract, capability metadata, execution dispatch, run-record event bridge, Layout Builder integration module, and diagnostics.
 
 ## Data Model
 
-This package has no schema impact. It does not declare package-owned migrations or required tables. Approval levels and run results are represented as Data objects; durable approval/audit storage belongs to a consuming governance package until AI Orchestrator ships first-class persistence.
+This package has no schema impact. It does not declare package-owned migrations or required tables. Approval levels and run results are represented as Data objects and `AIOrchestratorCapabilityRunRecorded` events; durable approval/audit storage belongs to a consuming governance package.
 
 ## Install Impact
 
