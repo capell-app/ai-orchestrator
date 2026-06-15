@@ -13,7 +13,7 @@
             "targetType": "admin-surface",
             "target": null,
             "required": false,
-            "notes": "Optional because this package registers services and actions but no standalone Filament UI. Capture only through a consuming package that renders registered `AIOrchestratorCapabilityData` entries.",
+            "notes": "Optional because this package is headless infrastructure and does not ship a standalone Filament UI. Capture only through a consuming package that renders registered `AIOrchestratorCapabilityData` entries.",
             "useCase": "A developer verifies that installed AI Orchestrator modules expose the expected capability labels and approval levels.",
             "screenshotPath": "packages/ai-orchestrator/docs/screenshots/capability-list-or-prompt-surface-where-provided-by-a-consuming-package.png",
             "darkScreenshotPath": "packages/ai-orchestrator/docs/screenshots/capability-list-or-prompt-surface-where-provided-by-a-consuming-package-dark.png"
@@ -26,7 +26,7 @@
             "targetType": "admin-surface",
             "target": null,
             "required": false,
-            "notes": "Optional and blocked until a Layout Builder consuming UI exposes `LayoutBuilderAIOrchestratorModule`; this package only provides the integration module and preview action.",
+            "notes": "Optional and blocked until a Layout Builder consuming UI exposes `LayoutBuilderAIOrchestratorModule`; this package only provides the headless integration module and preview action.",
             "useCase": "An editor previews an AI-generated Layout Builder plan before any layout content is applied.",
             "screenshotPath": "packages/ai-orchestrator/docs/screenshots/layout-builder-layout-preview-workflow-if-layout-builder-integration-is-enabled.png",
             "darkScreenshotPath": "packages/ai-orchestrator/docs/screenshots/layout-builder-layout-preview-workflow-if-layout-builder-integration-is-enabled-dark.png"
@@ -39,7 +39,7 @@
             "targetType": "admin-surface",
             "target": null,
             "required": false,
-            "notes": "Optional and requires a consuming package that persists or displays review-required capability runs. AI Orchestrator itself keeps run state in data objects.",
+            "notes": "Optional and requires a consuming package that persists or displays review-required capability runs. AI Orchestrator itself keeps run state in data objects until first-class approval persistence ships.",
             "useCase": "A reviewer sees that an AI capability result needs human approval before the consuming package acts on it.",
             "screenshotPath": "packages/ai-orchestrator/docs/screenshots/approval-state-where-a-capability-requires-review.png",
             "darkScreenshotPath": "packages/ai-orchestrator/docs/screenshots/approval-state-where-a-capability-requires-review-dark.png"

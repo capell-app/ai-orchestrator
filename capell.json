@@ -6,7 +6,7 @@
     "kind": "package",
     "capellApiVersion": "^4.0",
     "version": "4.x-dev",
-    "description": "Shared AI capability registry and execution layer for Capell packages.",
+    "description": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
     "product": {
         "group": "Capell Commercial",
         "tier": "premium",
@@ -113,7 +113,7 @@
         "privateDocsRequested": true
     },
     "marketplace": {
-        "summary": "The shared AI backbone for Capell packages: register, run, and govern AI-assisted capabilities from one admin-safe layer.",
+        "summary": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
         "screenshots": [],
         "categories": ["admin", "commercial"]
     }

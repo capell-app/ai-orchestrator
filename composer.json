@@ -1,6 +1,6 @@
 {
     "name": "capell-app/ai-orchestrator",
-    "description": "Shared AI capability registry and execution layer for Capell packages",
+    "description": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows",
     "keywords": [
         "capell",
         "ai-orchestrator",
