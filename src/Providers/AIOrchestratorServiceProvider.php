@@ -6,6 +6,7 @@ namespace Capell\AIOrchestrator\Providers;
 
 use Capell\AIOrchestrator\Integrations\LayoutBuilder\LayoutBuilderAIOrchestratorModule;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
+use Capell\AIOrchestrator\Support\AIOrchestratorPolicyGuardrailRegistry;
 use Capell\Core\Facades\CapellCore;
 use Capell\Core\Support\Packages\AbstractPackageServiceProvider;
 use Override;
@@ -48,6 +49,7 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     private function registerBindings(): self
     {
         $this->app->singleton(AIOrchestratorModuleRegistry::class);
+        $this->app->singleton(AIOrchestratorPolicyGuardrailRegistry::class);
 
         return $this;
     }

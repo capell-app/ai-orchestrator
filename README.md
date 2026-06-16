@@ -21,7 +21,7 @@ Status details:
 
 ## Why It Matters
 
-**For developers:** The package gives package authors a central registry, typed run data, approval metadata, optional Gate abilities, run-record events, and capability execution semantics without pushing AI workflow code into core or application code.
+**For developers:** The package gives package authors a central registry, typed run data, approval metadata, optional Gate abilities, policy guardrail adapters, run-record events, and capability execution semantics without pushing AI workflow code into core or application code.
 
 **For teams:** AI workflows stay consistent across packages: consuming extensions can register, run, and govern AI-assisted capabilities through one admin-safe layer while keeping their own UI and persistence.
 
@@ -38,6 +38,7 @@ Screenshot contract: `docs/screenshots.json`. Marketplace screenshots intentiona
 
 - Service providers: `Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider`.
 - Actions: `ListAIOrchestratorCapabilitiesAction`, `RegisterAIOrchestratorModuleAction`, `RunAIOrchestratorCapabilityAction`.
+- Contracts and registries: `AIOrchestratorModule`, `AIOrchestratorPolicyGuardrail`, `AIOrchestratorModuleRegistry`, and `AIOrchestratorPolicyGuardrailRegistry`.
 - Data objects: `AIOrchestratorCapabilityData`, `AIOrchestratorRunData`.
 - Events: `AIOrchestratorCapabilityRunRecorded` is dispatched after successful and failed capability runs so consuming governance packages can persist audit records without AI Orchestrator owning schema.
 - Filament pages: `AIOrchestratorCapabilityCatalogPage` lists registered module and capability metadata without running actions.
@@ -46,7 +47,7 @@ Screenshot contract: `docs/screenshots.json`. Marketplace screenshots intentiona
 
 ## Extension Boundary
 
-Consuming packages register modules with `RegisterAIOrchestratorModuleAction` or the shared registry. Capability metadata can declare a `requiredAbility`, and callers pass an authenticated `actor` on `AIOrchestratorRunData`; the run action checks Laravel Gate before executing the capability. AI Orchestrator includes a read-only catalog for reviewing registered metadata, but consuming packages still own the execution workflow, durable approval storage, and any public rendering they trigger after a run. AI Orchestrator owns the registry contract, capability metadata, execution dispatch, run-record event bridge, Layout Builder integration module, catalog, and diagnostics.
+Consuming packages register modules with `RegisterAIOrchestratorModuleAction` or the shared registry. Capability metadata can declare a `requiredAbility`, and callers pass an authenticated `actor` on `AIOrchestratorRunData`; the run action checks Laravel Gate before executing the capability. Hosts or consuming packages can also register `AIOrchestratorPolicyGuardrail` adapters to enforce provider, site, model, budget, or data-safety policy before the capability action runs. AI Orchestrator includes a read-only catalog for reviewing registered metadata, but consuming packages still own the execution workflow, durable approval storage, and any public rendering they trigger after a run. AI Orchestrator owns the registry contract, capability metadata, policy guardrail extension point, execution dispatch, run-record event bridge, Layout Builder integration module, catalog, and diagnostics.
 
 ## Data Model
 

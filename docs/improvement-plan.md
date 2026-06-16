@@ -24,6 +24,7 @@ Capabilities declared: `ai-orchestrator` and `ai-orchestrator-admin`.
 - **Done/Shipped: run-record event bridge.** Approval levels exist as data and execution now emits `AIOrchestratorCapabilityRunRecorded` for success/failure; consuming packages own durable approval storage.
 - **Done/Shipped: read-only admin catalog.** The package contributes `AIOrchestratorCapabilityCatalogPage` for registered module/capability metadata without execution controls.
 - **Done/Shipped: policy checks before execution.** Capability metadata can declare `requiredAbility`; callers provide an `actor`, and `RunAIOrchestratorCapabilityAction` checks Laravel Gate before running the action class.
+- **Done/Shipped: provider policy guardrails.** `AIOrchestratorPolicyGuardrailRegistry` lets hosts or consuming packages register provider/site/model/budget/data-safety adapters that must allow the run before the capability action executes. Denials happen before run-record events so rejected attempts cannot be mistaken for action failures. — `src/Contracts/AIOrchestratorPolicyGuardrail.php`, `src/Support/AIOrchestratorPolicyGuardrailRegistry.php`, `src/Actions/RunAIOrchestratorCapabilityAction.php`
 - **No Marketplace media.** This is currently correct for a headless package, but buyer-facing media needs a real consuming surface.
 
 ## 4. Issues / Risks
@@ -50,16 +51,16 @@ AI Orchestrator should be sold as Capell's shared AI capability backbone. For bu
 
 ## 6. Prioritized Roadmap
 
-| Item                                                     | Bucket | Effort | Impact | Section ref |
-| -------------------------------------------------------- | ------ | ------ | ------ | ----------- |
-| Register modules when registry has already been resolved | Done   | S      | High   | §2.1, §4.1  |
-| Add real registry/module/capability health diagnostics   | Done   | M      | High   | §2.2, §4.2  |
-| Rewrite docs around headless orchestrator positioning    | Done   | S      | Medium | §2.4, §4.4  |
-| Add approval/audit run persistence                       | Done   | L      | High   | §2.3, §4.3  |
-| Add admin capability catalog surface                     | Done   | M      | Medium | §3, §5      |
-| Add policy/scope checks before capability execution      | Done   | M      | High   | §3          |
-| Add consuming-package screenshot scenarios               | Later  | M      | Medium | §3, §5      |
-| Add provider adapters for external LLM policy guardrails | Later  | L      | Medium | §5          |
+| Item                                                                                                                                                                                                                                                   | Bucket | Effort | Impact | Section ref |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ | ------ | ----------- |
+| Register modules when registry has already been resolved                                                                                                                                                                                               | Done   | S      | High   | §2.1, §4.1  |
+| Add real registry/module/capability health diagnostics                                                                                                                                                                                                 | Done   | M      | High   | §2.2, §4.2  |
+| Rewrite docs around headless orchestrator positioning                                                                                                                                                                                                  | Done   | S      | Medium | §2.4, §4.4  |
+| Add approval/audit run persistence                                                                                                                                                                                                                     | Done   | L      | High   | §2.3, §4.3  |
+| Add admin capability catalog surface                                                                                                                                                                                                                   | Done   | M      | Medium | §3, §5      |
+| Add policy/scope checks before capability execution                                                                                                                                                                                                    | Done   | M      | High   | §3          |
+| Add consuming-package screenshot scenarios                                                                                                                                                                                                             | Later  | M      | Medium | §3, §5      |
+| Done/Shipped: Add provider adapters for external LLM policy guardrails. Evidence: package-owned guardrail contract/registry runs before capability execution, supports duplicate-key protection, and denies unsafe runs before events/actions execute. | Done   | M      | Medium | §5          |
 
 ## 7. Verification
 

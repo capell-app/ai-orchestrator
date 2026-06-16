@@ -7,8 +7,11 @@ use Capell\AIOrchestrator\Actions\RunAIOrchestratorCapabilityAction;
 use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
 use Capell\AIOrchestrator\Enums\AIOrchestratorRunStatus;
 use Capell\AIOrchestrator\Events\AIOrchestratorCapabilityRunRecorded;
+use Capell\AIOrchestrator\Exceptions\AIOrchestratorPolicyGuardrailException;
+use Capell\AIOrchestrator\Support\AIOrchestratorPolicyGuardrailRegistry;
 use Capell\AIOrchestrator\Tests\Fixtures\Autoload\AIOrchestratorActorFixture;
 use Capell\AIOrchestrator\Tests\Fixtures\Autoload\AIOrchestratorModuleFixture;
+use Capell\AIOrchestrator\Tests\Fixtures\Autoload\AIOrchestratorPolicyGuardrailFixture;
 use Capell\AIOrchestrator\Tests\Fixtures\Autoload\FailingAIOrchestratorRunActionFixture;
 use Capell\AIOrchestrator\Tests\Fixtures\Autoload\NotRunnableAIOrchestratorActionFixture;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -140,6 +143,65 @@ it('rejects capabilities when the actor lacks the required ability before execut
     );
 
     Event::assertNotDispatched(AIOrchestratorCapabilityRunRecorded::class);
+});
+
+it('runs policy guardrails before capability execution', function (): void {
+    resolve(AIOrchestratorPolicyGuardrailRegistry::class)->register(
+        'fixture-policy',
+        new AIOrchestratorPolicyGuardrailFixture,
+    );
+
+    RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
+        moduleKey: 'guardrail-allowed-module',
+        capabilityKey: 'guardrail-allowed-capability',
+    ));
+
+    $result = RunAIOrchestratorCapabilityAction::run(new AIOrchestratorRunData(
+        moduleKey: 'guardrail-allowed-module',
+        capabilityKey: 'guardrail-allowed-capability',
+        prompt: 'Create a sidebar layout',
+        context: ['page' => 'home', 'guardrail_allowed' => true],
+    ));
+
+    expect($result)->toBe([
+        'prompt' => 'Create a sidebar layout',
+        'page' => 'home',
+    ]);
+});
+
+it('rejects a capability before execution when a policy guardrail denies it', function (): void {
+    Event::fake([AIOrchestratorCapabilityRunRecorded::class]);
+
+    resolve(AIOrchestratorPolicyGuardrailRegistry::class)->register(
+        'fixture-policy',
+        new AIOrchestratorPolicyGuardrailFixture,
+    );
+
+    RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
+        moduleKey: 'guardrail-denied-module',
+        capabilityKey: 'guardrail-denied-capability',
+    ));
+
+    expect(fn (): mixed => RunAIOrchestratorCapabilityAction::run(new AIOrchestratorRunData(
+        moduleKey: 'guardrail-denied-module',
+        capabilityKey: 'guardrail-denied-capability',
+        prompt: 'Create a sidebar layout',
+        context: ['page' => 'home', 'guardrail_allowed' => false],
+    )))->toThrow(
+        AIOrchestratorPolicyGuardrailException::class,
+        'Policy guardrail denied [guardrail-denied-module:guardrail-denied-capability].',
+    );
+
+    Event::assertNotDispatched(AIOrchestratorCapabilityRunRecorded::class);
+});
+
+it('rejects duplicate policy guardrail keys', function (): void {
+    $registry = resolve(AIOrchestratorPolicyGuardrailRegistry::class);
+
+    $registry->register('fixture-policy', new AIOrchestratorPolicyGuardrailFixture);
+
+    expect(fn (): mixed => $registry->register('fixture-policy', new AIOrchestratorPolicyGuardrailFixture))
+        ->toThrow(InvalidArgumentException::class, 'AIOrchestrator policy guardrail [fixture-policy] is already registered.');
 });
 
 it('throws when a capability action class does not exist', function (): void {

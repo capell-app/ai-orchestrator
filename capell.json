@@ -58,7 +58,11 @@
     },
     "settings": [],
     "permissions": [],
-    "capabilities": ["ai-orchestrator", "ai-orchestrator-admin"],
+    "capabilities": [
+        "ai-orchestrator",
+        "ai-orchestrator-admin",
+        "ai-orchestrator-policy-guardrails"
+    ],
     "security": {
         "riskTier": "low",
         "publicSurface": {

@@ -8,7 +8,9 @@ use Capell\AIOrchestrator\Data\AIOrchestratorCapabilityData;
 use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
 use Capell\AIOrchestrator\Enums\AIOrchestratorRunStatus;
 use Capell\AIOrchestrator\Events\AIOrchestratorCapabilityRunRecorded;
+use Capell\AIOrchestrator\Exceptions\AIOrchestratorPolicyGuardrailException;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
+use Capell\AIOrchestrator\Support\AIOrchestratorPolicyGuardrailRegistry;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 use Lorisleiva\Actions\Concerns\AsObject;
@@ -25,6 +27,7 @@ class RunAIOrchestratorCapabilityAction
             ->capability($run->moduleKey, $run->capabilityKey);
 
         $this->ensureActionIsAuthorized($run, $capability);
+        $this->ensurePolicyGuardrailsAllow($run, $capability);
         $this->ensureActionIsRunnable($run, $capability);
 
         try {
@@ -91,5 +94,16 @@ class RunAIOrchestratorCapabilityAction
                 $capability->requiredAbility,
             ),
         );
+    }
+
+    private function ensurePolicyGuardrailsAllow(AIOrchestratorRunData $run, AIOrchestratorCapabilityData $capability): void
+    {
+        foreach (resolve(AIOrchestratorPolicyGuardrailRegistry::class)->guardrails() as $guardrail) {
+            if ($guardrail->allows($run, $capability)) {
+                continue;
+            }
+
+            throw new AIOrchestratorPolicyGuardrailException($guardrail->denialMessage($run, $capability));
+        }
     }
 }
