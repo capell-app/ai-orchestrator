@@ -8,7 +8,7 @@ AI Orchestrator is an **Available**, **No schema impact** Capell package in the 
 
 A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.
 
-After install, the package registers services, Actions, Data objects, health diagnostics, and package-owned capability contracts. It does not ship a standalone Filament resource, page, public route, or visitor-facing output; consuming packages provide any editor UI that lists, previews, approves, or runs capabilities.
+After install, the package registers services, Actions, Data objects, health diagnostics, a read-only Filament capability catalog, and package-owned capability contracts. It does not ship capability execution UI, public routes, or visitor-facing output; consuming packages provide any editor UI that previews, approves, or runs capabilities.
 
 Status details:
 
@@ -21,15 +21,16 @@ Status details:
 
 ## Why It Matters
 
-**For developers:** The package gives package authors a central registry, typed run data, approval metadata, and capability execution semantics without pushing AI workflow code into core or application code.
+**For developers:** The package gives package authors a central registry, typed run data, approval metadata, optional Gate abilities, policy guardrail adapters, run-record events, and capability execution semantics without pushing AI workflow code into core or application code.
 
 **For teams:** AI workflows stay consistent across packages: consuming extensions can register, run, and govern AI-assisted capabilities through one admin-safe layer while keeping their own UI and persistence.
 
 ## Screens And Workflow
 
-Screenshot contract: `docs/screenshots.json`. Marketplace screenshots intentionally remain empty until a consuming package or future admin catalog exposes a real workflow worth capturing.
+Screenshot contract: `docs/screenshots.json`. Marketplace screenshots intentionally remain empty until a consuming package exposes a real AI workflow worth capturing. The package-owned catalog is for installed capability review, not buyer-facing workflow media.
 
-- Capability list or prompt surface where provided by a consuming package (admin, optional).
+- Read-only capability catalog for registered modules and approval metadata (admin).
+- Prompt or execution surface where provided by a consuming package (admin, optional).
 - LayoutBuilder layout preview workflow if LayoutBuilder integration is enabled (admin, optional).
 - Approval state where a capability requires review (admin, optional).
 
@@ -37,20 +38,24 @@ Screenshot contract: `docs/screenshots.json`. Marketplace screenshots intentiona
 
 - Service providers: `Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider`.
 - Actions: `ListAIOrchestratorCapabilitiesAction`, `RegisterAIOrchestratorModuleAction`, `RunAIOrchestratorCapabilityAction`.
+- Contracts and registries: `AIOrchestratorModule`, `AIOrchestratorPolicyGuardrail`, `AIOrchestratorModuleRegistry`, and `AIOrchestratorPolicyGuardrailRegistry`.
 - Data objects: `AIOrchestratorCapabilityData`, `AIOrchestratorRunData`.
+- Events: `AIOrchestratorCapabilityRunRecorded` is dispatched after successful and failed capability runs so consuming governance packages can persist audit records without AI Orchestrator owning schema.
+- Filament pages: `AIOrchestratorCapabilityCatalogPage` lists registered module and capability metadata without running actions.
+- Manifest contributions: `AiOrchestratorAdminPageContribution` declares the read-only admin catalog surface.
 - Health checks: `Capell\AIOrchestrator\Health\AiOrchestratorHealthCheck`.
 
 ## Extension Boundary
 
-Consuming packages register modules with `RegisterAIOrchestratorModuleAction` or the shared registry. They own the editor workflow, persistence, permission checks, and any public rendering they trigger after a run. AI Orchestrator owns the registry contract, capability metadata, execution dispatch, Layout Builder integration module, and diagnostics.
+Consuming packages register modules with `RegisterAIOrchestratorModuleAction` or the shared registry. Capability metadata can declare a `requiredAbility`, and callers pass an authenticated `actor` on `AIOrchestratorRunData`; the run action checks Laravel Gate before executing the capability. Hosts or consuming packages can also register `AIOrchestratorPolicyGuardrail` adapters to enforce provider, site, model, budget, or data-safety policy before the capability action runs. AI Orchestrator includes a read-only catalog for reviewing registered metadata, but consuming packages still own the execution workflow, durable approval storage, and any public rendering they trigger after a run. AI Orchestrator owns the registry contract, capability metadata, policy guardrail extension point, execution dispatch, run-record event bridge, Layout Builder integration module, catalog, and diagnostics.
 
 ## Data Model
 
-This package has no schema impact. It does not declare package-owned migrations or required tables. Approval levels and run results are represented as Data objects; durable approval/audit storage belongs to a consuming governance package until AI Orchestrator ships first-class persistence.
+This package has no schema impact. It does not declare package-owned migrations or required tables. Approval levels and run results are represented as Data objects and `AIOrchestratorCapabilityRunRecorded` events; durable approval/audit storage belongs to a consuming governance package.
 
 ## Install Impact
 
-- Admin navigation: none; consuming packages provide any Filament resource or page that displays registered capabilities.
+- Admin navigation: read-only AI Orchestrator capability catalog.
 - Permissions: none declared in `capell.json`.
 - Public routes: none detected in package route files.
 - Database changes: no package migrations declared.

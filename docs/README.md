@@ -1,6 +1,6 @@
 # AI Orchestrator Docs
 
-AI Orchestrator provides the headless orchestration layer for Capell AI modules and capability execution. It is infrastructure for consuming packages, not a standalone editor screen.
+AI Orchestrator provides the headless orchestration layer for Capell AI modules and capability execution. It includes a read-only admin catalog for registered capability metadata, while consuming packages own execution, approval, and editor workflows.
 
 Start at the [package README](../README.md) when deciding whether to install this package. Use the docs below for setup, extension, debugging, and verification details.
 

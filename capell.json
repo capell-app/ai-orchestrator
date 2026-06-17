@@ -37,7 +37,14 @@
         "admin": [],
         "frontend": []
     },
-    "contributes": [],
+    "contributes": [
+        {
+            "type": "admin-page",
+            "class": "Capell\\AIOrchestrator\\Manifest\\AiOrchestratorAdminPageContribution",
+            "pageClass": "Capell\\AIOrchestrator\\Filament\\Pages\\AIOrchestratorCapabilityCatalogPage",
+            "labelKey": "capell-ai-orchestrator::package.catalog_title"
+        }
+    ],
     "database": {
         "migrations": false,
         "settings": false,
@@ -51,7 +58,11 @@
     },
     "settings": [],
     "permissions": [],
-    "capabilities": ["ai-orchestrator", "ai-orchestrator-admin"],
+    "capabilities": [
+        "ai-orchestrator",
+        "ai-orchestrator-admin",
+        "ai-orchestrator-policy-guardrails"
+    ],
     "security": {
         "riskTier": "low",
         "publicSurface": {

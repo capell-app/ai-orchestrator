@@ -13,7 +13,7 @@
             "targetType": "admin-surface",
             "target": null,
             "required": false,
-            "notes": "Optional because this package is headless infrastructure and does not ship a standalone Filament UI. Capture only through a consuming package that renders registered `AIOrchestratorCapabilityData` entries.",
+            "notes": "Optional because the package-owned catalog is a read-only metadata review surface, not a complete AI workflow. Capture marketplace workflow media through a consuming package that renders and runs registered `AIOrchestratorCapabilityData` entries.",
             "useCase": "A developer verifies that installed AI Orchestrator modules expose the expected capability labels and approval levels.",
             "screenshotPath": "packages/ai-orchestrator/docs/screenshots/capability-list-or-prompt-surface-where-provided-by-a-consuming-package.png",
             "darkScreenshotPath": "packages/ai-orchestrator/docs/screenshots/capability-list-or-prompt-surface-where-provided-by-a-consuming-package-dark.png"
