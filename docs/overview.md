@@ -34,6 +34,34 @@ Screenshot contract: `screenshots.json`. Marketplace screenshots intentionally r
 - LayoutBuilder layout preview workflow if LayoutBuilder integration is enabled (admin, optional).
 - Approval state where a capability requires review (admin, optional).
 
+## Screenshot Evidence
+
+These captures are the package-owned visual contract for the admin pages, public pages, actions, workflows, and feature surfaces described above. Keep this section aligned with `docs/screenshots.json` whenever the package surface changes.
+
+### Capability list or prompt surface where provided by a consuming package
+
+![Capability list or prompt surface where provided by a consuming package](screenshots/capability-list-or-prompt-surface-where-provided-by-a-consuming-package.png)
+
+- Surface: admin · Target: admin-surface.
+- Documents: A developer verifies that installed AI Orchestrator modules expose the expected capability labels and approval levels.
+- Capture notes: Optional because the package-owned catalog is a read-only metadata review surface, not a complete AI workflow. Capture marketplace workflow media through a consuming package that renders and runs registered `AIOrchestratorCapabilityData` entries.
+
+### LayoutBuilder layout preview workflow if LayoutBuilder integration is enabled
+
+![LayoutBuilder layout preview workflow if LayoutBuilder integration is enabled](screenshots/layout-builder-layout-preview-workflow-if-layout-builder-integration-is-enabled.png)
+
+- Surface: admin · Target: admin-surface.
+- Documents: An editor previews an AI-generated Layout Builder plan before any layout content is applied.
+- Capture notes: Optional and blocked until a Layout Builder consuming UI exposes `LayoutBuilderAIOrchestratorModule`; this package only provides the headless integration module and preview action.
+
+### Approval state where a capability requires review
+
+![Approval state where a capability requires review](screenshots/approval-state-where-a-capability-requires-review.png)
+
+- Surface: admin · Target: admin-surface.
+- Documents: A reviewer sees that an AI capability result needs human approval before the consuming package acts on it.
+- Capture notes: Optional and requires a consuming package that persists or displays review-required capability runs. AI Orchestrator itself keeps run state in data objects until first-class approval persistence ships.
+
 ## Technical Shape
 
 - Service providers: `Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider`.
