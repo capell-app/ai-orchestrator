@@ -29,6 +29,8 @@ Status details:
 
 Screenshot contract: `screenshots.json`.
 
+Marketplace screenshots intentionally remain empty because AI Orchestrator is a headless orchestration package whose visible workflows are provided by consuming packages.
+
 - Capability list or prompt surface where provided by a consuming package (admin, optional).
 - LayoutBuilder layout preview workflow if LayoutBuilder integration is enabled (admin, optional).
 - Approval state where a capability requires review (admin, optional).

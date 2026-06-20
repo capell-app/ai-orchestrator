@@ -51,7 +51,7 @@ final class AIOrchestratorCapabilityCatalogPage extends Page
      */
     public function capabilities(): array
     {
-        return collect(resolve(AIOrchestratorModuleRegistry::class)->modules())
+        return array_values(collect(resolve(AIOrchestratorModuleRegistry::class)->modules())
             ->flatMap(
                 fn (AIOrchestratorModule $module): array => array_map(
                     fn (AIOrchestratorCapabilityData $capability): array => [
@@ -68,6 +68,6 @@ final class AIOrchestratorCapabilityCatalogPage extends Page
                 ),
             )
             ->values()
-            ->all();
+            ->all());
     }
 }
