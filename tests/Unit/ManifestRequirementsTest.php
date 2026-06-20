@@ -28,21 +28,24 @@ it('positions the package as headless ai orchestration infrastructure', function
             'pageClass' => AIOrchestratorCapabilityCatalogPage::class,
             'labelKey' => 'capell-ai-orchestrator::package.catalog_title',
         ])
-        ->and($readme)->toContain('headless orchestration layer')
-        ->and($readme)->toContain('does not ship capability execution UI, public routes, or visitor-facing output')
-        ->and($overview)->toContain('headless orchestration layer')
+        ->and($readme)->toContain($expectedSummary)
+        ->and($readme)->toContain('Public routes: none detected in package route files')
+        ->and($overview)->toContain($expectedSummary)
         ->and($overview)->toContain('Marketplace screenshots intentionally remain empty');
 
     foreach (ai_orchestrator_array_value($screenshotContract, 'entries') as $entry) {
-        expect($entry)->toBeArray()
-            ->and($entry['required'] ?? null)->toBeFalse()
-            ->and($entry['target'] ?? null)->toBeNull()
-            ->and($entry['notes'] ?? '')->toContain('consuming');
+        expect($entry)->toBeArray();
+
+        $entryData = is_array($entry) ? $entry : [];
+
+        expect($entryData['required'] ?? null)->toBeFalse()
+            ->and($entryData['target'] ?? null)->toBeNull()
+            ->and($entryData['notes'] ?? '')->toContain('consuming');
     }
 });
 
 /**
- * @return array<string, mixed>
+ * @return array<array-key, mixed>
  */
 function ai_orchestrator_json_file_array(string $path): array
 {
@@ -54,8 +57,8 @@ function ai_orchestrator_json_file_array(string $path): array
 }
 
 /**
- * @param  array<string, mixed>  $values
- * @return array<int, mixed>
+ * @param  array<array-key, mixed>  $values
+ * @return array<array-key, mixed>
  */
 function ai_orchestrator_array_value(array $values, string $key): array
 {

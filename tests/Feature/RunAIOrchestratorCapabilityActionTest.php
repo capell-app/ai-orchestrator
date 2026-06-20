@@ -78,7 +78,7 @@ it('records a failed capability run before rethrowing the exception', function (
 it('authorizes required capability abilities before execution', function (): void {
     Gate::define(
         'ai-orchestrator.run-safe-capability',
-        fn (AIOrchestratorActorFixture $actor, AIOrchestratorRunData $run): bool => $run->context['allowed'] ?? false,
+        fn (AIOrchestratorActorFixture $actor, AIOrchestratorRunData $run): bool => ($run->context['allowed'] ?? false) === true,
     );
 
     RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
@@ -200,7 +200,9 @@ it('rejects duplicate policy guardrail keys', function (): void {
 
     $registry->register('fixture-policy', new AIOrchestratorPolicyGuardrailFixture);
 
-    expect(fn (): mixed => $registry->register('fixture-policy', new AIOrchestratorPolicyGuardrailFixture))
+    expect(function () use ($registry): void {
+        $registry->register('fixture-policy', new AIOrchestratorPolicyGuardrailFixture);
+    })
         ->toThrow(InvalidArgumentException::class, 'AIOrchestrator policy guardrail [fixture-policy] is already registered.');
 });
 
