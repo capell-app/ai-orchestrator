@@ -1,12 +1,6 @@
-# AI Orchestrator
-
-<!-- prettier-ignore-start -->
-
 ## What it does
 
 AI Orchestrator powers the AI features that other packages offer, such as the AI Creator buttons in SEO Suite and Blog. It coordinates the AI work behind the scenes.
-
-A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.
 
 ## Do I need to do anything?
 
@@ -20,10 +14,3 @@ In the AI features of other packages, for example drafting a title and descripti
 
 - There is nothing to operate here directly; use the AI features in the packages that rely on it.
 - If AI features stop working across packages, this is the package to check with your developer.
-- Marketplace screenshots intentionally remain empty because AI Orchestrator is headless infrastructure for consuming packages.
-
----
-
-For developers: see the [README](../README.md).
-
-<!-- prettier-ignore-end -->
