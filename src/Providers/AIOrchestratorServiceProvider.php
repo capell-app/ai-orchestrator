@@ -22,6 +22,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     {
         $package
             ->name(self::$name)
+            ->hasConfigFile(self::$name)
             ->hasTranslations()
             ->hasViews(self::$name);
     }
