@@ -16,6 +16,7 @@ use Capell\AIOrchestrator\Support\Ai\AiRateLimiter;
 use Capell\AIOrchestrator\Support\Ai\AiResponseParser;
 use Capell\AIOrchestrator\Support\Ai\AiTokenCounter;
 use Capell\AIOrchestrator\Support\Ai\Cache\RateLimitCache;
+use Capell\AIOrchestrator\Support\Ai\Concerns\NormalizesAiValues;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
 use Capell\AIOrchestrator\Support\Ai\PromptRepository;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
@@ -29,6 +30,8 @@ use Spatie\LaravelPackageTools\Package;
 
 final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 {
+    use NormalizesAiValues;
+
     public static string $name = 'capell-ai-orchestrator';
 
     public static string $packageName = 'capell-app/ai-orchestrator';
@@ -90,25 +93,25 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 
     private function registerAiEngineBindings(): self
     {
-        $this->app->singleton(PrismProvider::class, fn (Application $app): PrismProvider => new PrismProvider(config('capell-ai-orchestrator.prism', [])));
+        $this->app->singleton(PrismProvider::class, fn (Application $app): PrismProvider => new PrismProvider($this->aiArray(config('capell-ai-orchestrator.prism', []))));
 
-        $this->app->singleton(PromptRepository::class, fn (Application $app): PromptRepository => new PromptRepository(config('capell-ai-orchestrator.prompts', [])));
+        $this->app->singleton(PromptRepository::class, fn (Application $app): PromptRepository => new PromptRepository($this->aiArray(config('capell-ai-orchestrator.prompts', []))));
 
         $this->app->singleton(AiResponseParser::class, fn (): AiResponseParser => new AiResponseParser);
 
         $this->app->singleton(AiRateLimiter::class, fn (Application $app): AiRateLimiter => new AiRateLimiter(
             $app->make(RateLimitCache::class),
-            config('capell-ai-orchestrator.rate_limiting', ['enabled' => false, 'requests_per_minute' => 60]),
+            $this->aiArray(config('capell-ai-orchestrator.rate_limiting', ['enabled' => false, 'requests_per_minute' => 60])),
         ));
 
         $this->app->singleton(AiTokenCounter::class, fn (): AiTokenCounter => new AiTokenCounter);
 
         $this->app->singleton(AIGenerationCache::class, fn (Application $app): AIGenerationCache => new AIGenerationCache(
-            config('cache.default'),
-            config('capell-ai-orchestrator.cache.ttl', 86400),
+            $this->aiString(config('cache.default')),
+            $this->aiInt(config('capell-ai-orchestrator.cache.ttl', 86400)),
         ));
 
-        $this->app->singleton(RateLimitCache::class, fn (Application $app): RateLimitCache => new RateLimitCache((string) config('cache.default')));
+        $this->app->singleton(RateLimitCache::class, fn (Application $app): RateLimitCache => new RateLimitCache($this->aiString(config('cache.default'))));
 
         return $this;
     }
