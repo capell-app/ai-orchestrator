@@ -59,4 +59,10 @@ return [
     'health_runnable_actions_passed' => 'All registered AI capabilities resolve to runnable action classes.',
     'health_runnable_actions_registry_missing' => 'registry:missing',
     'health_runnable_actions_remediation' => 'Ensure every registered AI capability references an existing action class with a run method.',
+    'settings_model' => 'Model',
+    'settings_model_info' => 'Model to use for AI generation. Defaults to GPT-4.',
+    'settings_prompt_system' => 'System settings',
+    'settings_prompt_user_template' => 'User template',
+    'settings_rate_limiting' => 'Rate limiting',
+    'settings_rate_limiting_info' => 'Rate limiting to prevent abuse. Defaults to 60 requests per minute.',
 ];
