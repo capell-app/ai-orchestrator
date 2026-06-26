@@ -12,7 +12,7 @@ use Capell\Core\Support\Packages\AbstractPackageServiceProvider;
 use Override;
 use Spatie\LaravelPackageTools\Package;
 
-class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
+final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 {
     public static string $name = 'capell-ai-orchestrator';
 
@@ -22,6 +22,7 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     {
         $package
             ->name(self::$name)
+            ->hasConfigFile(self::$name)
             ->hasTranslations()
             ->hasViews(self::$name);
     }
@@ -43,7 +44,7 @@ class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     #[Override]
     protected function isPackageInstalled(): bool
     {
-        return CapellCore::isPackageInstalled(static::$packageName);
+        return CapellCore::isPackageInstalled(self::$packageName);
     }
 
     private function registerBindings(): self
