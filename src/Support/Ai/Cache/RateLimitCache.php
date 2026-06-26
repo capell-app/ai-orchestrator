@@ -15,6 +15,19 @@ class RateLimitCache
         return Cache::driver($this->driver)->get($key, $default);
     }
 
+    /**
+     * Read a rate-limit counter, always normalised to an integer count.
+     *
+     * @return array{count: int}
+     */
+    public function counter(string $key): array
+    {
+        $value = $this->get($key, ['count' => 0]);
+        $count = is_array($value) ? ($value['count'] ?? 0) : 0;
+
+        return ['count' => is_numeric($count) ? (int) $count : 0];
+    }
+
     public function put(string $key, mixed $value, int $seconds): void
     {
         Cache::driver($this->driver)->put($key, $value, $seconds);

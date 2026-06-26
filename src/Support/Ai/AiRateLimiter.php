@@ -25,10 +25,11 @@ class AiRateLimiter
             return;
         }
 
+        $perMinute = $this->intConfig('requests_per_minute', 60);
         $limits = [
-            'global' => (int) ($this->config['requests_per_minute'] ?? 60),
-            'user:' . $identifier => (int) ($this->config['requests_per_minute'] ?? 60),
-            'feature:' . $feature => (int) ($this->config['requests_per_minute'] ?? 60),
+            'global' => $perMinute,
+            'user:' . $identifier => $perMinute,
+            'feature:' . $feature => $perMinute,
         ];
         foreach ($limits as $key => $limit) {
             throw_unless($this->canExecute($key, $limit), RuntimeException::class, 'AI rate limit exceeded for ' . $key);
@@ -42,10 +43,10 @@ class AiRateLimiter
     public function getRemainingRequests(string $identifier = 'global'): int
     {
         $cacheKey = 'ai_rate_limit_' . $identifier;
-        $current = $this->cache->get($cacheKey, ['count' => 0]);
-        $limit = (int) ($this->config['requests_per_minute'] ?? 60);
+        $current = $this->cache->counter($cacheKey);
+        $limit = $this->intConfig('requests_per_minute', 60);
 
-        return max(0, $limit - (int) ($current['count'] ?? 0));
+        return max(0, $limit - $current['count']);
     }
 
     public function resetLimit(string $identifier = 'global'): void
@@ -68,17 +69,24 @@ class AiRateLimiter
     protected function canExecute(string $key, int $limit): bool
     {
         $cacheKey = 'ai_rate_limit_' . $key;
-        $current = $this->cache->get($cacheKey, ['count' => 0]);
+        $current = $this->cache->counter($cacheKey);
 
-        return (int) ($current['count'] ?? 0) < $limit;
+        return $current['count'] < $limit;
     }
 
     protected function incrementCounter(string $key): void
     {
         $cacheKey = 'ai_rate_limit_' . $key;
-        $current = $this->cache->get($cacheKey, ['count' => 0]);
-        $current['count'] = (int) ($current['count'] ?? 0) + 1;
-        $ttl = (int) ($this->config['window_seconds'] ?? 60);
+        $current = $this->cache->counter($cacheKey);
+        $current['count']++;
+        $ttl = $this->intConfig('window_seconds', 60);
         $this->cache->put($cacheKey, $current, $ttl);
+    }
+
+    private function intConfig(string $key, int $default): int
+    {
+        $value = $this->config[$key] ?? $default;
+
+        return is_numeric($value) ? (int) $value : $default;
     }
 }

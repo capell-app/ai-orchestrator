@@ -21,14 +21,14 @@ class AiTokenCounter
 
     /**
      * @param  array<array-key, mixed>  $usage
-     * @return array<array-key, mixed>
+     * @return array{prompt_tokens: int, completion_tokens: int, total_tokens: int}
      */
     public function count(array $usage): array
     {
         return [
-            'prompt_tokens' => (int) ($usage['prompt_tokens'] ?? 0),
-            'completion_tokens' => (int) ($usage['completion_tokens'] ?? 0),
-            'total_tokens' => (int) ($usage['total_tokens'] ?? 0),
+            'prompt_tokens' => $this->intFrom($usage['prompt_tokens'] ?? 0),
+            'completion_tokens' => $this->intFrom($usage['completion_tokens'] ?? 0),
+            'total_tokens' => $this->intFrom($usage['total_tokens'] ?? 0),
         ];
     }
 
@@ -50,5 +50,10 @@ class AiTokenCounter
     public function wouldExceedLimit(int $estimatedTokens, int $limit): bool
     {
         return $estimatedTokens > $limit;
+    }
+
+    private function intFrom(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
     }
 }

@@ -24,11 +24,11 @@ class AIOrchestratorSettingsSchema implements HasSchema
                     TextInput::make('model')
                         ->label(__('capell-seo-suite::form.model'))
                         ->helperText(__('capell-seo-suite::generic.model_info'))
-                        ->placeholder(config('capell-seo-suite.openai.default_model')),
+                        ->placeholder(is_scalar($defaultModel = config('capell-seo-suite.openai.default_model')) ? (string) $defaultModel : null),
                     TextInput::make('rate_limiting_requests_per_minute')
                         ->label(__('capell-seo-suite::form.rate_limiting'))
                         ->helperText(__('capell-seo-suite::generic.rate_limiting_info'))
-                        ->placeholder((string) config('capell-ai-orchestrator.rate_limiting.requests_per_minute')),
+                        ->placeholder(is_scalar($requestsPerMinute = config('capell-ai-orchestrator.rate_limiting.requests_per_minute')) ? (string) $requestsPerMinute : null),
                     Grid::make(2)
                         ->columnSpanFull()
                         ->schema([

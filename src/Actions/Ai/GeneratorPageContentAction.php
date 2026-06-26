@@ -37,7 +37,7 @@ class GeneratorPageContentAction
 
             Event::dispatch(new AiGenerationCompleted(static::class, $result->output, []));
 
-            return (string) $result->output;
+            return is_scalar($result->output) ? (string) $result->output : '';
         } catch (Throwable $throwable) {
             Log::error('AI Action failed', [
                 'action' => static::class,

@@ -31,8 +31,8 @@ class PrismProvider implements ServiceContract
      */
     public function __construct(protected array $config = [])
     {
-        $this->maxRetries = (int) ($this->config['max_retries'] ?? 3);
-        $this->retryDelay = (int) ($this->config['retry_delay_ms'] ?? 1000);
+        $this->maxRetries = $this->intConfig('max_retries', 3);
+        $this->retryDelay = $this->intConfig('retry_delay_ms', 1000);
     }
 
     public function execute(array $input): mixed
@@ -55,24 +55,29 @@ class PrismProvider implements ServiceContract
             try {
                 $messages = $params['messages'] ?? [];
                 $systemPrompt = '';
-                $userMessage = '';
 
                 $userMessages = [];
-                foreach ($messages as $message) {
-                    if ($message['role'] === 'system') {
-                        $systemPrompt = $message['content'];
-                    } elseif ($message['role'] === 'user') {
-                        $userMessages[] = $message['content'];
+                if (is_iterable($messages)) {
+                    foreach ($messages as $message) {
+                        if (! is_array($message)) {
+                            continue;
+                        }
+                        $content = $this->scalarString($message['content'] ?? '');
+                        if (($message['role'] ?? null) === 'system') {
+                            $systemPrompt = $content;
+                        } elseif (($message['role'] ?? null) === 'user') {
+                            $userMessages[] = $content;
+                        }
                     }
                 }
 
                 $userMessage = implode("\n\n", $userMessages);
 
-                $model = $params['model'] ?? $this->config['model'] ?? 'gpt-4o';
-                $providerName = $this->config['provider'] ?? 'openai';
+                $model = $this->scalarString($params['model'] ?? $this->config['model'] ?? 'gpt-4o');
+                $providerName = $this->scalarString($this->config['provider'] ?? 'openai');
 
-                $maxTokens = isset($params['max_tokens']) ? (int) $params['max_tokens'] : (int) ($this->config['max_tokens'] ?? 512);
-                $temperature = isset($params['temperature']) ? (float) $params['temperature'] : 0.7;
+                $maxTokens = isset($params['max_tokens']) ? $this->intFrom($params['max_tokens']) : $this->intConfig('max_tokens', 512);
+                $temperature = isset($params['temperature']) ? $this->floatFrom($params['temperature']) : 0.7;
 
                 $response = Prism::text()
                     ->using($this->resolveProvider($providerName), $model)
@@ -145,9 +150,9 @@ class PrismProvider implements ServiceContract
 
     public function circuitBreakerKey(): string
     {
-        $providerName = $this->config['provider'] ?? 'openai';
+        $providerName = $this->scalarString($this->config['provider'] ?? 'openai');
 
-        return self::CIRCUIT_BREAKER_KEY_PREFIX . ':' . strtolower((string) $providerName);
+        return self::CIRCUIT_BREAKER_KEY_PREFIX . ':' . strtolower($providerName);
     }
 
     protected function resolveProvider(string $name): Provider
@@ -162,16 +167,42 @@ class PrismProvider implements ServiceContract
 
     protected function isCircuitOpen(): bool
     {
-        $state = Cache::get($this->circuitBreakerKey(), ['failures' => 0]);
-
-        return (int) ($state['failures'] ?? 0) >= self::FAILURE_THRESHOLD;
+        return $this->currentFailures() >= self::FAILURE_THRESHOLD;
     }
 
     protected function recordFailure(): void
     {
+        Cache::put($this->circuitBreakerKey(), ['failures' => $this->currentFailures() + 1], self::CIRCUIT_TIMEOUT);
+    }
+
+    private function currentFailures(): int
+    {
         $state = Cache::get($this->circuitBreakerKey(), ['failures' => 0]);
-        $state['failures'] = (int) ($state['failures'] ?? 0) + 1;
-        Cache::put($this->circuitBreakerKey(), $state, self::CIRCUIT_TIMEOUT);
+        $failures = is_array($state) ? ($state['failures'] ?? 0) : 0;
+
+        return is_numeric($failures) ? (int) $failures : 0;
+    }
+
+    private function intConfig(string $key, int $default): int
+    {
+        $value = $this->config[$key] ?? $default;
+
+        return is_numeric($value) ? (int) $value : $default;
+    }
+
+    private function intFrom(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    private function floatFrom(mixed $value): float
+    {
+        return is_numeric($value) ? (float) $value : 0.0;
+    }
+
+    private function scalarString(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : '';
     }
 
     private function usageFromResponse(mixed $response): mixed

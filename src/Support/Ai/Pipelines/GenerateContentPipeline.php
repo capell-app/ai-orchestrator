@@ -10,6 +10,7 @@ use Capell\AIOrchestrator\Data\Ai\AiGenerationInputData;
 use Capell\AIOrchestrator\Data\Ai\AiGenerationResultData;
 use Capell\AIOrchestrator\Support\Ai\AiRateLimiter;
 use Capell\AIOrchestrator\Support\Ai\AiResponse;
+use Capell\AIOrchestrator\Support\Ai\Concerns\NormalizesAiValues;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
 use Capell\AIOrchestrator\Support\Ai\PromptRepository;
 use DOMDocument;
@@ -17,9 +18,12 @@ use DOMElement;
 use DOMNode;
 use Illuminate\Pipeline\Pipeline;
 use InvalidArgumentException;
+use RuntimeException;
 
 class GenerateContentPipeline
 {
+    use NormalizesAiValues;
+
     public function __construct(
         private readonly PromptRepository $prompts,
         private readonly PrismProvider $provider,
@@ -46,8 +50,8 @@ class GenerateContentPipeline
             ])
             ->thenReturn();
 
-        /** @var AiGenerationResultData $resultData */
-        $resultData = $payload['result_data'];
+        $resultData = is_array($payload) ? ($payload['result_data'] ?? null) : null;
+        throw_unless($resultData instanceof AiGenerationResultData, RuntimeException::class, 'Content generation pipeline produced no result data');
 
         return $resultData;
     }
@@ -70,7 +74,8 @@ class GenerateContentPipeline
      */
     private function checkRateLimit(array $payload, callable $next): array
     {
-        $identifier = (string) ($payload['options']['user_id'] ?? 'global');
+        $options = $this->aiArray($payload['options'] ?? null);
+        $identifier = $this->aiString($options['user_id'] ?? 'global') ?: 'global';
         $this->rateLimiter->checkLimit($identifier, 'content_generation');
 
         return $next($payload);
@@ -84,24 +89,24 @@ class GenerateContentPipeline
     {
         /** @var AiActionContextInterface $context */
         $context = $payload['context'];
-        $options = $payload['options'] ?? [];
-        $prompt = $this->prompts->get('content_generation');
+        $options = $this->aiArray($payload['options'] ?? null);
+        $prompt = $this->aiArray($this->prompts->get('content_generation'));
 
-        $userMessage = strtr((string) ($prompt['user_template'] ?? ''), [
-            '{{current_title}}' => (string) ($options['current_title'] ?? ''),
+        $userMessage = strtr($this->aiString($prompt['user_template'] ?? ''), [
+            '{{current_title}}' => $this->aiString($options['current_title'] ?? ''),
             '{{keywords}}' => $context->getKeywords() ?? '',
             '{{content}}' => $context->getContent() ?? '',
-            '{{target_length}}' => ($options['target_length'] ?? null) !== null ? (string) $options['target_length'] : 'auto',
-            '{{refactor}}' => ((bool) ($options['refactor'] ?? true)) ? 'yes' : 'no',
+            '{{target_length}}' => ($options['target_length'] ?? null) !== null ? $this->aiString($options['target_length']) : 'auto',
+            '{{refactor}}' => ($options['refactor'] ?? true) ? 'yes' : 'no',
         ]);
 
         $messages = [
-            ['role' => 'system', 'content' => (string) ($prompt['system'] ?? '')],
+            ['role' => 'system', 'content' => $this->aiString($prompt['system'] ?? '')],
             ['role' => 'user', 'content' => $userMessage],
         ];
 
         $params = [
-            'model' => (string) ($prompt['model'] ?? config('capell-ai-orchestrator.prism.model')),
+            'model' => $this->aiString($prompt['model'] ?? config('capell-ai-orchestrator.prism.model')),
             'messages' => $messages,
             'max_tokens' => config('capell-ai-orchestrator.prism.max_tokens', 4096),
             'temperature' => 0.7,
@@ -143,7 +148,7 @@ class GenerateContentPipeline
         $response = $payload['ai_response'];
         /** @var AiActionContextInterface $context */
         $context = $payload['context'];
-        $result = (string) ($payload['result'] ?? '');
+        $result = $this->aiString($payload['result'] ?? '');
 
         $resultData = AiGenerationResultData::make(
             actionKey: $input->actionKey,
@@ -151,8 +156,8 @@ class GenerateContentPipeline
             inputText: $context->getContent(),
             outputText: $result,
             response: $response,
-            messages: $payload['ai_messages'] ?? null,
-            params: $payload['ai_params'] ?? null,
+            messages: $this->aiMessages($payload['ai_messages'] ?? null),
+            params: $this->aiParams($payload['ai_params'] ?? null),
             pageableId: $context->getPageId(),
             pageableType: $context->getPageType(),
             languageId: $context->getLanguageId(),

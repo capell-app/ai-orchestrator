@@ -16,6 +16,8 @@ class PromptRepository
      */
     public function get(string $key): ?array
     {
-        return $this->prompts[$key] ?? null;
+        $prompt = $this->prompts[$key] ?? null;
+
+        return is_array($prompt) ? $prompt : null;
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Capell\SeoSuite\Actions\GeneratorPageContentAction;
+use Capell\AIOrchestrator\Actions\Ai\GeneratorPageContentAction;
 
 return [
     'prism' => [

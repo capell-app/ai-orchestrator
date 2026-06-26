@@ -57,12 +57,12 @@ class AiResponseParser
             }
 
             if (is_array($item)) {
-                $value = (string) ($item['title'] ?? $item['name'] ?? $item['value'] ?? $item['text'] ?? '');
+                $value = $this->stringFrom($item['title'] ?? $item['name'] ?? $item['value'] ?? $item['text'] ?? '');
                 $keywords = ['title', 'name', 'value', 'text', 'reason', 'description', 'explanation'];
 
                 return [
                     'value' => $value,
-                    'reason' => (string) ($item['reason'] ?? $item['description'] ?? $item['explanation'] ?? ''),
+                    'reason' => $this->stringFrom($item['reason'] ?? $item['description'] ?? $item['explanation'] ?? ''),
                     'length' => strlen($value),
                     'source' => 'json',
                 ] + array_filter(
@@ -72,7 +72,7 @@ class AiResponseParser
                 );
             }
 
-            return ['value' => (string) $item, 'source' => 'unknown'];
+            return ['value' => $this->stringFrom($item), 'source' => 'unknown'];
         }, $data));
     }
 
@@ -100,5 +100,10 @@ class AiResponseParser
         }
 
         return [];
+    }
+
+    private function stringFrom(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : '';
     }
 }

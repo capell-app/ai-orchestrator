@@ -41,7 +41,12 @@ class SuggestPageTitlesAction
             ]);
             Event::dispatch(new AiGenerationCompleted(static::class, $result->output, []));
 
-            return (array) $result->output;
+            $output = is_array($result->output) ? $result->output : [];
+
+            return array_values(array_map(
+                static fn (mixed $value): string => is_scalar($value) ? (string) $value : '',
+                $output,
+            ));
         } catch (Throwable $throwable) {
             Log::error('AI Action failed', [
                 'action' => static::class,
