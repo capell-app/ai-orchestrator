@@ -24,7 +24,11 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             ->name(self::$name)
             ->hasConfigFile(self::$name)
             ->hasTranslations()
-            ->hasViews(self::$name);
+            ->hasViews(self::$name)
+            ->hasMigrations([
+                '2026_05_10_190870_02_create_ai_generation_histories_table',
+                '2026_06_08_000001_add_cost_fields_to_ai_generation_histories_table',
+            ]);
     }
 
     public function registeringPackage(): void
