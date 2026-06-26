@@ -4,11 +4,26 @@ declare(strict_types=1);
 
 namespace Capell\AIOrchestrator\Providers;
 
+use Capell\AIOrchestrator\Events\Ai\AiGenerationCompleted;
+use Capell\AIOrchestrator\Events\Ai\AiGenerationFailed;
+use Capell\AIOrchestrator\Filament\Settings\AIOrchestratorSettingsSchema;
 use Capell\AIOrchestrator\Integrations\LayoutBuilder\LayoutBuilderAIOrchestratorModule;
+use Capell\AIOrchestrator\Listeners\Ai\LogAiGeneration;
+use Capell\AIOrchestrator\Listeners\Ai\NotifyAiFailure;
+use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
+use Capell\AIOrchestrator\Support\Ai\AIGenerationCache;
+use Capell\AIOrchestrator\Support\Ai\AiRateLimiter;
+use Capell\AIOrchestrator\Support\Ai\AiResponseParser;
+use Capell\AIOrchestrator\Support\Ai\AiTokenCounter;
+use Capell\AIOrchestrator\Support\Ai\Cache\RateLimitCache;
+use Capell\AIOrchestrator\Support\Ai\PrismProvider;
+use Capell\AIOrchestrator\Support\Ai\PromptRepository;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\AIOrchestrator\Support\AIOrchestratorPolicyGuardrailRegistry;
 use Capell\Core\Facades\CapellCore;
 use Capell\Core\Support\Packages\AbstractPackageServiceProvider;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Foundation\Application;
 use Override;
 use Spatie\LaravelPackageTools\Package;
 
@@ -17,6 +32,16 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     public static string $name = 'capell-ai-orchestrator';
 
     public static string $packageName = 'capell-app/ai-orchestrator';
+
+    /**
+     * @return list<string>
+     */
+    public static function getSettingMigrations(): array
+    {
+        return [
+            '2026_05_10_190871_01_create_ai-orchestrator_settings',
+        ];
+    }
 
     public function configurePackage(Package $package): void
     {
@@ -34,14 +59,18 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     public function registeringPackage(): void
     {
         $this
-            ->registerBindings();
+            ->registerBindings()
+            ->registerAiEngineBindings();
 
         $this->app->booted(function (): void {
             if (! $this->isPackageInstalled()) {
                 return;
             }
 
-            $this->registerServices();
+            $this
+                ->registerServices()
+                ->registerAiEventListeners()
+                ->registerSettingsSchema();
         });
     }
 
@@ -55,6 +84,54 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     {
         $this->app->singleton(AIOrchestratorModuleRegistry::class);
         $this->app->singleton(AIOrchestratorPolicyGuardrailRegistry::class);
+
+        return $this;
+    }
+
+    private function registerAiEngineBindings(): self
+    {
+        $this->app->singleton(PrismProvider::class, fn (Application $app): PrismProvider => new PrismProvider(config('capell-ai-orchestrator.prism', [])));
+
+        $this->app->singleton(PromptRepository::class, fn (Application $app): PromptRepository => new PromptRepository(config('capell-ai-orchestrator.prompts', [])));
+
+        $this->app->singleton(AiResponseParser::class, fn (): AiResponseParser => new AiResponseParser);
+
+        $this->app->singleton(AiRateLimiter::class, fn (Application $app): AiRateLimiter => new AiRateLimiter(
+            $app->make(RateLimitCache::class),
+            config('capell-ai-orchestrator.rate_limiting', ['enabled' => false, 'requests_per_minute' => 60]),
+        ));
+
+        $this->app->singleton(AiTokenCounter::class, fn (): AiTokenCounter => new AiTokenCounter);
+
+        $this->app->singleton(AIGenerationCache::class, fn (Application $app): AIGenerationCache => new AIGenerationCache(
+            config('cache.default'),
+            config('capell-ai-orchestrator.cache.ttl', 86400),
+        ));
+
+        $this->app->singleton(RateLimitCache::class, fn (Application $app): RateLimitCache => new RateLimitCache((string) config('cache.default')));
+
+        return $this;
+    }
+
+    private function registerAiEventListeners(): self
+    {
+        $events = $this->app->make(Dispatcher::class);
+        $events->listen(
+            AiGenerationFailed::class,
+            NotifyAiFailure::class,
+        );
+        $events->listen(
+            AiGenerationCompleted::class,
+            LogAiGeneration::class,
+        );
+
+        return $this;
+    }
+
+    private function registerSettingsSchema(): self
+    {
+        $this->surface()->settingsSchema('ai-orchestrator', AIOrchestratorSettingsSchema::class);
+        $this->surface()->settingsClass('ai-orchestrator', AIOrchestratorSettings::class);
 
         return $this;
     }
