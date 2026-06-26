@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Capell\AIOrchestrator\Providers;
 
+use Capell\Admin\Contracts\Extenders\ResourceHeaderActionExtender;
 use Capell\AIOrchestrator\Events\Ai\AiGenerationCompleted;
 use Capell\AIOrchestrator\Events\Ai\AiGenerationFailed;
 use Capell\AIOrchestrator\Filament\Settings\AIOrchestratorSettingsSchema;
@@ -12,6 +13,7 @@ use Capell\AIOrchestrator\Integrations\LayoutBuilder\LayoutBuilderAIOrchestrator
 use Capell\AIOrchestrator\Listeners\Ai\LogAiGeneration;
 use Capell\AIOrchestrator\Listeners\Ai\NotifyAiFailure;
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
+use Capell\AIOrchestrator\Support\Admin\AiAssistantPageResourceExtender;
 use Capell\AIOrchestrator\Support\Ai\AIGenerationCache;
 use Capell\AIOrchestrator\Support\Ai\AiRateLimiter;
 use Capell\AIOrchestrator\Support\Ai\AiResponseParser;
@@ -88,6 +90,8 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     {
         $this->app->singleton(AIOrchestratorModuleRegistry::class);
         $this->app->singleton(AIOrchestratorPolicyGuardrailRegistry::class);
+
+        $this->app->tag([AiAssistantPageResourceExtender::class], ResourceHeaderActionExtender::TAG);
 
         return $this;
     }
