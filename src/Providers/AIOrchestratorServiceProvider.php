@@ -7,6 +7,7 @@ namespace Capell\AIOrchestrator\Providers;
 use Capell\AIOrchestrator\Events\Ai\AiGenerationCompleted;
 use Capell\AIOrchestrator\Events\Ai\AiGenerationFailed;
 use Capell\AIOrchestrator\Filament\Settings\AIOrchestratorSettingsSchema;
+use Capell\AIOrchestrator\Integrations\Authoring\AIAuthoringModule;
 use Capell\AIOrchestrator\Integrations\LayoutBuilder\LayoutBuilderAIOrchestratorModule;
 use Capell\AIOrchestrator\Listeners\Ai\LogAiGeneration;
 use Capell\AIOrchestrator\Listeners\Ai\NotifyAiFailure;
@@ -142,7 +143,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     private function registerServices(): self
     {
         if ($this->app->resolved(AIOrchestratorModuleRegistry::class)) {
-            $this->registerLayoutBuilderModule($this->app->make(AIOrchestratorModuleRegistry::class));
+            $this->registerOrchestratorModules($this->app->make(AIOrchestratorModuleRegistry::class));
 
             return $this;
         }
@@ -150,11 +151,17 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         $this->app->afterResolving(
             AIOrchestratorModuleRegistry::class,
             function (AIOrchestratorModuleRegistry $registry): void {
-                $this->registerLayoutBuilderModule($registry);
+                $this->registerOrchestratorModules($registry);
             },
         );
 
         return $this;
+    }
+
+    private function registerOrchestratorModules(AIOrchestratorModuleRegistry $registry): void
+    {
+        $this->registerLayoutBuilderModule($registry);
+        $this->registerAuthoringModule($registry);
     }
 
     private function registerLayoutBuilderModule(AIOrchestratorModuleRegistry $registry): void
@@ -164,5 +171,14 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         }
 
         $registry->register(new LayoutBuilderAIOrchestratorModule);
+    }
+
+    private function registerAuthoringModule(AIOrchestratorModuleRegistry $registry): void
+    {
+        if (array_key_exists('ai-authoring', $registry->modules())) {
+            return;
+        }
+
+        $registry->register(new AIAuthoringModule);
     }
 }
