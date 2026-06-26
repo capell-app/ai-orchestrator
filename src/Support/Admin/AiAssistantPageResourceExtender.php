@@ -47,7 +47,7 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
     {
         return [
             Action::make('ai-assistant')
-                ->label(__('AI Assistant'))
+                ->label(__('capell-ai-orchestrator::package.ai_assistant_action'))
                 ->icon(Heroicon::OutlinedSparkles)
                 ->slideOver()
                 ->fillForm(fn (array $arguments, mixed $livewire): array => $this->prefillFromActiveTranslation($livewire))
@@ -63,47 +63,47 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
     {
         return [
             Wizard::make([
-                Step::make(__('Choose'))
+                Step::make(__('capell-ai-orchestrator::package.ai_assistant_step_choose'))
                     ->schema([
                         Select::make('targetLanguageId')
-                            ->label(__('Target language'))
+                            ->label(__('capell-ai-orchestrator::package.ai_assistant_target_language'))
                             ->options(fn (mixed $livewire): array => $this->languageOptions($livewire))
                             ->default(fn (mixed $livewire): ?int => $this->defaultLanguageId($livewire))
                             ->required(),
                         CheckboxList::make('fields')
-                            ->label(__('Fields'))
+                            ->label(__('capell-ai-orchestrator::package.ai_assistant_fields'))
                             ->options($this->fieldOptions())
                             ->required()
                             ->minItems(1),
                     ]),
 
-                Step::make(__('Inputs'))
+                Step::make(__('capell-ai-orchestrator::package.ai_assistant_step_inputs'))
                     ->schema([
                         Textarea::make('keywords')
-                            ->label(__('Target keywords'))
+                            ->label(__('capell-ai-orchestrator::package.ai_assistant_keywords'))
                             ->rows(2),
                         Radio::make('titleIncludeCurrent')
-                            ->label(__('Use the current title as a starting point'))
+                            ->label(__('capell-ai-orchestrator::package.ai_assistant_title_include_current'))
                             ->boolean()
                             ->default(true)
                             ->visible(fn (Get $get): bool => in_array('title', $this->selectedFields($get), true)),
                         Checkbox::make('contentRefactor')
-                            ->label(__('Refactor existing content'))
+                            ->label(__('capell-ai-orchestrator::package.ai_assistant_content_refactor'))
                             ->visible(fn (Get $get): bool => in_array('content', $this->selectedFields($get), true)),
                         TextInput::make('contentTargetLength')
-                            ->label(__('Target content length (words)'))
+                            ->label(__('capell-ai-orchestrator::package.ai_assistant_content_target_length'))
                             ->numeric()
                             ->minValue(100)
                             ->maxValue(2000)
                             ->visible(fn (Get $get): bool => in_array('content', $this->selectedFields($get), true)),
                         Radio::make('metaIncludeCurrent')
-                            ->label(__('Use the current meta description as a starting point'))
+                            ->label(__('capell-ai-orchestrator::package.ai_assistant_meta_include_current'))
                             ->boolean()
                             ->default(true)
                             ->visible(fn (Get $get): bool => in_array('meta', $this->selectedFields($get), true)),
                     ]),
 
-                Step::make(__('Review'))
+                Step::make(__('capell-ai-orchestrator::package.ai_assistant_step_review'))
                     ->schema([]),
             ]),
         ];
@@ -272,12 +272,27 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
             return null;
         }
 
-        $activeTab = is_object($livewire) && isset($livewire->activeTab) && is_int($livewire->activeTab)
-            ? $livewire->activeTab
-            : 1;
+        if (! is_object($livewire) || ! isset($livewire->activeTab) || ! is_int($livewire->activeTab)) {
+            return null;
+        }
+
+        $activeTab = $livewire->activeTab;
+
+        // activeTab is a 1-indexed tab position over the translations repeater
+        // (RepeaterTabs). Map it positionally to the item key, but never coerce
+        // an out-of-range tab onto the first translation — return null so the
+        // caller falls back to the default-language translation instead.
+        if ($activeTab < 1) {
+            return null;
+        }
 
         $translationKeys = array_keys($translations);
-        $activeKey = $translationKeys[$activeTab - 1] ?? $translationKeys[0];
+        $activeKey = $translationKeys[$activeTab - 1] ?? null;
+
+        if ($activeKey === null) {
+            return null;
+        }
+
         $activeTranslation = $translations[$activeKey] ?? null;
 
         return is_array($activeTranslation) ? $activeTranslation : null;

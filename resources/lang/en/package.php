@@ -3,6 +3,20 @@
 declare(strict_types=1);
 
 return [
+    'ai_assistant_action' => 'AI Assistant',
+    'ai_assistant_content_refactor' => 'Refactor existing content',
+    'ai_assistant_content_target_length' => 'Target content length (words)',
+    'ai_assistant_field_content' => 'Content',
+    'ai_assistant_field_meta' => 'Meta description',
+    'ai_assistant_field_title' => 'Title',
+    'ai_assistant_fields' => 'Fields',
+    'ai_assistant_keywords' => 'Target keywords',
+    'ai_assistant_meta_include_current' => 'Use the current meta description as a starting point',
+    'ai_assistant_step_choose' => 'Choose',
+    'ai_assistant_step_inputs' => 'Inputs',
+    'ai_assistant_step_review' => 'Review',
+    'ai_assistant_target_language' => 'Target language',
+    'ai_assistant_title_include_current' => 'Use the current title as a starting point',
     'catalog_action' => 'Action',
     'catalog_approval' => 'Approval',
     'catalog_capability' => 'Capability',
