@@ -129,8 +129,13 @@ it('sends normalized chat messages through prism and maps the response telemetry
     $fake->assertRequest(function (array $requests): void {
         $request = $requests[0] ?? null;
 
-        expect($request)->toBeInstanceOf(PrismTextRequest::class)
-            ->and($request->model())->toBe('claude-test')
+        expect($request)->toBeInstanceOf(PrismTextRequest::class);
+
+        if (! $request instanceof PrismTextRequest) {
+            return;
+        }
+
+        expect($request->model())->toBe('claude-test')
             ->and(collect($request->systemPrompts())->pluck('content')->all())->toBe(['Use the brand voice.'])
             ->and($request->prompt())->toBe("Draft a page title.\n\nKeep it short.")
             ->and($request->maxTokens())->toBe(128)

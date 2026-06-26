@@ -75,11 +75,11 @@ function executeGenerateContentPipelineWithHtml(string $html): string
         }
     };
 
-    return (string) $pipeline->execute(AiGenerationInputData::forContextAction(
+    return $pipeline->execute(AiGenerationInputData::forContextAction(
         'GeneratorPageContentAction',
         $context,
         ['user_id' => 123],
-    ))->output;
+    ))->outputText;
 }
 
 it('sanitizes unsafe AI generated HTML attributes and schemes', function (string $html, array $missingFragments, array $expectedFragments): void {
