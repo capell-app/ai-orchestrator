@@ -6,21 +6,29 @@ namespace Capell\AIOrchestrator\Support\Admin;
 
 use Capell\Admin\Contracts\Extenders\ResourceHeaderActionExtender;
 use Capell\Admin\Filament\Resources\Pages\Pages\EditPage;
+use Capell\AIOrchestrator\Actions\RunAIOrchestratorCapabilityAction;
+use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
 use Capell\AIOrchestrator\Enums\AiAssistantFieldEnum;
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Throwable;
 
 final class AiAssistantPageResourceExtender implements ResourceHeaderActionExtender
 {
@@ -33,6 +41,22 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
         'title' => 'title_generation',
         'content' => 'content_generation',
         'meta' => 'meta_description',
+    ];
+
+    /**
+     * The AI Orchestrator module that owns the authoring capabilities.
+     */
+    private const MODULE_KEY = 'ai-authoring';
+
+    /**
+     * Map of short field keys to their AI Orchestrator capability keys.
+     *
+     * @var array<string, string>
+     */
+    private const CAPABILITY_KEYS = [
+        'title' => 'suggest-title',
+        'content' => 'generate-content',
+        'meta' => 'suggest-meta-description',
     ];
 
     public function supports(string $pageClass): bool
@@ -52,6 +76,9 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
                 ->slideOver()
                 ->fillForm(fn (array $arguments, mixed $livewire): array => $this->prefillFromActiveTranslation($livewire))
                 ->schema(fn (): array => $this->wizardSchema())
+                ->action(function (array $data, mixed $livewire): void {
+                    $this->applySelections($livewire, $data);
+                })
                 ->visible(fn (): bool => $this->anyCapabilityEnabled()),
         ];
     }
@@ -101,10 +128,13 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
                             ->boolean()
                             ->default(true)
                             ->visible(fn (Get $get): bool => in_array('meta', $this->selectedFields($get), true)),
-                    ]),
+                    ])
+                    ->afterValidation(function (Get $get, Set $set, mixed $livewire): void {
+                        $set('generated', $this->generatePayload($this->inputsFromState($get), $livewire));
+                    }),
 
                 Step::make(__('capell-ai-orchestrator::package.ai_assistant_step_review'))
-                    ->schema([]),
+                    ->schema(fn (Get $get): array => $this->reviewComponents($this->generatedState($get))),
             ]),
         ];
     }
@@ -130,13 +160,300 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
      */
     private function selectedFields(Get $get): array
     {
-        $selectedFields = $get('fields');
+        return $this->selectedFieldsFrom($get('fields'));
+    }
 
-        if (! is_array($selectedFields)) {
+    /**
+     * @return array<int, string>
+     */
+    private function selectedFieldsFrom(mixed $fields): array
+    {
+        if (! is_array($fields)) {
             return [];
         }
 
-        return array_values(array_filter($selectedFields, 'is_string'));
+        return array_values(array_filter($fields, 'is_string'));
+    }
+
+    /**
+     * Normalise the Inputs-step form state into a plain array for generation.
+     *
+     * @return array<string, mixed>
+     */
+    private function inputsFromState(Get $get): array
+    {
+        return [
+            'fields' => $this->selectedFields($get),
+            'targetLanguageId' => $this->intOrNull($get('targetLanguageId')),
+            'keywords' => is_string($get('keywords')) ? $get('keywords') : '',
+            'titleIncludeCurrent' => $get('titleIncludeCurrent') === true,
+            'contentRefactor' => $get('contentRefactor') === true,
+            'contentTargetLength' => $this->intOrNull($get('contentTargetLength')),
+            'metaIncludeCurrent' => $get('metaIncludeCurrent') === true,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function generatedState(Get $get): array
+    {
+        $generated = $get('generated');
+
+        return is_array($generated) ? $generated : [];
+    }
+
+    /**
+     * Run each selected capability once and collect its raw output, keyed by
+     * field. A failing capability notifies the user and is skipped so the
+     * wizard never aborts mid-generation.
+     *
+     * @param  array<string, mixed>  $inputs
+     * @return array<string, mixed>
+     */
+    private function generatePayload(array $inputs, mixed $livewire): array
+    {
+        $selectedFields = $this->selectedFieldsFrom($inputs['fields'] ?? null);
+        $targetLanguageId = $this->intOrNull($inputs['targetLanguageId'] ?? null);
+
+        $sourceTranslation = $targetLanguageId !== null
+            ? $this->translationStateForLanguage($livewire, $targetLanguageId)
+            : null;
+
+        $record = $this->resolveRecord($livewire);
+        $context = [
+            'content' => $this->stringFrom($sourceTranslation, 'content'),
+            'keywords' => is_string($inputs['keywords'] ?? null) ? $inputs['keywords'] : '',
+            'pageId' => $record?->getKey(),
+            'pageType' => $record?->getMorphClass(),
+            'languageId' => $targetLanguageId ?? 0,
+        ];
+        $currentTitle = $this->stringFrom($sourceTranslation, 'title');
+
+        $generated = [];
+
+        foreach ($selectedFields as $field) {
+            try {
+                $generated[$field] = $this->runCapability(
+                    $field,
+                    $context,
+                    $this->optionsForField($field, $inputs, $currentTitle),
+                    Auth::user(),
+                );
+            } catch (Throwable $exception) {
+                Notification::make()
+                    ->title(__('capell-ai-orchestrator::package.ai_assistant_generation_failed'))
+                    ->body($exception->getMessage())
+                    ->danger()
+                    ->send();
+            }
+        }
+
+        return $generated;
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>  $options
+     */
+    private function runCapability(string $field, array $context, array $options, ?Authenticatable $actor): mixed
+    {
+        $context['options'] = $options;
+
+        return RunAIOrchestratorCapabilityAction::run(new AIOrchestratorRunData(
+            moduleKey: self::MODULE_KEY,
+            capabilityKey: self::CAPABILITY_KEYS[$field],
+            prompt: $this->stringFrom($context, 'keywords'),
+            context: $context,
+            actor: $actor,
+        ));
+    }
+
+    /**
+     * @param  array<string, mixed>  $inputs
+     * @return array<string, mixed>
+     */
+    private function optionsForField(string $field, array $inputs, string $currentTitle): array
+    {
+        $userId = Auth::id();
+        $options = is_int($userId) ? ['user_id' => $userId] : [];
+
+        return match ($field) {
+            'title' => ($inputs['titleIncludeCurrent'] ?? false) === true && $currentTitle !== ''
+                ? $options + ['current_title' => $currentTitle]
+                : $options,
+            'content' => $options + array_filter(
+                [
+                    'current_title' => $currentTitle !== '' ? $currentTitle : null,
+                    'target_length' => $this->intOrNull($inputs['contentTargetLength'] ?? null),
+                    'refactor' => ($inputs['contentRefactor'] ?? false) === true,
+                ],
+                static fn (mixed $value): bool => $value !== null,
+            ),
+            default => $options,
+        };
+    }
+
+    /**
+     * Build the Review-step components from the generated payload: a Radio of
+     * options for title/meta, and an editable preview for content.
+     *
+     * @param  array<string, mixed>  $generated
+     * @return array<int, Placeholder|Radio|Textarea>
+     */
+    private function reviewComponents(array $generated): array
+    {
+        $components = [];
+
+        $titleOptions = $this->stringList($generated['title'] ?? null);
+
+        if ($titleOptions !== []) {
+            $components[] = Radio::make('apply.title')
+                ->label(__('capell-ai-orchestrator::package.ai_assistant_review_title'))
+                ->options($titleOptions);
+        }
+
+        $content = $generated['content'] ?? null;
+
+        if (is_string($content) && $content !== '') {
+            $components[] = Textarea::make('apply.content')
+                ->label(__('capell-ai-orchestrator::package.ai_assistant_review_content'))
+                ->default($content)
+                ->rows(8);
+        }
+
+        $metaOptions = $this->stringList($generated['meta'] ?? null);
+
+        if ($metaOptions !== []) {
+            $components[] = Radio::make('apply.meta')
+                ->label(__('capell-ai-orchestrator::package.ai_assistant_review_meta'))
+                ->options($metaOptions);
+        }
+
+        if ($components === []) {
+            $components[] = Placeholder::make('review_empty')
+                ->content(__('capell-ai-orchestrator::package.ai_assistant_review_empty'));
+        }
+
+        return $components;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function stringList(mixed $values): array
+    {
+        if (! is_array($values)) {
+            return [];
+        }
+
+        $options = [];
+
+        foreach ($values as $value) {
+            if (is_string($value) && $value !== '') {
+                $options[$value] = $value;
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * Write the reviewed selections back into the target translation's form
+     * state, resolved by language id (never by tab position).
+     *
+     * @param  array<string, mixed>  $formState
+     */
+    private function applySelections(mixed $livewire, array $formState): void
+    {
+        $targetLanguageId = $this->intOrNull($formState['targetLanguageId'] ?? null);
+        $translationKey = $targetLanguageId === null
+            ? null
+            : $this->translationKeyForLanguage($livewire, $targetLanguageId);
+
+        if ($translationKey === null || ! is_object($livewire) || ! isset($livewire->data) || ! is_array($livewire->data)) {
+            Notification::make()
+                ->title(__('capell-ai-orchestrator::package.ai_assistant_apply_no_translation'))
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $selectedFields = $this->selectedFieldsFrom($formState['fields'] ?? null);
+        $apply = is_array($formState['apply'] ?? null) ? $formState['apply'] : [];
+        $data = $livewire->data;
+        $appliedCount = 0;
+
+        foreach ([
+            'title' => "translations.{$translationKey}.title",
+            'content' => "translations.{$translationKey}.content",
+            'meta' => "translations.{$translationKey}.meta.description",
+        ] as $field => $path) {
+            if (! in_array($field, $selectedFields, true)) {
+                continue;
+            }
+
+            $value = $apply[$field] ?? null;
+
+            if (! is_string($value) || $value === '') {
+                continue;
+            }
+
+            data_set($data, $path, $value);
+            $appliedCount++;
+        }
+
+        $livewire->data = $data;
+
+        Notification::make()
+            ->title(trans_choice('capell-ai-orchestrator::package.ai_assistant_applied', $appliedCount, ['count' => $appliedCount]))
+            ->success()
+            ->send();
+    }
+
+    /**
+     * Resolve the translations-repeater item key (UUID) whose language_id
+     * matches the requested language, or null when none match.
+     */
+    private function translationKeyForLanguage(mixed $livewire, int $languageId): ?string
+    {
+        foreach ($this->translationsState($livewire) as $key => $translation) {
+            if (is_array($translation) && $this->intOrNull($translation['language_id'] ?? null) === $languageId) {
+                return (string) $key;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<array-key, mixed>|null
+     */
+    private function translationStateForLanguage(mixed $livewire, int $languageId): ?array
+    {
+        foreach ($this->translationsState($livewire) as $translation) {
+            if (is_array($translation) && $this->intOrNull($translation['language_id'] ?? null) === $languageId) {
+                return $translation;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<array-key, mixed>|null  $source
+     */
+    private function stringFrom(?array $source, string $key): string
+    {
+        $value = $source[$key] ?? null;
+
+        return is_string($value) ? $value : '';
+    }
+
+    private function intOrNull(mixed $value): ?int
+    {
+        return is_numeric($value) ? (int) $value : null;
     }
 
     /**
