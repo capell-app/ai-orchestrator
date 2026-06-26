@@ -21,12 +21,14 @@
         "capell-app/core": "^4.0 || 4.x-dev",
         "capell-app/layout-builder": "^4.0 || 4.x-dev",
         "lorisleiva/laravel-actions": "^2.8",
+        "prism-php/prism": "^0.100",
         "spatie/laravel-data": "^4.5",
         "spatie/laravel-package-tools": "^1.14.1"
     },
     "autoload": {
         "psr-4": {
-            "Capell\\AIOrchestrator\\": "src/"
+            "Capell\\AIOrchestrator\\": "src/",
+            "Capell\\AIOrchestrator\\Database\\Factories\\": "database/factories"
         }
     },
     "extra": {

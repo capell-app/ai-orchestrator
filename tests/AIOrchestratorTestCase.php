@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Capell\AIOrchestrator\Tests;
 
 use Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider;
+use Capell\Core\Facades\CapellCore;
 use Capell\Tests\AbstractTestCase;
 use Illuminate\Foundation\Application;
 use Livewire\LivewireServiceProvider;
@@ -38,5 +39,7 @@ class AIOrchestratorTestCase extends AbstractTestCase
     protected function getEnvironmentSetUp(mixed $app): void
     {
         parent::getEnvironmentSetUp($app);
+
+        CapellCore::forcePackageInstalled(AIOrchestratorServiceProvider::$packageName);
     }
 }
