@@ -6,8 +6,8 @@ namespace Capell\AIOrchestrator\Support\Admin;
 
 use Capell\Admin\Contracts\Extenders\ResourceHeaderActionExtender;
 use Capell\Admin\Filament\Resources\Pages\Pages\EditPage;
-use Capell\AIOrchestrator\Actions\RunAIOrchestratorCapabilityAction;
-use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
+use Capell\AIOrchestrator\Actions\GenerateAiAssistantFieldsAction;
+use Capell\AIOrchestrator\Data\AiAssistantGenerationData;
 use Capell\AIOrchestrator\Enums\AiAssistantFieldEnum;
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
 use Filament\Actions\Action;
@@ -24,11 +24,9 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use Throwable;
 
 final class AiAssistantPageResourceExtender implements ResourceHeaderActionExtender
 {
@@ -41,22 +39,6 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
         'title' => 'title_generation',
         'content' => 'content_generation',
         'meta' => 'meta_description',
-    ];
-
-    /**
-     * The AI Orchestrator module that owns the authoring capabilities.
-     */
-    private const MODULE_KEY = 'ai-authoring';
-
-    /**
-     * Map of short field keys to their AI Orchestrator capability keys.
-     *
-     * @var array<string, string>
-     */
-    private const CAPABILITY_KEYS = [
-        'title' => 'suggest-title',
-        'content' => 'generate-content',
-        'meta' => 'suggest-meta-description',
     ];
 
     public function supports(string $pageClass): bool
@@ -204,16 +186,15 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
     }
 
     /**
-     * Run each selected capability once and collect its raw output, keyed by
-     * field. A failing capability notifies the user and is skipped so the
-     * wizard never aborts mid-generation.
+     * Adapt the Inputs-step form state and active translation into the Action's
+     * pure input, run generation, and surface any per-field failures as
+     * notifications. The wizard never aborts mid-generation.
      *
      * @param  array<string, mixed>  $inputs
      * @return array<string, mixed>
      */
     private function generatePayload(array $inputs, mixed $livewire): array
     {
-        $selectedFields = $this->selectedFieldsFrom($inputs['fields'] ?? null);
         $targetLanguageId = $this->intOrNull($inputs['targetLanguageId'] ?? null);
 
         $sourceTranslation = $targetLanguageId !== null
@@ -221,77 +202,32 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
             : null;
 
         $record = $this->resolveRecord($livewire);
-        $context = [
-            'content' => $this->stringFrom($sourceTranslation, 'content'),
-            'keywords' => is_string($inputs['keywords'] ?? null) ? $inputs['keywords'] : '',
-            'pageId' => $record?->getKey(),
-            'pageType' => $record?->getMorphClass(),
-            'languageId' => $targetLanguageId ?? 0,
-        ];
-        $currentTitle = $this->stringFrom($sourceTranslation, 'title');
+        $pageKey = $record?->getKey();
 
-        $generated = [];
+        $result = GenerateAiAssistantFieldsAction::make()->handle(new AiAssistantGenerationData(
+            fields: $this->selectedFieldsFrom($inputs['fields'] ?? null),
+            content: $this->stringFrom($sourceTranslation, 'content'),
+            currentTitle: $this->stringFrom($sourceTranslation, 'title'),
+            keywords: is_string($inputs['keywords'] ?? null) ? $inputs['keywords'] : '',
+            pageId: is_int($pageKey) || is_string($pageKey) ? $pageKey : null,
+            pageType: $record?->getMorphClass(),
+            languageId: $targetLanguageId ?? 0,
+            titleIncludeCurrent: ($inputs['titleIncludeCurrent'] ?? false) === true,
+            contentRefactor: ($inputs['contentRefactor'] ?? false) === true,
+            contentTargetLength: $this->intOrNull($inputs['contentTargetLength'] ?? null),
+            metaIncludeCurrent: ($inputs['metaIncludeCurrent'] ?? false) === true,
+            actor: Auth::user(),
+        ));
 
-        foreach ($selectedFields as $field) {
-            try {
-                $generated[$field] = $this->runCapability(
-                    $field,
-                    $context,
-                    $this->optionsForField($field, $inputs, $currentTitle),
-                    Auth::user(),
-                );
-            } catch (Throwable $exception) {
-                Notification::make()
-                    ->title(__('capell-ai-orchestrator::package.ai_assistant_generation_failed'))
-                    ->body($exception->getMessage())
-                    ->danger()
-                    ->send();
-            }
+        foreach ($result->failures as $message) {
+            Notification::make()
+                ->title(__('capell-ai-orchestrator::package.ai_assistant_generation_failed'))
+                ->body($message)
+                ->danger()
+                ->send();
         }
 
-        return $generated;
-    }
-
-    /**
-     * @param  array<string, mixed>  $context
-     * @param  array<string, mixed>  $options
-     */
-    private function runCapability(string $field, array $context, array $options, ?Authenticatable $actor): mixed
-    {
-        $context['options'] = $options;
-
-        return RunAIOrchestratorCapabilityAction::run(new AIOrchestratorRunData(
-            moduleKey: self::MODULE_KEY,
-            capabilityKey: self::CAPABILITY_KEYS[$field],
-            prompt: $this->stringFrom($context, 'keywords'),
-            context: $context,
-            actor: $actor,
-        ));
-    }
-
-    /**
-     * @param  array<string, mixed>  $inputs
-     * @return array<string, mixed>
-     */
-    private function optionsForField(string $field, array $inputs, string $currentTitle): array
-    {
-        $userId = Auth::id();
-        $options = is_int($userId) ? ['user_id' => $userId] : [];
-
-        return match ($field) {
-            'title' => ($inputs['titleIncludeCurrent'] ?? false) === true && $currentTitle !== ''
-                ? $options + ['current_title' => $currentTitle]
-                : $options,
-            'content' => $options + array_filter(
-                [
-                    'current_title' => $currentTitle !== '' ? $currentTitle : null,
-                    'target_length' => $this->intOrNull($inputs['contentTargetLength'] ?? null),
-                    'refactor' => ($inputs['contentRefactor'] ?? false) === true,
-                ],
-                static fn (mixed $value): bool => $value !== null,
-            ),
-            default => $options,
-        };
+        return $result->generated;
     }
 
     /**
