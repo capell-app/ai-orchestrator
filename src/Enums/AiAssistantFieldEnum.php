@@ -15,9 +15,9 @@ enum AiAssistantFieldEnum: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Title => __('Title'),
-            self::Content => __('Content'),
-            self::Meta => __('Meta description'),
+            self::Title => __('capell-ai-orchestrator::package.ai_assistant_field_title'),
+            self::Content => __('capell-ai-orchestrator::package.ai_assistant_field_content'),
+            self::Meta => __('capell-ai-orchestrator::package.ai_assistant_field_meta'),
         };
     }
 }

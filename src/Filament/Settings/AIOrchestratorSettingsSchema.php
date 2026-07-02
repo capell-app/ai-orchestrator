@@ -22,12 +22,12 @@ class AIOrchestratorSettingsSchema implements HasSchema
                 ->columnSpanFull()
                 ->schema([
                     TextInput::make('model')
-                        ->label(__('capell-seo-suite::form.model'))
-                        ->helperText(__('capell-seo-suite::generic.model_info'))
-                        ->placeholder(is_scalar($defaultModel = config('capell-seo-suite.openai.default_model')) ? (string) $defaultModel : null),
+                        ->label(__('capell-ai-orchestrator::package.settings_model'))
+                        ->helperText(__('capell-ai-orchestrator::package.settings_model_info'))
+                        ->placeholder(is_scalar($defaultModel = config('capell-ai-orchestrator.prism.model')) ? (string) $defaultModel : null),
                     TextInput::make('rate_limiting_requests_per_minute')
-                        ->label(__('capell-seo-suite::form.rate_limiting'))
-                        ->helperText(__('capell-seo-suite::generic.rate_limiting_info'))
+                        ->label(__('capell-ai-orchestrator::package.settings_rate_limiting'))
+                        ->helperText(__('capell-ai-orchestrator::package.settings_rate_limiting_info'))
                         ->placeholder(is_scalar($requestsPerMinute = config('capell-ai-orchestrator.rate_limiting.requests_per_minute')) ? (string) $requestsPerMinute : null),
                     Grid::make(2)
                         ->columnSpanFull()
@@ -40,10 +40,10 @@ class AIOrchestratorSettingsSchema implements HasSchema
                                 ->visible(fn (Get $get): bool => $get('title_generation') === true)
                                 ->schema([
                                     Textarea::make('title_generation_system')
-                                        ->label(__('capell-seo-suite::form.system'))
+                                        ->label(__('capell-ai-orchestrator::package.settings_prompt_system'))
                                         ->rows(4),
                                     Textarea::make('title_generation_user_template')
-                                        ->label(__('capell-seo-suite::form.user_template'))
+                                        ->label(__('capell-ai-orchestrator::package.settings_prompt_user_template'))
                                         ->rows(4),
                                 ]),
                         ]),
@@ -58,10 +58,10 @@ class AIOrchestratorSettingsSchema implements HasSchema
                                 ->visible(fn (Get $get): bool => $get('meta_description') === true)
                                 ->schema([
                                     Textarea::make('meta_description_system')
-                                        ->label(__('capell-seo-suite::form.system'))
+                                        ->label(__('capell-ai-orchestrator::package.settings_prompt_system'))
                                         ->rows(4),
                                     Textarea::make('meta_description_user_template')
-                                        ->label(__('capell-seo-suite::form.user_template'))
+                                        ->label(__('capell-ai-orchestrator::package.settings_prompt_user_template'))
                                         ->rows(4),
                                 ]),
                         ]),
@@ -76,10 +76,10 @@ class AIOrchestratorSettingsSchema implements HasSchema
                                 ->visible(fn (Get $get): bool => $get('content_generation') === true)
                                 ->schema([
                                     Textarea::make('content_generation_system')
-                                        ->label(__('capell-seo-suite::form.system'))
+                                        ->label(__('capell-ai-orchestrator::package.settings_prompt_system'))
                                         ->rows(4),
                                     Textarea::make('content_generation_user_template')
-                                        ->label(__('capell-seo-suite::form.user_template'))
+                                        ->label(__('capell-ai-orchestrator::package.settings_prompt_user_template'))
                                         ->rows(4),
                                 ]),
                         ]),
