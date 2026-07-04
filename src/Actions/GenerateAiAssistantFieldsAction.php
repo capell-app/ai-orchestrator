@@ -22,14 +22,14 @@ class GenerateAiAssistantFieldsAction
     /**
      * The AI Orchestrator module that owns the authoring capabilities.
      */
-    private const MODULE_KEY = 'ai-authoring';
+    private const string MODULE_KEY = 'ai-authoring';
 
     /**
      * Map of short field keys to their AI Orchestrator capability keys.
      *
      * @var array<string, string>
      */
-    private const CAPABILITY_KEYS = [
+    private const array CAPABILITY_KEYS = [
         'title' => 'suggest-title',
         'content' => 'generate-content',
         'meta' => 'suggest-meta-description',
