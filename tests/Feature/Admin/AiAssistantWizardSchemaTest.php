@@ -27,57 +27,14 @@ beforeEach(function (): void {
 });
 
 /**
- * @return array<int, Wizard>
+ * @return array<int, mixed>
  */
 function invokeWizardSchema(): array
 {
     $extender = app(AiAssistantPageResourceExtender::class);
     $wizardSchema = new ReflectionMethod(AiAssistantPageResourceExtender::class, 'wizardSchema');
-    $schema = $wizardSchema->invoke($extender);
 
-    throw_unless(is_array($schema), RuntimeException::class, 'Expected AI assistant wizard schema array.');
-
-    $wizards = [];
-
-    foreach ($schema as $component) {
-        throw_unless($component instanceof Wizard, RuntimeException::class, 'Expected AI assistant wizard schema to contain Wizard components.');
-
-        $wizards[] = $component;
-    }
-
-    return $wizards;
-}
-
-/**
- * @return array<int, Step>
- */
-function wizardSteps(Wizard $wizard): array
-{
-    $steps = $wizard->getDefaultChildComponents();
-
-    throw_unless(is_array($steps), RuntimeException::class, 'Expected AI assistant wizard steps array.');
-
-    $wizardSteps = [];
-
-    foreach ($steps as $step) {
-        throw_unless($step instanceof Step, RuntimeException::class, 'Expected AI assistant wizard step.');
-
-        $wizardSteps[] = $step;
-    }
-
-    return $wizardSteps;
-}
-
-/**
- * @return array<int, object>
- */
-function stepComponents(Step $step): array
-{
-    $components = $step->getDefaultChildComponents();
-
-    throw_unless(is_array($components), RuntimeException::class, 'Expected AI assistant step components array.');
-
-    return array_values(array_filter($components, static fn (mixed $component): bool => is_object($component)));
+    return $wizardSchema->invoke($extender);
 }
 
 it('builds a wizard with exactly three steps', function (): void {
@@ -86,7 +43,7 @@ it('builds a wizard with exactly three steps', function (): void {
     expect($schema)->toHaveCount(1)
         ->and($schema[0])->toBeInstanceOf(Wizard::class);
 
-    $steps = wizardSteps($schema[0]);
+    $steps = $schema[0]->getDefaultChildComponents();
 
     expect($steps)->toHaveCount(3);
 
@@ -97,9 +54,9 @@ it('builds a wizard with exactly three steps', function (): void {
 
 it('puts the language select and field checkbox list in the choose step', function (): void {
     $schema = invokeWizardSchema();
-    $steps = wizardSteps($schema[0]);
+    $steps = $schema[0]->getDefaultChildComponents();
 
-    $components = stepComponents($steps[0]);
+    $components = $steps[0]->getDefaultChildComponents();
 
     $checkboxList = collect($components)->first(
         fn (object $component): bool => $component instanceof CheckboxList && $component->getName() === 'fields',
@@ -108,8 +65,6 @@ it('puts the language select and field checkbox list in the choose step', functi
         fn (object $component): bool => $component instanceof Select && $component->getName() === 'targetLanguageId',
     );
 
-    throw_unless($checkboxList instanceof CheckboxList, RuntimeException::class, 'Expected fields checkbox list.');
-
     expect($checkboxList)->not->toBeNull()
         ->and($select)->not->toBeNull()
         ->and(array_keys($checkboxList->getOptions()))->toBe(['title', 'content', 'meta']);
@@ -117,9 +72,9 @@ it('puts the language select and field checkbox list in the choose step', functi
 
 it('puts the keywords textarea in the inputs step', function (): void {
     $schema = invokeWizardSchema();
-    $steps = wizardSteps($schema[0]);
+    $steps = $schema[0]->getDefaultChildComponents();
 
-    $components = stepComponents($steps[1]);
+    $components = $steps[1]->getDefaultChildComponents();
 
     $keywords = collect($components)->first(
         fn (object $component): bool => $component instanceof Textarea && $component->getName() === 'keywords',
@@ -133,8 +88,6 @@ it('maps enabled fields to enum labels', function (): void {
     $fieldOptions = new ReflectionMethod(AiAssistantPageResourceExtender::class, 'fieldOptions');
 
     $options = $fieldOptions->invoke($extender);
-
-    throw_unless(is_array($options), RuntimeException::class, 'Expected AI assistant field options array.');
 
     expect(array_keys($options))->toBe(['title', 'content', 'meta']);
 });

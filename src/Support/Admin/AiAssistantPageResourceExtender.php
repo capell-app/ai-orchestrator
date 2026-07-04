@@ -35,7 +35,7 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
      *
      * @var array<string, string>
      */
-    private const array CAPABILITY_FLAGS = [
+    private const CAPABILITY_FLAGS = [
         'title' => 'title_generation',
         'content' => 'content_generation',
         'meta' => 'meta_description',
