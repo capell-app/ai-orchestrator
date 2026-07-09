@@ -31,7 +31,8 @@ it('positions the package as headless ai orchestration infrastructure', function
         ->and($readme)->toContain($expectedSummary)
         ->and($readme)->toContain('Public routes: none detected in package route files')
         ->and($overview)->toContain($expectedSummary)
-        ->and($overview)->toContain('Marketplace screenshots intentionally remain empty');
+        ->and($overview)->toContain('Marketplace screenshots intentionally remain empty')
+        ->and(File::exists($packagePath . '/docs-move-refs.txt'))->toBeFalse();
 
     foreach (ai_orchestrator_array_value($screenshotContract, 'entries') as $entry) {
         expect($entry)->toBeArray();
