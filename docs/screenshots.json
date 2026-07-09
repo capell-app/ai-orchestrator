@@ -3,6 +3,8 @@
     "composerName": "capell-app/ai-orchestrator",
     "generatedFor": "deployment-screenshot-runner",
     "requiresInstalledPackage": true,
+    "auditStatus": "visual-exempt",
+    "auditReason": "AI Orchestrator is a shared capability registry and execution contract. Visual proof belongs to consuming packages that render registered capabilities, approvals, and execution results.",
     "outputDirectory": "packages/ai-orchestrator/docs/screenshots",
     "entries": [
         {
