@@ -37,8 +37,34 @@ class AIGenerationCache
         return $type . ':' . $id;
     }
 
+    /**
+     * @param  array<string, mixed>  $request
+     */
+    public function keyForRequest(array $request): string
+    {
+        $encodedRequest = json_encode(
+            $this->normalizeForHash($request),
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+        );
+
+        return $this->keyFor('ai-generation', hash('sha256', $encodedRequest));
+    }
+
     public function ttl(): int
     {
         return $this->ttl;
+    }
+
+    private function normalizeForHash(mixed $value): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        if (! array_is_list($value)) {
+            ksort($value);
+        }
+
+        return array_map(fn (mixed $item): mixed => $this->normalizeForHash($item), $value);
     }
 }

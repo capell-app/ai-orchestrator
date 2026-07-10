@@ -6,10 +6,13 @@ namespace Capell\AIOrchestrator\Support\Ai;
 
 use Capell\AIOrchestrator\Exceptions\OpenAICircuitBreakerOpenException;
 use Capell\Core\Contracts\ServiceContract;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
 use Prism\Prism\Enums\Provider;
+use Prism\Prism\Exceptions\PrismProviderOverloadedException;
+use Prism\Prism\Exceptions\PrismRateLimitedException;
 use Prism\Prism\Facades\Prism;
 use RuntimeException;
 use Throwable;
@@ -29,10 +32,12 @@ class PrismProvider implements ServiceContract
     /**
      * @param  array<array-key, mixed>  $config
      */
-    public function __construct(protected array $config = [])
-    {
-        $this->maxRetries = $this->intConfig('max_retries', 3);
-        $this->retryDelay = $this->intConfig('retry_delay_ms', 1000);
+    public function __construct(
+        protected array $config = [],
+        private readonly ?AIGenerationCache $generationCache = null,
+    ) {
+        $this->maxRetries = max(1, $this->intConfig('max_retries', 3));
+        $this->retryDelay = max(0, $this->intConfig('retry_delay_ms', 1000));
     }
 
     public function execute(array $input): mixed
@@ -45,7 +50,45 @@ class PrismProvider implements ServiceContract
      */
     public function chat(array $params): AiResponse
     {
-        throw_if($this->isCircuitOpen(), OpenAICircuitBreakerOpenException::class);
+        [$systemPrompt, $userMessage] = $this->promptsFrom($params['messages'] ?? []);
+        [$systemPrompt, $userMessage] = $this->boundPrompts($systemPrompt, $userMessage);
+
+        $model = $this->scalarString($params['model'] ?? $this->config['model'] ?? 'gpt-4o');
+        $providerName = $this->scalarString($this->config['provider'] ?? 'openai');
+        $maxTokens = isset($params['max_tokens']) ? $this->intFrom($params['max_tokens']) : $this->intConfig('max_tokens', 512);
+        $temperature = isset($params['temperature']) ? $this->floatFrom($params['temperature']) : 0.7;
+        $requestIdentity = [
+            'provider' => $providerName,
+            'model' => $model,
+            'system_prompt' => $systemPrompt,
+            'user_prompt' => $userMessage,
+            'max_tokens' => $maxTokens,
+            'temperature' => $temperature,
+        ];
+        $cacheKey = $this->generationCache?->keyForRequest($requestIdentity);
+
+        if ($cacheKey !== null) {
+            $cachedResponse = $this->generationCache?->get($cacheKey);
+
+            if ($cachedResponse instanceof AiResponse) {
+                return new AiResponse(
+                    content: $cachedResponse->content,
+                    tokensUsed: $cachedResponse->tokensUsed,
+                    model: $cachedResponse->model,
+                    duration: 0.0,
+                    metadata: [
+                        ...$cachedResponse->metadata,
+                        'cache_hit' => true,
+                        'cost_micros' => 0,
+                    ],
+                );
+            }
+        }
+
+        throw_if($this->isCircuitOpen($model), OpenAICircuitBreakerOpenException::class);
+
+        $idempotencySource = $this->scalarString($params['idempotency_key'] ?? $cacheKey ?? json_encode($requestIdentity));
+        $idempotencyKey = hash('sha256', $idempotencySource);
 
         $attempt = 0;
         $lastException = null;
@@ -53,42 +96,21 @@ class PrismProvider implements ServiceContract
 
         while ($attempt < $this->maxRetries) {
             try {
-                $messages = $params['messages'] ?? [];
-                $systemPrompt = '';
-
-                $userMessages = [];
-                if (is_iterable($messages)) {
-                    foreach ($messages as $message) {
-                        if (! is_array($message)) {
-                            continue;
-                        }
-                        $content = $this->scalarString($message['content'] ?? '');
-                        if (($message['role'] ?? null) === 'system') {
-                            $systemPrompt = $content;
-                        } elseif (($message['role'] ?? null) === 'user') {
-                            $userMessages[] = $content;
-                        }
-                    }
-                }
-
-                $userMessage = implode("\n\n", $userMessages);
-
-                $model = $this->scalarString($params['model'] ?? $this->config['model'] ?? 'gpt-4o');
-                $providerName = $this->scalarString($this->config['provider'] ?? 'openai');
-
-                $maxTokens = isset($params['max_tokens']) ? $this->intFrom($params['max_tokens']) : $this->intConfig('max_tokens', 512);
-                $temperature = isset($params['temperature']) ? $this->floatFrom($params['temperature']) : 0.7;
-
                 $response = Prism::text()
                     ->using($this->resolveProvider($providerName), $model)
                     ->withSystemPrompt($systemPrompt)
                     ->withPrompt($userMessage)
                     ->withMaxTokens($maxTokens)
                     ->usingTemperature($temperature)
+                    ->withClientOptions([
+                        'timeout' => max(1, $this->intConfig('timeout_seconds', 30)),
+                        'connect_timeout' => max(1, $this->intConfig('connect_timeout_seconds', 5)),
+                        'headers' => ['Idempotency-Key' => $idempotencyKey],
+                    ])
                     ->asText();
 
                 $duration = microtime(true) - $startTime;
-                $this->resetCircuitBreaker();
+                $this->resetCircuitBreaker($model);
                 $usage = $this->usageFromResponse($response);
                 $promptTokens = $this->promptTokens($usage);
                 $completionTokens = $this->completionTokens($usage);
@@ -101,7 +123,7 @@ class PrismProvider implements ServiceContract
                     'duration_ms' => round($duration * 1000, 2),
                 ]);
 
-                return new AiResponse(
+                $aiResponse = new AiResponse(
                     content: $response->text,
                     tokensUsed: $totalTokens,
                     model: $model,
@@ -109,12 +131,31 @@ class PrismProvider implements ServiceContract
                     metadata: [
                         'prompt_tokens' => $promptTokens,
                         'completion_tokens' => $completionTokens,
+                        'cache_hit' => false,
+                        'idempotency_key' => $idempotencyKey,
                     ],
                 );
+
+                if ($cacheKey !== null) {
+                    $this->generationCache?->put($cacheKey, $aiResponse);
+                }
+
+                return $aiResponse;
             } catch (Throwable $e) {
                 $attempt++;
                 $lastException = $e;
-                $this->recordFailure();
+
+                if (! $this->isRetryable($e)) {
+                    Log::warning('AI API request rejected without retry', [
+                        'provider' => $providerName,
+                        'model' => $model,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    throw $e;
+                }
+
+                $this->recordFailure($model);
 
                 Log::warning('AI API attempt failed', [
                     'attempt' => $attempt,
@@ -143,16 +184,17 @@ class PrismProvider implements ServiceContract
         return 'prism_provider';
     }
 
-    public function resetCircuitBreaker(): void
+    public function resetCircuitBreaker(?string $model = null): void
     {
-        Cache::forget($this->circuitBreakerKey());
+        Cache::forget($this->circuitBreakerKey($model));
     }
 
-    public function circuitBreakerKey(): string
+    public function circuitBreakerKey(?string $model = null): string
     {
         $providerName = $this->scalarString($this->config['provider'] ?? 'openai');
+        $modelName = $model ?? $this->scalarString($this->config['model'] ?? 'gpt-4o');
 
-        return self::CIRCUIT_BREAKER_KEY_PREFIX . ':' . strtolower($providerName);
+        return self::CIRCUIT_BREAKER_KEY_PREFIX . ':' . strtolower($providerName) . ':' . strtolower($modelName);
     }
 
     protected function resolveProvider(string $name): Provider
@@ -165,19 +207,42 @@ class PrismProvider implements ServiceContract
         };
     }
 
-    protected function isCircuitOpen(): bool
+    protected function isCircuitOpen(?string $model = null): bool
     {
-        return $this->currentFailures() >= self::FAILURE_THRESHOLD;
+        return $this->currentFailures($model) >= self::FAILURE_THRESHOLD;
     }
 
-    protected function recordFailure(): void
+    protected function recordFailure(?string $model = null): void
     {
-        Cache::put($this->circuitBreakerKey(), ['failures' => $this->currentFailures() + 1], self::CIRCUIT_TIMEOUT);
+        Cache::put($this->circuitBreakerKey($model), ['failures' => $this->currentFailures($model) + 1], self::CIRCUIT_TIMEOUT);
     }
 
-    private function currentFailures(): int
+    protected function isRetryable(Throwable $exception): bool
     {
-        $state = Cache::get($this->circuitBreakerKey(), ['failures' => 0]);
+        $currentException = $exception;
+
+        do {
+            if ($currentException instanceof ConnectionException
+                || $currentException instanceof PrismRateLimitedException
+                || $currentException instanceof PrismProviderOverloadedException) {
+                return true;
+            }
+
+            $statusCode = $currentException->getCode();
+
+            if (in_array($statusCode, [408, 409, 425, 429], true) || $statusCode >= 500) {
+                return true;
+            }
+
+            $currentException = $currentException->getPrevious();
+        } while ($currentException instanceof Throwable);
+
+        return false;
+    }
+
+    private function currentFailures(?string $model = null): int
+    {
+        $state = Cache::get($this->circuitBreakerKey($model), ['failures' => 0]);
         $failures = is_array($state) ? ($state['failures'] ?? 0) : 0;
 
         return is_numeric($failures) ? (int) $failures : 0;
@@ -203,6 +268,59 @@ class PrismProvider implements ServiceContract
     private function scalarString(mixed $value): string
     {
         return is_scalar($value) ? (string) $value : '';
+    }
+
+    /**
+     * @return array{string, string}
+     */
+    private function promptsFrom(mixed $messages): array
+    {
+        $systemPrompts = [];
+        $userMessages = [];
+
+        if (is_iterable($messages)) {
+            foreach ($messages as $message) {
+                if (! is_array($message)) {
+                    continue;
+                }
+
+                $content = $this->scalarString($message['content'] ?? '');
+
+                if (($message['role'] ?? null) === 'system') {
+                    $systemPrompts[] = $content;
+                } elseif (($message['role'] ?? null) === 'user') {
+                    $userMessages[] = $content;
+                }
+            }
+        }
+
+        return [implode("\n\n", $systemPrompts), implode("\n\n", $userMessages)];
+    }
+
+    /**
+     * @return array{string, string}
+     */
+    private function boundPrompts(string $systemPrompt, string $userPrompt): array
+    {
+        $maximumCharacters = max(1, $this->intConfig('max_prompt_chars', 32_000));
+
+        if (mb_strlen($systemPrompt . $userPrompt) <= $maximumCharacters) {
+            return [$systemPrompt, $userPrompt];
+        }
+
+        if ($systemPrompt === '') {
+            return ['', mb_substr($userPrompt, 0, $maximumCharacters)];
+        }
+
+        if ($userPrompt === '') {
+            return [mb_substr($systemPrompt, 0, $maximumCharacters), ''];
+        }
+
+        $systemBudget = max(1, (int) floor($maximumCharacters * 0.35));
+        $boundedSystemPrompt = mb_substr($systemPrompt, 0, $systemBudget);
+        $userBudget = max(0, $maximumCharacters - mb_strlen($boundedSystemPrompt));
+
+        return [$boundedSystemPrompt, mb_substr($userPrompt, 0, $userBudget)];
     }
 
     private function usageFromResponse(mixed $response): mixed

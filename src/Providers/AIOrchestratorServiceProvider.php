@@ -98,7 +98,10 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 
     private function registerAiEngineBindings(): self
     {
-        $this->app->singleton(PrismProvider::class, fn (Application $app): PrismProvider => new PrismProvider($this->aiArray(config('capell-ai-orchestrator.prism', []))));
+        $this->app->singleton(PrismProvider::class, fn (Application $app): PrismProvider => new PrismProvider(
+            $this->aiArray(config('capell-ai-orchestrator.prism', [])),
+            $app->make(AIGenerationCache::class),
+        ));
 
         $this->app->singleton(PromptRepository::class, fn (Application $app): PromptRepository => new PromptRepository($this->aiArray(config('capell-ai-orchestrator.prompts', []))));
 
