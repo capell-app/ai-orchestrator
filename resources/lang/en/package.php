@@ -37,6 +37,7 @@ return [
     'catalog_required_ability' => 'Required ability',
     'catalog_subheading' => 'Review registered AI modules, approval levels, required abilities, and action classes before consuming packages expose workflows.',
     'catalog_title' => 'AI Orchestrator Capability Catalog',
+    'prune_generation_payloads' => 'Pruned payloads from :count AI generation histories.',
     'health_duplicate_capability_failed' => 'The module registry accepted duplicate capability keys.',
     'health_duplicate_capability_label' => 'AI Orchestrator duplicate capability protection',
     'health_duplicate_capability_passed' => 'The module registry rejects duplicate capability keys.',

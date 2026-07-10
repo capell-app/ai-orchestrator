@@ -5,6 +5,9 @@ declare(strict_types=1);
 use Capell\AIOrchestrator\Actions\Ai\GeneratorPageContentAction;
 
 return [
+    'retention' => [
+        'generation_payload_days' => (int) env('CAPELL_AI_ORCHESTRATOR_GENERATION_PAYLOAD_DAYS', 30),
+    ],
     'prism' => [
         'provider' => env('AI_PROVIDER', 'openai'),
         'model' => env('AI_MODEL', 'gpt-4o'),

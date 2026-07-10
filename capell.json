@@ -54,7 +54,8 @@
         "install": null,
         "setup": null,
         "demo": null,
-        "doctor": null
+        "doctor": null,
+        "prune": "capell:ai-orchestrator:prune-generation-payloads"
     },
     "settings": ["Capell\\AIOrchestrator\\Settings\\AIOrchestratorSettings"],
     "permissions": [],
@@ -71,7 +72,12 @@
             "throttledRoutes": []
         },
         "sensitiveData": {
-            "encryptedFields": [],
+            "encryptedFields": [
+                "ai_generation_histories.input",
+                "ai_generation_histories.output",
+                "ai_generation_histories.error_message",
+                "ai_generation_histories.metadata"
+            ],
             "hashedTokenFields": [],
             "redactedOutputClasses": [],
             "plaintextJustifications": []
