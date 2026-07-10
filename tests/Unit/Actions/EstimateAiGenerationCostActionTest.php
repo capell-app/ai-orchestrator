@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Capell\AIOrchestrator\Actions\Ai\AssertAiModelPriceConfiguredAction;
 use Capell\AIOrchestrator\Actions\Ai\EstimateAiGenerationCostAction;
 
 it('estimates token and flat image costs from configured pricing', function (): void {
@@ -32,4 +33,14 @@ it('honours explicit provider cost metadata', function (): void {
         'cost_micros' => 1234,
         'currency' => 'GBP',
     ]);
+});
+
+it('rejects dispatch for models without an explicit price map entry', function (): void {
+    config()->set('capell-ai-orchestrator.ai_costs.models', [
+        'known-model' => ['flat_cost_micros' => 0],
+    ]);
+
+    expect(fn (): bool => AssertAiModelPriceConfiguredAction::run('missing-model'))
+        ->toThrow(RuntimeException::class, 'missing-model')
+        ->and(AssertAiModelPriceConfiguredAction::run('KNOWN-MODEL'))->toBeTrue();
 });

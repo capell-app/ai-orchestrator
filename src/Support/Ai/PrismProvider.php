@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Capell\AIOrchestrator\Support\Ai;
 
+use Capell\AIOrchestrator\Actions\Ai\AssertAiModelPriceConfiguredAction;
 use Capell\AIOrchestrator\Exceptions\OpenAICircuitBreakerOpenException;
 use Capell\Core\Contracts\ServiceContract;
 use Illuminate\Http\Client\ConnectionException;
@@ -57,6 +58,10 @@ class PrismProvider implements ServiceContract
         $providerName = $this->scalarString($this->config['provider'] ?? 'openai');
         $maxTokens = isset($params['max_tokens']) ? $this->intFrom($params['max_tokens']) : $this->intConfig('max_tokens', 512);
         $temperature = isset($params['temperature']) ? $this->floatFrom($params['temperature']) : 0.7;
+
+        if (($this->config['enforce_price_map'] ?? false) === true) {
+            AssertAiModelPriceConfiguredAction::run($model);
+        }
         $requestIdentity = [
             'provider' => $providerName,
             'model' => $model,

@@ -13,6 +13,7 @@ return [
         'timeout_seconds' => 30,
         'connect_timeout_seconds' => 5,
         'max_prompt_chars' => 32_000,
+        'enforce_price_map' => true,
         'max_tokens' => 4096,
         'image_provider' => env('AI_IMAGE_PROVIDER', 'openai'),
         'image_model' => env('AI_IMAGE_MODEL', 'dall-e-3'),
