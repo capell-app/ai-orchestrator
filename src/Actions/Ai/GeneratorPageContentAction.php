@@ -22,7 +22,7 @@ class GeneratorPageContentAction
     public function __construct(private readonly GenerateContentPipeline $pipeline) {}
 
     /**
-     * @param  array{user_id?:int|null,current_title?:string|null,target_length?:int|null,refactor?:bool|null}  $options
+     * @param  array{user_id?:int|null,site_id?:int|null,current_title?:string|null,target_length?:int|null,refactor?:bool|null}  $options
      */
     public function handle(AiActionContextInterface $context, array $options = []): string
     {

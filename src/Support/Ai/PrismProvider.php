@@ -36,6 +36,7 @@ class PrismProvider implements ServiceContract
     public function __construct(
         protected array $config = [],
         private readonly ?AIGenerationCache $generationCache = null,
+        private readonly ?AiSpendGuard $spendGuard = null,
     ) {
         $this->maxRetries = max(1, $this->intConfig('max_retries', 3));
         $this->retryDelay = max(0, $this->intConfig('retry_delay_ms', 1000));
@@ -94,6 +95,14 @@ class PrismProvider implements ServiceContract
 
         $idempotencySource = $this->scalarString($params['idempotency_key'] ?? $cacheKey ?? json_encode($requestIdentity));
         $idempotencyKey = hash('sha256', $idempotencySource);
+        $siteId = $this->positiveIntOrNull($params['site_id'] ?? null);
+        $reservation = $this->spendGuard?->reserve(
+            siteId: $siteId,
+            model: $model,
+            promptTokens: (int) ceil(mb_strlen($systemPrompt . $userMessage) / 4),
+            completionTokens: max(0, $maxTokens),
+            idempotencyKey: $idempotencyKey,
+        );
 
         $attempt = 0;
         $lastException = null;
@@ -138,6 +147,9 @@ class PrismProvider implements ServiceContract
                         'completion_tokens' => $completionTokens,
                         'cache_hit' => false,
                         'idempotency_key' => $idempotencyKey,
+                        'site_id' => $siteId,
+                        'spend_reservation_id' => $reservation?->id,
+                        'estimated_cost_micros' => $reservation?->estimatedCostMicros,
                     ],
                 );
 
@@ -157,6 +169,8 @@ class PrismProvider implements ServiceContract
                         'error' => $e->getMessage(),
                     ]);
 
+                    $this->spendGuard?->release($reservation?->id);
+
                     throw $e;
                 }
 
@@ -168,13 +182,19 @@ class PrismProvider implements ServiceContract
                     'error' => $e->getMessage(),
                 ]);
 
-                throw_if($attempt >= $this->maxRetries, $lastException);
+                if ($attempt >= $this->maxRetries) {
+                    $this->spendGuard?->release($reservation?->id);
+
+                    throw $lastException;
+                }
 
                 $delay = $this->retryDelay * (2 ** ($attempt - 1));
                 $jitter = random_int(0, (int) ($delay * 0.1));
                 Sleep::usleep(($delay + $jitter) * 1000);
             }
         }
+
+        $this->spendGuard?->release($reservation?->id);
 
         throw $lastException ?? new RuntimeException('Unknown AI provider error');
     }
@@ -273,6 +293,11 @@ class PrismProvider implements ServiceContract
     private function scalarString(mixed $value): string
     {
         return is_scalar($value) ? (string) $value : '';
+    }
+
+    private function positiveIntOrNull(mixed $value): ?int
+    {
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : null;
     }
 
     /**

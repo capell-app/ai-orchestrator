@@ -6,6 +6,7 @@ namespace Capell\AIOrchestrator\Actions\Ai;
 
 use Capell\AIOrchestrator\Data\Ai\AiGenerationResultData;
 use Capell\AIOrchestrator\Models\AIGenerationHistory;
+use Capell\AIOrchestrator\Support\Ai\AiSpendGuard;
 use Illuminate\Support\Facades\Auth;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -16,13 +17,19 @@ class RecordAiGenerationAction
 {
     use AsAction;
 
+    public function __construct(private readonly ?AiSpendGuard $spendGuard = null) {}
+
     /**
      * @param  AiGenerationResultData|array<string, mixed>  $result
      */
     public function handle(AiGenerationResultData|array $result): AIGenerationHistory
     {
         if (is_array($result)) {
-            return AIGenerationHistory::query()->create($this->withCostAndActor($result));
+            $history = AIGenerationHistory::query()->create($this->withCostAndActor($result));
+            $metadata = is_array($result['metadata'] ?? null) ? $result['metadata'] : [];
+            $this->spendGuard?->release($this->stringOrNull($metadata['spend_reservation_id'] ?? null));
+
+            return $history;
         }
 
         $responseMetadata = $result->response->metadata ?? [];
@@ -40,7 +47,8 @@ class RecordAiGenerationAction
             $metadata['ai_creator_session_id'] = $result->aiCreatorSessionId;
         }
 
-        return AIGenerationHistory::query()->create($this->withCostAndActor([
+        $history = AIGenerationHistory::query()->create($this->withCostAndActor([
+            'site_id' => $result->siteId ?? $this->integerOrNull($metadata['site_id'] ?? null),
             'action' => $result->actionKey,
             'model' => $result->response?->model,
             'input' => $result->inputText,
@@ -54,6 +62,10 @@ class RecordAiGenerationAction
             'language_id' => $result->languageId,
             'metadata' => $metadata,
         ]));
+
+        $this->spendGuard?->release($this->stringOrNull($metadata['spend_reservation_id'] ?? null));
+
+        return $history;
     }
 
     /**
@@ -99,6 +111,16 @@ class RecordAiGenerationAction
     private function integerValue(mixed $value): int
     {
         return is_numeric($value) ? (int) $value : 0;
+    }
+
+    private function integerOrNull(mixed $value): ?int
+    {
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : null;
+    }
+
+    private function stringOrNull(mixed $value): ?string
+    {
+        return is_string($value) && $value !== '' ? $value : null;
     }
 
     /**

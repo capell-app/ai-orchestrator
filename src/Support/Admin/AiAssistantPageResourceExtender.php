@@ -211,6 +211,7 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
             keywords: is_string($inputs['keywords'] ?? null) ? $inputs['keywords'] : '',
             pageId: is_int($pageKey) || is_string($pageKey) ? $pageKey : null,
             pageType: $record?->getMorphClass(),
+            siteId: $this->intOrNull($record?->getAttribute('site_id')),
             languageId: $targetLanguageId ?? 0,
             titleIncludeCurrent: ($inputs['titleIncludeCurrent'] ?? false) === true,
             contentRefactor: ($inputs['contentRefactor'] ?? false) === true,

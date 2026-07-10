@@ -110,6 +110,7 @@ class GenerateContentPipeline
             'messages' => $messages,
             'max_tokens' => config('capell-ai-orchestrator.prism.max_tokens', 4096),
             'temperature' => 0.7,
+            'site_id' => $this->positiveIntOrNull($options['site_id'] ?? null),
         ];
 
         $response = $this->provider->chat($params);
@@ -161,6 +162,7 @@ class GenerateContentPipeline
             pageableId: $context->getPageId(),
             pageableType: $context->getPageType(),
             languageId: $context->getLanguageId(),
+            siteId: $this->positiveIntOrNull($input->options['site_id'] ?? null),
         );
 
         $resultData->history = $this->recordAiGenerationAction->handle($resultData);
@@ -183,6 +185,11 @@ class GenerateContentPipeline
         }
 
         return $this->sanitizeHtmlWithPatterns($html);
+    }
+
+    private function positiveIntOrNull(mixed $value): ?int
+    {
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : null;
     }
 
     private function sanitizeHtmlWithDom(string $html): string

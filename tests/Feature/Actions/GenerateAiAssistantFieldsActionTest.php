@@ -70,6 +70,7 @@ it('maps per-field options for title and content', function (): void {
         content: 'Existing body',
         currentTitle: 'Old Title',
         keywords: 'kw',
+        siteId: 42,
         languageId: 2,
         titleIncludeCurrent: true,
         contentRefactor: true,
@@ -77,9 +78,10 @@ it('maps per-field options for title and content', function (): void {
     ));
 
     expect($capturedContext['suggest-title']['options'])
-        ->toBe(['current_title' => 'Old Title'])
+        ->toBe(['site_id' => 42, 'current_title' => 'Old Title'])
         ->and($capturedContext['generate-content']['options'])
         ->toBe([
+            'site_id' => 42,
             'current_title' => 'Old Title',
             'target_length' => 500,
             'refactor' => true,

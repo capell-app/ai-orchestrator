@@ -35,6 +35,12 @@ return [
             ],
         ],
     ],
+    'spend_limits' => [
+        'enabled' => true,
+        'monthly_limit_micros' => 50_000_000,
+        'per_request_limit_micros' => 5_000_000,
+        'reservation_ttl_seconds' => 3_600,
+    ],
     'prompts' => [
         'title_generation' => [
             'system' => 'You are a helpful ai-orchestrator that writes concise, SEO-friendly page titles.',

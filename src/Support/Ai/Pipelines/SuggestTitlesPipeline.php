@@ -119,6 +119,7 @@ class SuggestTitlesPipeline
             'messages' => $messages,
             'max_tokens' => config('capell-ai-orchestrator.prism.max_tokens', 128),
             'temperature' => 0.7,
+            'site_id' => $this->positiveIntOrNull($options['site_id'] ?? null),
         ];
 
         $response = $this->provider->chat($params);
@@ -166,11 +167,17 @@ class SuggestTitlesPipeline
             pageableId: $context->getPageId(),
             pageableType: $context->getPageType(),
             languageId: $context->getLanguageId(),
+            siteId: $this->positiveIntOrNull($input->options['site_id'] ?? null),
         );
 
         $resultData->history = $this->recordAiGenerationAction->handle($resultData);
         $payload['result_data'] = $resultData;
 
         return $next($payload);
+    }
+
+    private function positiveIntOrNull(mixed $value): ?int
+    {
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : null;
     }
 }

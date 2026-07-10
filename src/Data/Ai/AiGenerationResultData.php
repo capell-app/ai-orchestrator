@@ -26,6 +26,7 @@ class AiGenerationResultData extends Data
         public int|string|null $pageableId = null,
         public ?string $pageableType = null,
         public ?int $languageId = null,
+        public ?int $siteId = null,
         public array $metadata = [],
         public ?int $aiCreatorSessionId = null,
         public ?AIGenerationHistory $history = null,
@@ -47,6 +48,7 @@ class AiGenerationResultData extends Data
         int|string|null $pageableId = null,
         ?string $pageableType = null,
         ?int $languageId = null,
+        ?int $siteId = null,
         array $metadata = [],
         ?int $aiCreatorSessionId = null,
     ): self {
@@ -61,6 +63,7 @@ class AiGenerationResultData extends Data
             pageableId: $pageableId,
             pageableType: $pageableType,
             languageId: $languageId,
+            siteId: $siteId,
             metadata: $metadata,
             aiCreatorSessionId: $aiCreatorSessionId,
         );

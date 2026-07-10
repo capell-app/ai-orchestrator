@@ -13,6 +13,7 @@ use Override;
 
 /**
  * @property int $id
+ * @property int|null $site_id
  * @property string $action
  * @property string|null $model
  * @property string|null $input
@@ -51,6 +52,7 @@ use Override;
  * @method static Builder<static>|AIGenerationHistory whereOutput($value)
  * @method static Builder<static>|AIGenerationHistory wherePageId($value)
  * @method static Builder<static>|AIGenerationHistory wherePromptTokens($value)
+ * @method static Builder<static>|AIGenerationHistory whereSiteId($value)
  * @method static Builder<static>|AIGenerationHistory whereTotalTokens($value)
  * @method static Builder<static>|AIGenerationHistory whereUpdatedAt($value)
  *
@@ -64,6 +66,7 @@ class AIGenerationHistory extends Model
     protected $table = 'ai_generation_histories';
 
     protected $fillable = [
+        'site_id',
         'action',
         'model',
         'input',

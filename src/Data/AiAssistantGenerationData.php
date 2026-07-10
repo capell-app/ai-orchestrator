@@ -24,6 +24,7 @@ class AiAssistantGenerationData extends Data
         public string $keywords = '',
         public int|string|null $pageId = null,
         public ?string $pageType = null,
+        public ?int $siteId = null,
         public int $languageId = 0,
         public bool $titleIncludeCurrent = false,
         public bool $contentRefactor = false,

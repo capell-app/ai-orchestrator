@@ -24,7 +24,7 @@ class GenerateContentCapabilityAction
     }
 
     /**
-     * @return array{user_id?:int|null,current_title?:string|null,target_length?:int|null,refactor?:bool|null}
+     * @return array{user_id?:int|null,site_id?:int|null,current_title?:string|null,target_length?:int|null,refactor?:bool|null}
      */
     private function optionsFromRun(AIOrchestratorRunData $run): array
     {
@@ -35,6 +35,11 @@ class GenerateContentCapabilityAction
         if (array_key_exists('user_id', $rawOptions)) {
             $userId = $rawOptions['user_id'];
             $options['user_id'] = is_scalar($userId) ? (int) $userId : null;
+        }
+
+        if (array_key_exists('site_id', $rawOptions)) {
+            $siteId = $rawOptions['site_id'];
+            $options['site_id'] = is_scalar($siteId) ? (int) $siteId : null;
         }
 
         if (array_key_exists('current_title', $rawOptions)) {

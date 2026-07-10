@@ -65,6 +65,7 @@ class GenerateAiAssistantFieldsAction
             'keywords' => $data->keywords,
             'pageId' => $data->pageId,
             'pageType' => $data->pageType,
+            'siteId' => $data->siteId,
             'languageId' => $data->languageId,
             'options' => $this->optionsForField($field, $data),
         ];
@@ -85,6 +86,10 @@ class GenerateAiAssistantFieldsAction
     {
         $userId = $data->actor?->getAuthIdentifier();
         $options = is_int($userId) ? ['user_id' => $userId] : [];
+
+        if ($data->siteId !== null) {
+            $options['site_id'] = $data->siteId;
+        }
 
         return match ($field) {
             'title' => $data->titleIncludeCurrent && $data->currentTitle !== ''

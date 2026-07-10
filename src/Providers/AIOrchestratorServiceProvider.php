@@ -17,6 +17,7 @@ use Capell\AIOrchestrator\Support\Admin\AiAssistantPageResourceExtender;
 use Capell\AIOrchestrator\Support\Ai\AIGenerationCache;
 use Capell\AIOrchestrator\Support\Ai\AiRateLimiter;
 use Capell\AIOrchestrator\Support\Ai\AiResponseParser;
+use Capell\AIOrchestrator\Support\Ai\AiSpendGuard;
 use Capell\AIOrchestrator\Support\Ai\AiTokenCounter;
 use Capell\AIOrchestrator\Support\Ai\Cache\RateLimitCache;
 use Capell\AIOrchestrator\Support\Ai\Concerns\NormalizesAiValues;
@@ -59,6 +60,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             ->hasMigrations([
                 '2026_05_10_190870_02_create_ai_generation_histories_table',
                 '2026_06_08_000001_add_cost_fields_to_ai_generation_histories_table',
+                '2026_07_10_000001_add_site_id_to_ai_generation_histories_table',
             ]);
     }
 
@@ -101,6 +103,12 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         $this->app->singleton(PrismProvider::class, fn (Application $app): PrismProvider => new PrismProvider(
             $this->aiArray(config('capell-ai-orchestrator.prism', [])),
             $app->make(AIGenerationCache::class),
+            $app->make(AiSpendGuard::class),
+        ));
+
+        $this->app->singleton(AiSpendGuard::class, fn (Application $app): AiSpendGuard => new AiSpendGuard(
+            $this->aiString(config('cache.default')),
+            $this->aiArray(config('capell-ai-orchestrator.spend_limits', [])),
         ));
 
         $this->app->singleton(PromptRepository::class, fn (Application $app): PromptRepository => new PromptRepository($this->aiArray(config('capell-ai-orchestrator.prompts', []))));
