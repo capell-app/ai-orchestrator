@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Capell\AIOrchestrator\Actions\Ai\AssertAiModelPriceConfiguredAction;
+use Capell\AIOrchestrator\Actions\Ai\AssertAiRequestBudgetAction;
 use Capell\AIOrchestrator\Actions\Ai\EstimateAiGenerationCostAction;
+use Capell\AIOrchestrator\Exceptions\AiSpendBudgetExceededException;
 
 it('estimates token and flat image costs from configured pricing', function (): void {
     $textCost = EstimateAiGenerationCostAction::run(
@@ -43,4 +45,14 @@ it('rejects dispatch for models without an explicit price map entry', function (
     expect(fn (): bool => AssertAiModelPriceConfiguredAction::run('missing-model'))
         ->toThrow(RuntimeException::class, 'missing-model')
         ->and(AssertAiModelPriceConfiguredAction::run('KNOWN-MODEL'))->toBeTrue();
+});
+
+it('enforces a caller budget against the configured model price', function (): void {
+    config()->set('capell-ai-orchestrator.ai_costs.models.image-model', [
+        'flat_cost_micros' => 40_000,
+    ]);
+
+    expect(AssertAiRequestBudgetAction::run('image-model', 4))->toBeTrue()
+        ->and(fn (): bool => AssertAiRequestBudgetAction::run('image-model', 3))
+        ->toThrow(AiSpendBudgetExceededException::class);
 });
