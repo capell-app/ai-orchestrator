@@ -59,6 +59,7 @@ class PrismProvider implements ServiceContract
         $providerName = $this->scalarString($this->config['provider'] ?? 'openai');
         $maxTokens = isset($params['max_tokens']) ? $this->intFrom($params['max_tokens']) : $this->intConfig('max_tokens', 512);
         $temperature = isset($params['temperature']) ? $this->floatFrom($params['temperature']) : 0.7;
+        $siteId = $this->positiveIntOrNull($params['site_id'] ?? null);
 
         if (($this->config['enforce_price_map'] ?? false) === true) {
             AssertAiModelPriceConfiguredAction::run($model);
@@ -70,6 +71,7 @@ class PrismProvider implements ServiceContract
             'user_prompt' => $userMessage,
             'max_tokens' => $maxTokens,
             'temperature' => $temperature,
+            'site_id' => $siteId,
         ];
         $cacheKey = $this->generationCache?->keyForRequest($requestIdentity);
 
@@ -95,7 +97,6 @@ class PrismProvider implements ServiceContract
 
         $idempotencySource = $this->scalarString($params['idempotency_key'] ?? $cacheKey ?? json_encode($requestIdentity));
         $idempotencyKey = hash('sha256', $idempotencySource);
-        $siteId = $this->positiveIntOrNull($params['site_id'] ?? null);
         $reservation = $this->spendGuard?->reserve(
             siteId: $siteId,
             model: $model,

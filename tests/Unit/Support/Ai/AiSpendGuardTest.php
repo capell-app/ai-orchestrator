@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Capell\AIOrchestrator\Actions\Ai\RecordAiGenerationAction;
 use Capell\AIOrchestrator\Exceptions\AiSpendBudgetExceededException;
 use Capell\AIOrchestrator\Models\AIGenerationHistory;
 use Capell\AIOrchestrator\Support\Ai\AiSpendGuard;
@@ -63,4 +64,22 @@ it('rejects a single request above its configured ceiling', function (): void {
 
     expect(fn (): mixed => testAiSpendGuard()->reserve(10, 'test-model', 0, 0, 'request-one'))
         ->toThrow(AiSpendBudgetExceededException::class, 'per-request');
+});
+
+it('settles a reservation after generation history is recorded', function (): void {
+    $guard = testAiSpendGuard();
+    $reservation = $guard->reserve(10, 'test-model', 0, 0, 'request-one');
+
+    $history = (new RecordAiGenerationAction($guard))->handle([
+        'site_id' => 10,
+        'action' => 'test-generation',
+        'model' => 'test-model',
+        'metadata' => [
+            'cost_micros' => 0,
+            'spend_reservation_id' => $reservation?->id,
+        ],
+    ]);
+
+    expect($history->site_id)->toBe(10)
+        ->and($guard->reserve(10, 'test-model', 0, 0, 'request-two'))->not->toBeNull();
 });
