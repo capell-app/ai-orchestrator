@@ -6,9 +6,13 @@ use Capell\AIOrchestrator\Exceptions\OpenAICircuitBreakerOpenException;
 use Capell\AIOrchestrator\Support\Ai\AIGenerationCache;
 use Capell\AIOrchestrator\Support\Ai\Cache\RateLimitCache;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Prism\Prism\Enums\FinishReason;
 use Prism\Prism\Enums\Provider;
+use Prism\Prism\Exceptions\PrismException;
+use Prism\Prism\Exceptions\PrismProviderOverloadedException;
+use Prism\Prism\Exceptions\PrismRateLimitedException;
 use Prism\Prism\Facades\Prism;
 use Prism\Prism\Text\Request as PrismTextRequest;
 use Prism\Prism\Text\Response as PrismTextResponse;
@@ -113,6 +117,8 @@ it('sends normalized chat messages through prism and maps the response telemetry
         'model' => 'claude-test',
         'max_retries' => 1,
         'retry_delay_ms' => 0,
+        'timeout_seconds' => 19,
+        'connect_timeout_seconds' => 4,
     ]);
 
     $response = $provider->chat([
@@ -139,7 +145,11 @@ it('sends normalized chat messages through prism and maps the response telemetry
             ->and(collect($request->systemPrompts())->pluck('content')->all())->toBe(['Use the brand voice.'])
             ->and($request->prompt())->toBe("Draft a page title.\n\nKeep it short.")
             ->and($request->maxTokens())->toBe(128)
-            ->and($request->temperature())->toBe(0.2);
+            ->and($request->temperature())->toBe(0.2)
+            ->and($request->clientOptions()['timeout'] ?? null)->toBe(19)
+            ->and($request->clientOptions()['connect_timeout'] ?? null)->toBe(4)
+            ->and($request->clientOptions()['headers']['Idempotency-Key'] ?? null)
+            ->toMatch('/^[a-f0-9]{64}$/');
     });
 
     expect($response->content)->toBe('Generated title')
@@ -148,6 +158,7 @@ it('sends normalized chat messages through prism and maps the response telemetry
         ->and($response->metadata)->toMatchArray([
             'prompt_tokens' => 11,
             'completion_tokens' => 7,
+            'cache_hit' => false,
         ])
         ->and($provider->isAvailable())->toBeTrue();
 });
@@ -185,10 +196,11 @@ it('opens and resets the prism circuit breaker after repeated failures', functio
     expect($provider->isAvailable())->toBeTrue();
 });
 
-it('scopes prism circuit breakers by provider', function (): void {
+it('scopes prism circuit breakers by provider and model', function (): void {
     Cache::flush();
 
     $openAiProvider = new PrismProvider(['provider' => 'openai']);
+    $otherOpenAiModel = new PrismProvider(['provider' => 'openai', 'model' => 'gpt-4o-mini']);
     $anthropicProvider = new PrismProvider(['provider' => 'anthropic']);
     $recordFailure = new ReflectionMethod(PrismProvider::class, 'recordFailure');
 
@@ -196,10 +208,96 @@ it('scopes prism circuit breakers by provider', function (): void {
         $recordFailure->invoke($openAiProvider);
     }
 
-    expect($openAiProvider->circuitBreakerKey())->toBe('ai_circuit_breaker_state:openai')
-        ->and($anthropicProvider->circuitBreakerKey())->toBe('ai_circuit_breaker_state:anthropic')
+    expect($openAiProvider->circuitBreakerKey())->toBe('ai_circuit_breaker_state:openai:gpt-4o')
+        ->and($otherOpenAiModel->circuitBreakerKey())->toBe('ai_circuit_breaker_state:openai:gpt-4o-mini')
+        ->and($anthropicProvider->circuitBreakerKey())->toBe('ai_circuit_breaker_state:anthropic:gpt-4o')
         ->and($openAiProvider->isAvailable())->toBeFalse()
+        ->and($otherOpenAiModel->isAvailable())->toBeTrue()
         ->and($anthropicProvider->isAvailable())->toBeTrue();
+});
+
+it('only retries transient provider failures', function (Throwable $exception, bool $expected): void {
+    $provider = new PrismProvider;
+    $isRetryable = new ReflectionMethod(PrismProvider::class, 'isRetryable');
+
+    expect($isRetryable->invoke($provider, $exception))->toBe($expected);
+})->with([
+    'connection failure' => [new ConnectionException('connection failed'), true],
+    'rate limit' => [PrismRateLimitedException::make(), true],
+    'provider overloaded' => [PrismProviderOverloadedException::make('openai'), true],
+    'request timeout' => [new PrismException('timed out', 408), true],
+    'server error' => [new PrismException('unavailable', 503), true],
+    'bad request' => [new PrismException('invalid prompt', 400), false],
+    'domain failure' => [new RuntimeException('invalid generated content'), false],
+]);
+
+it('bounds prompt size before dispatch', function (): void {
+    Cache::flush();
+    app()->instance('prism', new \Prism\Prism\Prism);
+
+    $fake = Prism::fake();
+    $provider = new PrismProvider([
+        'model' => 'gpt-4o-mini',
+        'max_retries' => 1,
+        'max_prompt_chars' => 32,
+    ]);
+
+    $provider->chat([
+        'messages' => [
+            ['role' => 'system', 'content' => str_repeat('S', 20)],
+            ['role' => 'user', 'content' => str_repeat('U', 40)],
+        ],
+    ]);
+
+    $fake->assertRequest(function (array $requests): void {
+        $request = $requests[0] ?? null;
+
+        expect($request)->toBeInstanceOf(PrismTextRequest::class);
+
+        if (! $request instanceof PrismTextRequest) {
+            return;
+        }
+
+        $systemPrompt = collect($request->systemPrompts())->pluck('content')->implode('');
+
+        expect(mb_strlen($systemPrompt . $request->prompt()))->toBeLessThanOrEqual(32)
+            ->and($request->prompt())->not->toBe(str_repeat('U', 40));
+    });
+});
+
+it('reuses identical successful generations without rebilling', function (): void {
+    Cache::flush();
+    app()->instance('prism', new \Prism\Prism\Prism);
+
+    $fake = Prism::fake([
+        new PrismTextResponse(
+            steps: collect(),
+            text: 'Cached response',
+            finishReason: FinishReason::Stop,
+            toolCalls: [],
+            toolResults: [],
+            usage: new Usage(promptTokens: 3, completionTokens: 2),
+            meta: new Meta(id: 'cached-response', model: 'gpt-4o-mini'),
+            messages: collect(),
+        ),
+    ]);
+    $provider = new PrismProvider(
+        ['model' => 'gpt-4o-mini', 'max_retries' => 1],
+        new AIGenerationCache('array', 120),
+    );
+    $params = ['messages' => [['role' => 'user', 'content' => 'Repeatable prompt']]];
+
+    $first = $provider->chat($params);
+    $second = $provider->chat($params);
+
+    $fake->assertCallCount(1);
+
+    expect($first->metadata['cache_hit'] ?? null)->toBeFalse()
+        ->and($second->content)->toBe('Cached response')
+        ->and($second->metadata)->toMatchArray([
+            'cache_hit' => true,
+            'cost_micros' => 0,
+        ]);
 });
 
 it('normalizes missing prism usage telemetry to zero tokens', function (): void {
