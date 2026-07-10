@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Capell\AIOrchestrator\Providers;
 
 use Capell\Admin\Contracts\Extenders\ResourceHeaderActionExtender;
+use Capell\AIOrchestrator\Console\Commands\PruneAiGenerationPayloadsCommand;
 use Capell\AIOrchestrator\Events\Ai\AiGenerationCompleted;
 use Capell\AIOrchestrator\Events\Ai\AiGenerationFailed;
 use Capell\AIOrchestrator\Filament\Settings\AIOrchestratorSettingsSchema;
@@ -27,6 +28,7 @@ use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\AIOrchestrator\Support\AIOrchestratorPolicyGuardrailRegistry;
 use Capell\Core\Facades\CapellCore;
 use Capell\Core\Support\Packages\AbstractPackageServiceProvider;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Override;
@@ -57,10 +59,12 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             ->hasConfigFile(self::$name)
             ->hasTranslations()
             ->hasViews(self::$name)
+            ->hasCommand(PruneAiGenerationPayloadsCommand::class)
             ->hasMigrations([
                 '2026_05_10_190870_02_create_ai_generation_histories_table',
                 '2026_06_08_000001_add_cost_fields_to_ai_generation_histories_table',
                 '2026_07_10_000001_add_site_id_to_ai_generation_histories_table',
+                '2026_07_10_000003_encrypt_ai_generation_history_payloads',
             ]);
     }
 
@@ -78,7 +82,8 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             $this
                 ->registerServices()
                 ->registerAiEventListeners()
-                ->registerSettingsSchema();
+                ->registerSettingsSchema()
+                ->registerRetentionSchedule();
         });
     }
 
@@ -94,6 +99,18 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         $this->app->singleton(AIOrchestratorPolicyGuardrailRegistry::class);
 
         $this->app->tag([AiAssistantPageResourceExtender::class], ResourceHeaderActionExtender::TAG);
+
+        return $this;
+    }
+
+    private function registerRetentionSchedule(): self
+    {
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            $schedule->command('capell:ai-orchestrator:prune-generation-payloads')
+                ->daily()
+                ->withoutOverlapping()
+                ->onOneServer();
+        });
 
         return $this;
     }

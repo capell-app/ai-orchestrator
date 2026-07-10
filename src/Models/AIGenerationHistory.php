@@ -91,7 +91,12 @@ class AIGenerationHistory extends Model
     {
         return [
             'failed' => 'boolean',
-            'metadata' => 'array',
+            // Generation content can contain unpublished copy, prompts, or provider diagnostics.
+            // Retain only the encrypted audit record; aggregate cost fields remain queryable.
+            'input' => 'encrypted',
+            'output' => 'encrypted',
+            'error_message' => 'encrypted',
+            'metadata' => 'encrypted:array',
             'cost_micros' => 'integer',
         ];
     }
