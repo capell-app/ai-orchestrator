@@ -48,7 +48,7 @@
     "database": {
         "migrations": true,
         "settings": true,
-        "requiredTables": ["ai_generation_histories"]
+        "requiredTables": ["ai_generation_histories", "ai_generation_requests"]
     },
     "commands": {
         "install": null,
