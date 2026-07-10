@@ -49,9 +49,10 @@ final class AiGenerationRequest extends Model
     {
         return [
             'status' => AiGenerationRequestStatus::class,
-            'payload' => 'array',
-            'generated' => 'array',
-            'failures' => 'array',
+            'payload' => 'encrypted:array',
+            'generated' => 'encrypted:array',
+            'failures' => 'encrypted:array',
+            'error_message' => 'encrypted',
             'completed_at' => 'immutable_datetime',
             'expires_at' => 'immutable_datetime',
         ];
