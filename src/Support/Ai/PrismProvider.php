@@ -11,6 +11,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
+use LogicException;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Exceptions\PrismProviderOverloadedException;
 use Prism\Prism\Exceptions\PrismRateLimitedException;
@@ -52,6 +53,10 @@ class PrismProvider implements ServiceContract
      */
     public function chat(array $params): AiResponse
     {
+        if (($this->config['require_queue_for_web'] ?? false) === true && ! app()->runningInConsole()) {
+            throw new LogicException('AI provider calls must be executed by a queued worker.');
+        }
+
         [$systemPrompt, $userMessage] = $this->promptsFrom($params['messages'] ?? []);
         [$systemPrompt, $userMessage] = $this->boundPrompts($systemPrompt, $userMessage);
 

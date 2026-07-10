@@ -2,15 +2,19 @@
 
 declare(strict_types=1);
 
+use Capell\AIOrchestrator\Jobs\RunAiAssistantGenerationJob;
 use Capell\AIOrchestrator\Models\AIGenerationHistory;
+use Capell\AIOrchestrator\Models\AiGenerationRequest;
 use Capell\AIOrchestrator\Support\Admin\AiAssistantPageResourceExtender;
 use Capell\AIOrchestrator\Support\Ai\AiResponse;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Textarea;
+use Illuminate\Support\Facades\Queue;
 
 beforeEach(function (): void {
+    Queue::fake();
     test()->registerAndMigrateSettings(
         ['2026_05_10_190871_01_create_ai-orchestrator_settings'],
         dirname(__DIR__, 3) . '/database/settings',
@@ -75,7 +79,7 @@ function applyFormTranslations(): array
     ];
 }
 
-it('runs the selected capability through the orchestrator and records generation history', function (): void {
+it('queues the selected capability and returns the completed result on the next review attempt', function (): void {
     $livewire = stubApplyLivewire(['translations' => applyFormTranslations()]);
 
     $generated = invokeExtender('generatePayload', [
@@ -84,7 +88,20 @@ it('runs the selected capability through the orchestrator and records generation
         'keywords' => 'seo, marketing',
     ], $livewire);
 
-    expect($generated)->toBeArray()
+    expect($generated)->toBe([]);
+    Queue::assertPushed(RunAiAssistantGenerationJob::class, 1);
+    expect(AIGenerationHistory::query()->count())->toBe(0);
+
+    $request = AiGenerationRequest::query()->sole();
+    (new RunAiAssistantGenerationJob((int) $request->getKey()))->handle();
+
+    $completed = invokeExtender('generatePayload', [
+        'fields' => ['title'],
+        'targetLanguageId' => 2,
+        'keywords' => 'seo, marketing',
+    ], $livewire);
+
+    expect($completed)->toBeArray()
         ->toMatchArray(['title' => ['Alpha title', 'Beta title', 'Gamma title']]);
 
     // The pipeline records exactly one history row for the single capability run.

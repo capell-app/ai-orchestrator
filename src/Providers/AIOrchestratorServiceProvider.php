@@ -61,6 +61,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
                 '2026_05_10_190870_02_create_ai_generation_histories_table',
                 '2026_06_08_000001_add_cost_fields_to_ai_generation_histories_table',
                 '2026_07_10_000001_add_site_id_to_ai_generation_histories_table',
+                '2026_07_10_000002_create_ai_generation_requests_table',
             ]);
     }
 

@@ -6,9 +6,10 @@ namespace Capell\AIOrchestrator\Support\Admin;
 
 use Capell\Admin\Contracts\Extenders\ResourceHeaderActionExtender;
 use Capell\Admin\Filament\Resources\Pages\Pages\EditPage;
-use Capell\AIOrchestrator\Actions\GenerateAiAssistantFieldsAction;
+use Capell\AIOrchestrator\Actions\QueueAiAssistantGenerationAction;
 use Capell\AIOrchestrator\Data\AiAssistantGenerationData;
 use Capell\AIOrchestrator\Enums\AiAssistantFieldEnum;
+use Capell\AIOrchestrator\Enums\AiGenerationRequestStatus;
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
@@ -204,7 +205,7 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
         $record = $this->resolveRecord($livewire);
         $pageKey = $record?->getKey();
 
-        $result = GenerateAiAssistantFieldsAction::make()->handle(new AiAssistantGenerationData(
+        $request = QueueAiAssistantGenerationAction::run(new AiAssistantGenerationData(
             fields: $this->selectedFieldsFrom($inputs['fields'] ?? null),
             content: $this->stringFrom($sourceTranslation, 'content'),
             currentTitle: $this->stringFrom($sourceTranslation, 'title'),
@@ -220,15 +221,35 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
             actor: Auth::user(),
         ));
 
-        foreach ($result->failures as $message) {
-            Notification::make()
-                ->title(__('capell-ai-orchestrator::package.ai_assistant_generation_failed'))
-                ->body($message)
-                ->danger()
-                ->send();
+        if ($request->status === AiGenerationRequestStatus::Completed) {
+            foreach ($request->failures ?? [] as $message) {
+                Notification::make()
+                    ->title(__('capell-ai-orchestrator::package.ai_assistant_generation_failed'))
+                    ->body($message)
+                    ->danger()
+                    ->send();
+            }
+
+            return $request->generated ?? [];
         }
 
-        return $result->generated;
+        if ($request->status === AiGenerationRequestStatus::Failed) {
+            Notification::make()
+                ->title(__('capell-ai-orchestrator::package.ai_assistant_generation_failed'))
+                ->body($request->error_message)
+                ->danger()
+                ->send();
+
+            return [];
+        }
+
+        Notification::make()
+            ->title(__('capell-ai-orchestrator::package.ai_assistant_generation_queued'))
+            ->body(__('capell-ai-orchestrator::package.ai_assistant_generation_queued_body'))
+            ->info()
+            ->send();
+
+        return [];
     }
 
     /**

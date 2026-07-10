@@ -14,6 +14,7 @@ return [
         'connect_timeout_seconds' => 5,
         'max_prompt_chars' => 32_000,
         'enforce_price_map' => true,
+        'require_queue_for_web' => true,
         'max_tokens' => 4096,
         'image_provider' => env('AI_IMAGE_PROVIDER', 'openai'),
         'image_model' => env('AI_IMAGE_MODEL', 'dall-e-3'),
@@ -40,6 +41,10 @@ return [
         'monthly_limit_micros' => 50_000_000,
         'per_request_limit_micros' => 5_000_000,
         'reservation_ttl_seconds' => 3_600,
+    ],
+    'queue' => [
+        'connection' => env('AI_QUEUE_CONNECTION'),
+        'name' => env('AI_QUEUE_NAME', 'ai'),
     ],
     'prompts' => [
         'title_generation' => [
