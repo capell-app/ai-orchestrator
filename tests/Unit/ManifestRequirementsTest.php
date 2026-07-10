@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Capell\AIOrchestrator\Filament\Pages\AIOrchestratorCapabilityCatalogPage;
 use Capell\AIOrchestrator\Manifest\AiOrchestratorAdminPageContribution;
+use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
+use Capell\AIOrchestrator\Support\Ai\PrismProvider;
 use Illuminate\Support\Facades\File;
 
 it('positions the package as headless ai orchestration infrastructure', function (): void {
@@ -22,6 +24,13 @@ it('positions the package as headless ai orchestration infrastructure', function
         ->and(data_get($manifest, 'marketplace.screenshots'))->toBe([])
         ->and(data_get($manifest, 'providers.admin'))->toBe([])
         ->and(data_get($manifest, 'providers.frontend'))->toBe([])
+        ->and(data_get($manifest, 'database.migrations'))->toBeTrue()
+        ->and(data_get($manifest, 'database.settings'))->toBeTrue()
+        ->and(data_get($manifest, 'database.requiredTables'))->toBe(['ai_generation_histories'])
+        ->and(data_get($manifest, 'settings'))->toBe([AIOrchestratorSettings::class])
+        ->and(data_get($manifest, 'externalHttpClients.requiresTimeouts'))->toBeTrue()
+        ->and(data_get($manifest, 'externalHttpClients.requiresSecretRedaction'))->toBeTrue()
+        ->and(data_get($manifest, 'externalHttpClients.clients'))->toBe([PrismProvider::class])
         ->and(data_get($manifest, 'contributes'))->toContain([
             'type' => 'admin-page',
             'class' => AiOrchestratorAdminPageContribution::class,
