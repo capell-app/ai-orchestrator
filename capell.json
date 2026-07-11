@@ -148,19 +148,9 @@
         "summary": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
         "screenshots": [
             {
-                "path": "docs/screenshots/capability-list-or-prompt-surface-where-provided-by-a-consuming-package.png",
-                "alt": "AI capability catalogue supplied by a package using AI Orchestrator",
-                "caption": "Consuming packages register governed capabilities through the shared orchestration contract."
-            },
-            {
-                "path": "docs/screenshots/layout-builder-layout-preview-workflow-if-layout-builder-integration-is-enabled.png",
-                "alt": "Layout Builder AI plan preview powered by AI Orchestrator",
-                "caption": "Editors can review a structured layout plan before a consuming package applies it."
-            },
-            {
-                "path": "docs/screenshots/approval-state-where-a-capability-requires-review.png",
-                "alt": "Human approval state for a governed AI capability",
-                "caption": "Review-required capabilities stay pending until a person approves the result."
+                "path": "docs/screenshots/beta-contract.svg",
+                "alt": "Illustrative AI Orchestrator Beta contract from capability registration to consumer-owned UI",
+                "caption": "Illustrative Beta contract artwork: AI Orchestrator owns registration, governed execution, and approval boundaries while consuming packages own the screens."
             }
         ],
         "categories": ["admin", "commercial"]
