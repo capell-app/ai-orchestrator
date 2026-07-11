@@ -29,9 +29,7 @@ Status details:
 
 Screenshot contract: `docs/screenshots.json`.
 
-- Capability list or prompt surface where provided by a consuming package (admin, optional).
-- LayoutBuilder layout preview workflow if LayoutBuilder integration is enabled (admin, optional).
-- Approval state where a capability requires review (admin, optional).
+- AI Orchestrator beta contract artwork (marketplace, required).
 
 ## Technical Shape
 

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">AI Orchestrator beta contract artwork</title>
+  <desc id="desc">Illustrative contract showing capability registration, governed execution, human approval, and consumer-owned user interfaces.</desc>
+  <rect width="1280" height="720" fill="#08111f"/>
+  <rect x="0" y="0" width="1280" height="86" fill="#101d32"/>
+  <text x="64" y="54" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="700" letter-spacing="2.5" fill="#dbeafe">CAPELL COMMERCIAL</text>
+  <rect x="914" y="23" width="302" height="40" rx="20" fill="#2563eb"/>
+  <text x="1065" y="49" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="800" letter-spacing="1.5" fill="#ffffff">BETA / CONTRACT ARTWORK</text>
+  <text x="64" y="164" font-family="Helvetica, Arial, sans-serif" font-size="58" font-weight="800" fill="#f8fafc">AI Orchestrator</text>
+  <text x="64" y="204" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="#94a3b8">Headless capability registry and governed execution boundary</text>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="64" y="284" width="236" height="142" rx="18" fill="#14233b" stroke="#3b82f6" stroke-width="2"/>
+    <circle cx="102" cy="324" r="18" fill="#2563eb"/>
+    <text x="102" y="330" text-anchor="middle" font-size="16" font-weight="800" fill="#ffffff">1</text>
+    <text x="92" y="369" font-size="20" font-weight="700" fill="#f8fafc">Register capability</text>
+    <text x="92" y="399" font-size="15" fill="#93c5fd">Package-owned metadata</text>
+    <path d="M316 355H370" stroke="#475569" stroke-width="3"/>
+    <path d="M360 346L371 355L360 364" fill="none" stroke="#475569" stroke-width="3"/>
+    <rect x="386" y="284" width="236" height="142" rx="18" fill="#14233b" stroke="#8b5cf6" stroke-width="2"/>
+    <circle cx="424" cy="324" r="18" fill="#7c3aed"/>
+    <text x="424" y="330" text-anchor="middle" font-size="16" font-weight="800" fill="#ffffff">2</text>
+    <text x="414" y="369" font-size="20" font-weight="700" fill="#f8fafc">Govern execution</text>
+    <text x="414" y="399" font-size="15" fill="#c4b5fd">Prompt, provider, audit</text>
+    <path d="M638 355H692" stroke="#475569" stroke-width="3"/>
+    <path d="M682 346L693 355L682 364" fill="none" stroke="#475569" stroke-width="3"/>
+    <rect x="708" y="284" width="236" height="142" rx="18" fill="#14233b" stroke="#f59e0b" stroke-width="2"/>
+    <circle cx="746" cy="324" r="18" fill="#d97706"/>
+    <text x="746" y="330" text-anchor="middle" font-size="16" font-weight="800" fill="#ffffff">3</text>
+    <text x="736" y="369" font-size="20" font-weight="700" fill="#f8fafc">Require approval</text>
+    <text x="736" y="399" font-size="15" fill="#fcd34d">Human review policy</text>
+    <path d="M960 355H1014" stroke="#475569" stroke-width="3"/>
+    <path d="M1004 346L1015 355L1004 364" fill="none" stroke="#475569" stroke-width="3"/>
+    <rect x="1030" y="284" width="186" height="142" rx="18" fill="#14233b" stroke="#10b981" stroke-width="2"/>
+    <circle cx="1068" cy="324" r="18" fill="#059669"/>
+    <text x="1068" y="330" text-anchor="middle" font-size="16" font-weight="800" fill="#ffffff">4</text>
+    <text x="1058" y="369" font-size="20" font-weight="700" fill="#f8fafc">Consumer UI</text>
+    <text x="1058" y="399" font-size="15" fill="#6ee7b7">Renders the workflow</text>
+  </g>
+  <rect x="64" y="506" width="1152" height="106" rx="18" fill="#0f1a2d" stroke="#27364f"/>
+  <text x="92" y="548" font-family="Helvetica, Arial, sans-serif" font-size="16" font-weight="800" letter-spacing="1.2" fill="#60a5fa">ILLUSTRATION ONLY</text>
+  <text x="92" y="582" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#cbd5e1">AI Orchestrator owns the contract. Consuming packages own and capture their screens.</text>
+  <text x="64" y="668" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#64748b">Beta evidence asset - no product-screen claim</text>
+</svg>
