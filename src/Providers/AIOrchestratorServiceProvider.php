@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Capell\AIOrchestrator\Providers;
 
 use Capell\Admin\Contracts\Extenders\ResourceHeaderActionExtender;
+use Capell\AIOrchestrator\Console\Commands\PruneAiGenerationPayloadsCommand;
 use Capell\AIOrchestrator\Events\Ai\AiGenerationCompleted;
 use Capell\AIOrchestrator\Events\Ai\AiGenerationFailed;
 use Capell\AIOrchestrator\Filament\Settings\AIOrchestratorSettingsSchema;
@@ -57,11 +58,13 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             ->hasConfigFile(self::$name)
             ->hasTranslations()
             ->hasViews(self::$name)
+            ->hasCommand(PruneAiGenerationPayloadsCommand::class)
             ->hasMigrations([
                 '2026_05_10_190870_02_create_ai_generation_histories_table',
                 '2026_06_08_000001_add_cost_fields_to_ai_generation_histories_table',
                 '2026_07_10_000001_add_site_id_to_ai_generation_histories_table',
                 '2026_07_10_000002_create_ai_generation_requests_table',
+                '2026_07_10_000003_encrypt_ai_generation_requests_table',
             ]);
     }
 

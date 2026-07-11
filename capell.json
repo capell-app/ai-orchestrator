@@ -43,12 +43,27 @@
             "class": "Capell\\AIOrchestrator\\Manifest\\AiOrchestratorAdminPageContribution",
             "pageClass": "Capell\\AIOrchestrator\\Filament\\Pages\\AIOrchestratorCapabilityCatalogPage",
             "labelKey": "capell-ai-orchestrator::package.catalog_title"
+        },
+        {
+            "type": "console-command",
+            "class": "Capell\\AIOrchestrator\\Manifest\\AiOrchestratorPruneScheduleContribution",
+            "commands": ["capell:ai-orchestrator:prune-generation-payloads"],
+            "commandClasses": [
+                "Capell\\AIOrchestrator\\Console\\Commands\\PruneAiGenerationPayloadsCommand"
+            ]
+        },
+        {
+            "type": "scheduled-job",
+            "class": "Capell\\AIOrchestrator\\Manifest\\AiOrchestratorPruneScheduleContribution",
+            "command": "capell:ai-orchestrator:prune-generation-payloads",
+            "name": "capell-ai-orchestrator-prune-generation-payloads",
+            "frequency": "daily"
         }
     ],
     "database": {
         "migrations": true,
         "settings": true,
-        "requiredTables": ["ai_generation_histories"]
+        "requiredTables": ["ai_generation_histories", "ai_generation_requests"]
     },
     "commands": {
         "install": null,
@@ -76,7 +91,11 @@
                 "ai_generation_histories.input",
                 "ai_generation_histories.output",
                 "ai_generation_histories.error_message",
-                "ai_generation_histories.metadata"
+                "ai_generation_histories.metadata",
+                "ai_generation_requests.payload",
+                "ai_generation_requests.generated",
+                "ai_generation_requests.failures",
+                "ai_generation_requests.error_message"
             ],
             "hashedTokenFields": [],
             "redactedOutputClasses": [],

@@ -26,11 +26,11 @@ it('positions the package as headless ai orchestration infrastructure', function
         ->and(data_get($manifest, 'providers.frontend'))->toBe([])
         ->and(data_get($manifest, 'database.migrations'))->toBeTrue()
         ->and(data_get($manifest, 'database.settings'))->toBeTrue()
-        ->and(data_get($manifest, 'database.requiredTables'))->toBe(['ai_generation_histories'])
+        ->and(data_get($manifest, 'database.requiredTables'))->toBe(['ai_generation_histories', 'ai_generation_requests'])
         ->and(data_get($manifest, 'settings'))->toBe([AIOrchestratorSettings::class])
-        ->and(data_get($manifest, 'externalHttpClients.requiresTimeouts'))->toBeTrue()
-        ->and(data_get($manifest, 'externalHttpClients.requiresSecretRedaction'))->toBeTrue()
-        ->and(data_get($manifest, 'externalHttpClients.clients'))->toBe([PrismProvider::class])
+        ->and(data_get($manifest, 'security.externalHttpClients.requiresTimeouts'))->toBeTrue()
+        ->and(data_get($manifest, 'security.externalHttpClients.requiresSecretRedaction'))->toBeTrue()
+        ->and(data_get($manifest, 'security.externalHttpClients.clients'))->toBe([PrismProvider::class])
         ->and(data_get($manifest, 'contributes'))->toContain([
             'type' => 'admin-page',
             'class' => AiOrchestratorAdminPageContribution::class,
