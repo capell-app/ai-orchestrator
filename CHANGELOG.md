@@ -4,4 +4,4 @@ All notable changes to `capell-app/ai-orchestrator` will be documented in this f
 
 ## Unreleased
 
-- Prepared package metadata and documentation for ongoing Capell 4.x package work.
+- Prepared package metadata and documentation for ongoing Capell 0.0.x package work.
