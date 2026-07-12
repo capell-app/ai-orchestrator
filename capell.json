@@ -4,7 +4,7 @@
     "slug": "ai-orchestrator",
     "displayName": "AI Orchestrator",
     "kind": "package",
-    "capellApiVersion": "^4.0",
+    "capellApiVersion": "^0.0",
     "version": "0.0.x-dev",
     "description": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
     "product": {
@@ -146,7 +146,13 @@
     },
     "marketplace": {
         "summary": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
-        "screenshots": [],
+        "screenshots": [
+            {
+                "path": "docs/screenshots/beta-contract.svg",
+                "alt": "Illustrative AI Orchestrator Beta contract from capability registration to consumer-owned UI",
+                "caption": "Illustrative Beta contract artwork: AI Orchestrator owns registration, governed execution, and approval boundaries while consuming packages own the screens."
+            }
+        ],
         "categories": ["admin", "commercial"]
     }
 }

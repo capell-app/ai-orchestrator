@@ -4,47 +4,21 @@
     "generatedFor": "deployment-screenshot-runner",
     "requiresInstalledPackage": true,
     "auditStatus": "visual-exempt",
-    "auditReason": "AI Orchestrator is a shared capability registry and execution contract. Visual proof belongs to consuming packages that render registered capabilities, approvals, and execution results.",
+    "auditReason": "AI Orchestrator is a headless capability registry and execution contract. The required Marketplace asset is explicitly illustrative; product-screen proof belongs to consuming packages that render registered capabilities, approvals, and execution results.",
     "outputDirectory": "packages/ai-orchestrator/docs/screenshots",
     "entries": [
         {
-            "id": "capability-list-or-prompt-surface-where-provided-by-a-consuming-package",
-            "title": "Capability list or prompt surface where provided by a consuming package.",
+            "id": "ai-orchestrator-beta-contract",
+            "title": "AI Orchestrator beta contract artwork.",
             "package": "ai-orchestrator",
-            "surface": "admin",
-            "targetType": "admin-surface",
-            "target": null,
-            "required": false,
-            "notes": "Optional because the package-owned catalog is a read-only metadata review surface, not a complete AI workflow. Capture marketplace workflow media through a consuming package that renders and runs registered `AIOrchestratorCapabilityData` entries.",
-            "useCase": "A developer verifies that installed AI Orchestrator modules expose the expected capability labels and approval levels.",
-            "screenshotPath": "packages/ai-orchestrator/docs/screenshots/capability-list-or-prompt-surface-where-provided-by-a-consuming-package.png",
-            "darkScreenshotPath": "packages/ai-orchestrator/docs/screenshots/capability-list-or-prompt-surface-where-provided-by-a-consuming-package-dark.png"
-        },
-        {
-            "id": "layout-builder-layout-preview-workflow-if-layout-builder-integration-is-enabled",
-            "title": "LayoutBuilder layout preview workflow if LayoutBuilder integration is enabled.",
-            "package": "ai-orchestrator",
-            "surface": "admin",
-            "targetType": "admin-surface",
-            "target": null,
-            "required": false,
-            "notes": "Optional and blocked until a Layout Builder consuming UI exposes `LayoutBuilderAIOrchestratorModule`; this package only provides the headless integration module and preview action.",
-            "useCase": "An editor previews an AI-generated Layout Builder plan before any layout content is applied.",
-            "screenshotPath": "packages/ai-orchestrator/docs/screenshots/layout-builder-layout-preview-workflow-if-layout-builder-integration-is-enabled.png",
-            "darkScreenshotPath": "packages/ai-orchestrator/docs/screenshots/layout-builder-layout-preview-workflow-if-layout-builder-integration-is-enabled-dark.png"
-        },
-        {
-            "id": "approval-state-where-a-capability-requires-review",
-            "title": "Approval state where a capability requires review.",
-            "package": "ai-orchestrator",
-            "surface": "admin",
-            "targetType": "admin-surface",
-            "target": null,
-            "required": false,
-            "notes": "Optional and requires a consuming package that persists or displays review-required capability runs. AI Orchestrator itself keeps run state in data objects until first-class approval persistence ships.",
-            "useCase": "A reviewer sees that an AI capability result needs human approval before the consuming package acts on it.",
-            "screenshotPath": "packages/ai-orchestrator/docs/screenshots/approval-state-where-a-capability-requires-review.png",
-            "darkScreenshotPath": "packages/ai-orchestrator/docs/screenshots/approval-state-where-a-capability-requires-review-dark.png"
+            "surface": "marketplace",
+            "targetType": "marketplace-asset",
+            "target": "beta-contract",
+            "required": true,
+            "path": "docs/assets/marketplace/beta-contract.svg",
+            "screenshotPath": "packages/ai-orchestrator/docs/screenshots/beta-contract.svg",
+            "notes": "Committed Beta Marketplace artwork that labels itself as an illustration and describes the headless registration, governance, approval, and consumer-UI boundary.",
+            "useCase": "A buyer evaluates the Beta orchestration contract without mistaking a generic consuming screen for package-owned product evidence."
         }
     ]
 }
