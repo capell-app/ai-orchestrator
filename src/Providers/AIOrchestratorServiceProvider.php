@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Capell\AIOrchestrator\Providers;
 
 use Capell\Admin\Contracts\Extenders\ResourceHeaderActionExtender;
+use Capell\AIOrchestrator\Actions\ResolveAIOrchestratorRuntimeSettingsAction;
 use Capell\AIOrchestrator\Console\Commands\PruneAiGenerationPayloadsCommand;
+use Capell\AIOrchestrator\Data\AIOrchestratorRuntimeSettingsData;
 use Capell\AIOrchestrator\Events\Ai\AiGenerationCompleted;
 use Capell\AIOrchestrator\Events\Ai\AiGenerationFailed;
 use Capell\AIOrchestrator\Filament\Settings\AIOrchestratorSettingsSchema;
@@ -28,6 +30,7 @@ use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\AIOrchestrator\Support\AIOrchestratorPolicyGuardrailRegistry;
 use Capell\Core\Facades\CapellCore;
 use Capell\Core\Support\Packages\AbstractPackageServiceProvider;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Override;
@@ -82,7 +85,8 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             $this
                 ->registerServices()
                 ->registerAiEventListeners()
-                ->registerSettingsSchema();
+                ->registerSettingsSchema()
+                ->registerPayloadPruningSchedule();
         });
     }
 
@@ -104,8 +108,9 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 
     private function registerAiEngineBindings(): self
     {
+        $this->app->singleton(AIOrchestratorRuntimeSettingsData::class, fn (): AIOrchestratorRuntimeSettingsData => ResolveAIOrchestratorRuntimeSettingsAction::run());
         $this->app->singleton(PrismProvider::class, fn (Application $app): PrismProvider => new PrismProvider(
-            $this->aiArray(config('capell-ai-orchestrator.prism', [])),
+            $app->make(AIOrchestratorRuntimeSettingsData::class)->provider,
             $app->make(AIGenerationCache::class),
             $app->make(AiSpendGuard::class),
         ));
@@ -115,13 +120,13 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             $this->aiArray(config('capell-ai-orchestrator.spend_limits', [])),
         ));
 
-        $this->app->singleton(PromptRepository::class, fn (Application $app): PromptRepository => new PromptRepository($this->aiArray(config('capell-ai-orchestrator.prompts', []))));
+        $this->app->singleton(PromptRepository::class, fn (Application $app): PromptRepository => new PromptRepository($app->make(AIOrchestratorRuntimeSettingsData::class)->prompts));
 
         $this->app->singleton(AiResponseParser::class, fn (): AiResponseParser => new AiResponseParser);
 
         $this->app->singleton(AiRateLimiter::class, fn (Application $app): AiRateLimiter => new AiRateLimiter(
             $app->make(RateLimitCache::class),
-            $this->aiArray(config('capell-ai-orchestrator.rate_limiting', ['enabled' => false, 'requests_per_minute' => 60])),
+            $app->make(AIOrchestratorRuntimeSettingsData::class)->rateLimiting,
         ));
 
         $this->app->singleton(AiTokenCounter::class, fn (): AiTokenCounter => new AiTokenCounter);
@@ -155,6 +160,18 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     {
         $this->surface()->settingsSchema('ai-orchestrator', AIOrchestratorSettingsSchema::class);
         $this->surface()->settingsClass('ai-orchestrator', AIOrchestratorSettings::class);
+
+        return $this;
+    }
+
+    private function registerPayloadPruningSchedule(): self
+    {
+        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule): void {
+            $schedule->command('capell:ai-orchestrator:prune-generation-payloads')
+                ->daily()
+                ->withoutOverlapping()
+                ->onOneServer();
+        });
 
         return $this;
     }
