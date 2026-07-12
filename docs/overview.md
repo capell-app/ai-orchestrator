@@ -20,7 +20,7 @@ In the AI features of other packages, for example drafting a title and descripti
 
 - There is nothing to operate here directly; use the AI features in the packages that rely on it.
 - If AI features stop working across packages, this is the package to check with your developer.
-- Marketplace screenshots intentionally remain empty because AI Orchestrator is headless infrastructure for consuming packages.
+- The Marketplace card is explicitly labelled as illustrative Beta contract artwork; consuming packages own and capture their product screens.
 
 ---
 

@@ -13,6 +13,7 @@ it('positions the package as headless ai orchestration infrastructure', function
     $manifest = ai_orchestrator_json_file_array($packagePath . '/capell.json');
     $composer = ai_orchestrator_json_file_array($packagePath . '/composer.json');
     $screenshotContract = ai_orchestrator_json_file_array($packagePath . '/docs/screenshots.json');
+    $betaArtwork = File::get($packagePath . '/docs/screenshots/beta-contract.svg');
     $readme = File::get($packagePath . '/README.md');
     $overview = File::get($packagePath . '/docs/overview.md');
 
@@ -21,7 +22,11 @@ it('positions the package as headless ai orchestration infrastructure', function
     expect($manifest['description'])->toBe($expectedSummary)
         ->and(data_get($manifest, 'marketplace.summary'))->toBe($expectedSummary)
         ->and($composer['description'])->toBe(rtrim($expectedSummary, '.'))
-        ->and(data_get($manifest, 'marketplace.screenshots'))->toBe([])
+        ->and(data_get($manifest, 'marketplace.screenshots'))->toBe([[
+            'path' => 'docs/screenshots/beta-contract.svg',
+            'alt' => 'Illustrative AI Orchestrator Beta contract from capability registration to consumer-owned UI',
+            'caption' => 'Illustrative Beta contract artwork: AI Orchestrator owns registration, governed execution, and approval boundaries while consuming packages own the screens.',
+        ]])
         ->and(data_get($manifest, 'providers.admin'))->toBe([])
         ->and(data_get($manifest, 'providers.frontend'))->toBe([])
         ->and(data_get($manifest, 'database.migrations'))->toBeTrue()
@@ -40,18 +45,25 @@ it('positions the package as headless ai orchestration infrastructure', function
         ->and($readme)->toContain($expectedSummary)
         ->and($readme)->toContain('Public routes: none detected in package route files')
         ->and($overview)->toContain($expectedSummary)
-        ->and($overview)->toContain('Marketplace screenshots intentionally remain empty')
+        ->and($overview)->toContain('explicitly labelled as illustrative Beta contract artwork')
         ->and(File::exists($packagePath . '/docs-move-refs.txt'))->toBeFalse();
 
-    foreach (ai_orchestrator_array_value($screenshotContract, 'entries') as $entry) {
-        expect($entry)->toBeArray();
-
-        $entryData = is_array($entry) ? $entry : [];
-
-        expect($entryData['required'] ?? null)->toBeFalse()
-            ->and($entryData['target'] ?? null)->toBeNull()
-            ->and($entryData['notes'] ?? '')->toContain('consuming');
-    }
+    expect($screenshotContract['requiredEvidencePolicy'] ?? null)->toBe('distinct-required-surfaces')
+        ->and(ai_orchestrator_array_value($screenshotContract, 'entries'))->toBe([[
+            'id' => 'ai-orchestrator-beta-contract',
+            'title' => 'AI Orchestrator beta contract artwork.',
+            'package' => 'ai-orchestrator',
+            'surface' => 'marketplace',
+            'targetType' => 'marketplace-asset',
+            'target' => 'beta-contract',
+            'required' => true,
+            'path' => 'docs/assets/marketplace/beta-contract.svg',
+            'screenshotPath' => 'packages/ai-orchestrator/docs/screenshots/beta-contract.svg',
+            'notes' => 'Committed Beta Marketplace artwork that labels itself as an illustration and describes the headless registration, governance, approval, and consumer-UI boundary.',
+            'useCase' => 'A buyer evaluates the Beta orchestration contract without mistaking a generic consuming screen for package-owned product evidence.',
+        ]])
+        ->and(File::exists($packagePath . '/docs/screenshots/beta-contract.svg'))->toBeTrue()
+        ->and($betaArtwork)->toContain('BETA / CONTRACT ARTWORK', 'ILLUSTRATION ONLY', 'no product-screen claim');
 });
 
 /**
