@@ -1,0 +1,58 @@
+{
+    "name": "capell-app/ai-orchestrator",
+    "description": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows",
+    "keywords": [
+        "capell",
+        "ai-orchestrator",
+        "ai"
+    ],
+    "homepage": "https://capell.app",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Howdu",
+            "email": "capell.app26@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "capell-app/admin": "^0.0.4 || 0.0.x-dev",
+        "capell-app/core": "^0.0.4 || 0.0.x-dev",
+        "capell-app/layout-builder": "^0.0.4 || 0.0.x-dev",
+        "lorisleiva/laravel-actions": "^2.8",
+        "prism-php/prism": "^0.100",
+        "spatie/laravel-data": "^4.5",
+        "spatie/laravel-package-tools": "^1.14.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Capell\\AIOrchestrator\\": "src/",
+            "Capell\\AIOrchestrator\\Database\\Factories\\": "database/factories"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Capell\\AIOrchestrator\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider"
+            ]
+        },
+        "branch-alias": {
+            "dev-main": "0.0.x-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "prefer-stable": true,
+    "type": "library",
+    "support": {
+        "source": "https://github.com/capell-app/capell-packages",
+        "docs": "https://docs.capell.app/packages/ai-orchestrator"
+    }
+}

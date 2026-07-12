@@ -1,0 +1,158 @@
+{
+    "manifest-version": 3,
+    "name": "capell-app/ai-orchestrator",
+    "slug": "ai-orchestrator",
+    "displayName": "AI Orchestrator",
+    "kind": "package",
+    "capellApiVersion": "^0.0.1",
+    "version": "0.0.x-dev",
+    "description": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
+    "product": {
+        "group": "Capell Commercial",
+        "tier": "premium",
+        "bundle": "commercial"
+    },
+    "namespace": "Capell\\AIOrchestrator",
+    "surfaces": ["admin"],
+    "dependencies": {
+        "requires": [
+            "capell-app/admin",
+            "capell-app/core",
+            "capell-app/layout-builder"
+        ],
+        "supports": [
+            "capell-app/content-sections",
+            "capell-app/media-ai",
+            "capell-app/seo-suite",
+            "capell-app/translation-manager"
+        ],
+        "conflicts": []
+    },
+    "providers": {
+        "metadata": [],
+        "install": [],
+        "runtime": [
+            "Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider"
+        ],
+        "admin": [],
+        "frontend": []
+    },
+    "contributes": [
+        {
+            "type": "admin-page",
+            "class": "Capell\\AIOrchestrator\\Manifest\\AiOrchestratorAdminPageContribution",
+            "pageClass": "Capell\\AIOrchestrator\\Filament\\Pages\\AIOrchestratorCapabilityCatalogPage",
+            "labelKey": "capell-ai-orchestrator::package.catalog_title"
+        },
+        {
+            "type": "console-command",
+            "class": "Capell\\AIOrchestrator\\Manifest\\AiOrchestratorPruneScheduleContribution",
+            "commands": ["capell:ai-orchestrator:prune-generation-payloads"],
+            "commandClasses": [
+                "Capell\\AIOrchestrator\\Console\\Commands\\PruneAiGenerationPayloadsCommand"
+            ]
+        },
+        {
+            "type": "scheduled-job",
+            "class": "Capell\\AIOrchestrator\\Manifest\\AiOrchestratorPruneScheduleContribution",
+            "command": "capell:ai-orchestrator:prune-generation-payloads",
+            "name": "capell-ai-orchestrator-prune-generation-payloads",
+            "frequency": "daily"
+        }
+    ],
+    "database": {
+        "migrations": true,
+        "settings": true,
+        "requiredTables": ["ai_generation_histories", "ai_generation_requests"]
+    },
+    "commands": {
+        "install": null,
+        "setup": null,
+        "demo": null,
+        "doctor": null,
+        "prune": "capell:ai-orchestrator:prune-generation-payloads"
+    },
+    "settings": ["Capell\\AIOrchestrator\\Settings\\AIOrchestratorSettings"],
+    "permissions": [],
+    "capabilities": ["ai-orchestrator", "ai-orchestrator-admin"],
+    "security": {
+        "riskTier": "low",
+        "publicSurface": {
+            "routeNames": [],
+            "auth": "none",
+            "csrfExemptRoutes": [],
+            "signedRoutes": [],
+            "tokenizedRoutes": [],
+            "webhookRoutes": [],
+            "throttledRoutes": []
+        },
+        "sensitiveData": {
+            "encryptedFields": [
+                "ai_generation_histories.input",
+                "ai_generation_histories.output",
+                "ai_generation_histories.error_message",
+                "ai_generation_histories.metadata",
+                "ai_generation_requests.payload",
+                "ai_generation_requests.generated",
+                "ai_generation_requests.failures",
+                "ai_generation_requests.error_message"
+            ],
+            "hashedTokenFields": [],
+            "redactedOutputClasses": [],
+            "plaintextJustifications": []
+        },
+        "publicOutput": {
+            "cacheSafe": true,
+            "forbidAuthoringSurface": true,
+            "forbidSecrets": true,
+            "forbidPublicBladeQueries": true
+        },
+        "externalHttpClients": {
+            "requiresTimeouts": true,
+            "requiresSecretRedaction": true,
+            "clients": ["Capell\\AIOrchestrator\\Support\\Ai\\PrismProvider"]
+        },
+        "adminSurface": {
+            "authorization": "panel-auth",
+            "permissions": []
+        }
+    },
+    "performance": {
+        "frontendRenderBudgetMs": 0,
+        "adminQueryBudget": 40,
+        "cacheTags": [],
+        "cacheSafety": {
+            "cacheable": false,
+            "variesBy": [],
+            "sensitiveOutput": false,
+            "invalidationSources": [],
+            "queueInvalidation": false
+        }
+    },
+    "healthChecks": [
+        {
+            "key": "ai-orchestrator.package-health",
+            "label": "AI Orchestrator package surfaces, providers, and install health are discoverable by Diagnostics.",
+            "class": "Capell\\AIOrchestrator\\Health\\AiOrchestratorHealthCheck",
+            "severity": "critical",
+            "surface": "admin"
+        }
+    ],
+    "commercial": {
+        "proposedLicense": "paid",
+        "requestedCertification": "first-party",
+        "supportPolicy": "priority",
+        "privateDocsRequested": true
+    },
+    "marketplace": {
+        "summary": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
+        "screenshots": [
+            {
+                "path": "docs/screenshots/beta-contract.svg",
+                "alt": "Illustrative AI Orchestrator Beta contract from capability registration to consumer-owned UI",
+                "caption": "Illustrative Beta contract artwork: AI Orchestrator owns registration, governed execution, and approval boundaries while consuming packages own the screens."
+            }
+        ],
+        "categories": ["admin", "commercial"]
+    }
+}
