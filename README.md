@@ -29,9 +29,9 @@ Status details:
 
 Screenshot contract: `docs/screenshots.json`.
 
-![AI Orchestrator beta contract artwork](docs/screenshots/beta-contract.svg)
-
-- AI Orchestrator beta contract artwork (marketplace, required).
+- Capability list or prompt surface where provided by a consuming package (admin, optional).
+- LayoutBuilder layout preview workflow if LayoutBuilder integration is enabled (admin, optional).
+- Approval state where a capability requires review (admin, optional).
 
 ## Technical Shape
 
@@ -44,8 +44,8 @@ Screenshot contract: `docs/screenshots.json`.
 - Filament classes: `AIOrchestratorCapabilityCatalogPage`, `AIOrchestratorSettingsSchema`.
 - Events: `AIOrchestratorCapabilityRunRecorded`, `AiGenerationCompleted`, `AiGenerationFailed`, `AiGenerationStarted`.
 - Listeners: `LogAiGeneration`, `NotifyAiFailure`.
-- Actions: `AssertAiModelPriceConfiguredAction`, `AssertAiRequestBudgetAction`, `EstimateAiGenerationCostAction`, `GeneratorPageContentAction`, `PruneAiGenerationPayloadsAction`, `RecordAiGenerationAction`, `SuggestMetaDescriptionsAction`, `SuggestPageTitlesAction`, `GenerateAiAssistantFieldsAction`, `ListAIOrchestratorCapabilitiesAction`, `QueueAiAssistantGenerationAction`, `RegisterAIOrchestratorModuleAction`, `and 1 more`.
-- Data objects: `AIOrchestratorCapabilityData`, `AIOrchestratorRunData`, `AiGenerationInputData`, `AiGenerationResultData`, `AiSpendReservationData`, `AiAssistantGenerationData`, `AiAssistantGenerationResultData`.
+- Actions: `AssertAiModelPriceConfiguredAction`, `AssertAiRequestBudgetAction`, `EstimateAiGenerationCostAction`, `GeneratorPageContentAction`, `PruneAiGenerationPayloadsAction`, `RecordAiGenerationAction`, `SuggestMetaDescriptionsAction`, `SuggestPageTitlesAction`, `GenerateAiAssistantFieldsAction`, `ListAIOrchestratorCapabilitiesAction`, `QueueAiAssistantGenerationAction`, `RegisterAIOrchestratorModuleAction`, `and 2 more`.
+- Data objects: `AIOrchestratorCapabilityData`, `AIOrchestratorRunData`, `AIOrchestratorRuntimeSettingsData`, `AiGenerationInputData`, `AiGenerationResultData`, `AiSpendReservationData`, `AiAssistantGenerationData`, `AiAssistantGenerationResultData`.
 - Jobs: `RunAiAssistantGenerationJob`.
 - Command signatures: `capell:ai-orchestrator:prune-generation-payloads`.
 - Console command classes: `PruneAiGenerationPayloadsCommand`.
