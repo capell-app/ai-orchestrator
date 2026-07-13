@@ -5,6 +5,7 @@
     "requiresInstalledPackage": true,
     "auditStatus": "visual-exempt",
     "auditReason": "AI Orchestrator is a headless capability registry and execution contract. The required Marketplace asset is explicitly illustrative; product-screen proof belongs to consuming packages that render registered capabilities, approvals, and execution results.",
+    "requiredEvidencePolicy": "distinct-required-surfaces",
     "outputDirectory": "packages/ai-orchestrator/docs/screenshots",
     "entries": [
         {
