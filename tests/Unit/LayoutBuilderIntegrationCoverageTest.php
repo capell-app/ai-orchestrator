@@ -24,7 +24,7 @@ it('describes the layout builder ai orchestrator module capability', function ()
         ->and($capabilities[0]->key)->toBe('preview-layout-plan')
         ->and($capabilities[0]->actionClass)->toBe(PreviewLayoutBuilderLayoutPlanAction::class)
         ->and($capabilities[0]->approvalLevel)->toBe(AIOrchestratorApprovalLevel::Draft)
-        ->and(AiOrchestratorHealthCheck::compatibleCapellApiVersion())->toBe('^4.0');
+        ->and(AiOrchestratorHealthCheck::compatibleCapellApiVersion())->toBe('^1.0');
 });
 
 it('registers the layout builder module when the registry resolves after services register', function (): void {
