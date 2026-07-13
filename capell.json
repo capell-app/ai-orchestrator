@@ -21,6 +21,7 @@
             "capell-app/layout-builder"
         ],
         "supports": [
+            "capell-app/ai-creator",
             "capell-app/content-sections",
             "capell-app/media-ai",
             "capell-app/seo-suite",

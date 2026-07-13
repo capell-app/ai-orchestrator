@@ -4,7 +4,7 @@
 
 ## What This Plugin Adds
 
-AI Orchestrator is an **Available**, **Schema-owning** Capell package in the **Capell Commercial** product group. It ships as `capell-app/ai-orchestrator` and extends these surfaces: admin.
+AI Orchestrator is an **Available**, **Schema-owning** Capell package in the **Capell AI** product group. It ships as `capell-app/ai-orchestrator` and extends these surfaces: admin.
 
 A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.
 
@@ -14,7 +14,7 @@ Status details:
 
 - Status: Available
 - Tier: premium
-- Bundle: commercial
+- Bundle: ai
 - Composer package: `capell-app/ai-orchestrator`
 - Namespace: `Capell\AIOrchestrator`
 - Theme key: not applicable
@@ -29,9 +29,9 @@ Status details:
 
 Screenshot contract: `docs/screenshots.json`.
 
-- Capability list or prompt surface where provided by a consuming package (admin, optional).
-- LayoutBuilder layout preview workflow if LayoutBuilder integration is enabled (admin, optional).
-- Approval state where a capability requires review (admin, optional).
+![AI Orchestrator beta contract artwork](docs/screenshots/beta-contract.svg)
+
+- AI Orchestrator beta contract artwork (marketplace, required).
 
 ## Technical Shape
 
@@ -101,7 +101,7 @@ Screenshot contract: `docs/screenshots.json`.
 - [Capell content language plan](../../docs/CONTENT_LANGUAGE_PLAN.md)
 - [Capell documentation design system](../../docs/DESIGN_SYSTEM.md)
 - [Capell and package ERD notes](../../docs/erd/capell-and-package-erds.md)
-- Related packages: [Layout Builder](../layout-builder/README.md), [Content Sections](../content-sections/README.md), [Media Ai](../media-ai/README.md), [Seo Suite](../seo-suite/README.md), [Translation Manager](../translation-manager/README.md).
+- Related packages: [Layout Builder](../layout-builder/README.md), [Ai Creator](../ai-creator/README.md), [Content Sections](../content-sections/README.md), [Media Ai](../media-ai/README.md), [Seo Suite](../seo-suite/README.md), [Translation Manager](../translation-manager/README.md).
 - Focused tests: `vendor/bin/pest packages/ai-orchestrator/tests --configuration=phpunit.xml`.
 
 <!-- prettier-ignore-end -->
