@@ -4,13 +4,13 @@
     "slug": "ai-orchestrator",
     "displayName": "AI Orchestrator",
     "kind": "package",
-    "capellApiVersion": "^1.0",
+    "capellApiVersion": "^4.0",
     "version": "1.x-dev",
     "description": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
     "product": {
-        "group": "Capell Commercial",
+        "group": "Capell AI",
         "tier": "premium",
-        "bundle": "commercial"
+        "bundle": "ai"
     },
     "namespace": "Capell\\AIOrchestrator",
     "surfaces": ["admin"],
