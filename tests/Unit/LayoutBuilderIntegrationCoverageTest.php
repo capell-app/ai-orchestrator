@@ -9,6 +9,7 @@ use Capell\AIOrchestrator\Integrations\LayoutBuilder\LayoutBuilderAIOrchestrator
 use Capell\AIOrchestrator\Integrations\LayoutBuilder\PreviewLayoutBuilderLayoutPlanAction;
 use Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
+use Capell\Core\Facades\CapellCore;
 use Capell\LayoutBuilder\Data\LayoutPlanResultData;
 use Illuminate\Config\Repository;
 use Illuminate\Foundation\Application;
@@ -63,6 +64,7 @@ it('delegates layout builder preview planning through the integration action', f
 
 function aiOrchestratorRegisterServices(Application $application): void
 {
+    CapellCore::forcePackageInstalled('capell-app/layout-builder');
     $application->instance('config', new Repository);
 
     $provider = new AIOrchestratorServiceProvider($application);

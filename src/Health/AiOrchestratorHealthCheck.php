@@ -168,6 +168,10 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
 
     public function layoutBuilderModuleIsAvailable(): bool
     {
+        if (! CapellCore::isPackageInstalled('capell-app/layout-builder')) {
+            return true;
+        }
+
         try {
             return array_key_exists('layout-builder', app()->make(AIOrchestratorModuleRegistry::class)->modules());
         } catch (Throwable) {

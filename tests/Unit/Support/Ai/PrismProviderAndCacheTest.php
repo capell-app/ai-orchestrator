@@ -148,7 +148,7 @@ it('sends normalized chat messages through prism and maps the response telemetry
             ->and($request->temperature())->toBe(0.2)
             ->and($request->clientOptions()['timeout'] ?? null)->toBe(19)
             ->and($request->clientOptions()['connect_timeout'] ?? null)->toBe(4)
-            ->and($request->clientOptions()['headers']['Idempotency-Key'] ?? null)
+            ->and(data_get($request->clientOptions(), 'headers.Idempotency-Key'))
             ->toMatch('/^[a-f0-9]{64}$/');
     });
 

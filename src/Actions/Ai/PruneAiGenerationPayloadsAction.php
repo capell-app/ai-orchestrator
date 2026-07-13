@@ -39,7 +39,8 @@ final class PruneAiGenerationPayloadsAction
                 'updated_at' => now(),
             ]);
 
-        return $expiredRequests + $prunedHistories;
+        return (is_int($expiredRequests) ? $expiredRequests : 0)
+            + (is_int($prunedHistories) ? $prunedHistories : 0);
     }
 
     private function retentionDays(): int

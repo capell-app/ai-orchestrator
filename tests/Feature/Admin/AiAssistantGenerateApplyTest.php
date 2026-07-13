@@ -93,7 +93,9 @@ it('queues the selected capability and returns the completed result on the next 
     expect(AIGenerationHistory::query()->count())->toBe(0);
 
     $request = AiGenerationRequest::query()->sole();
-    (new RunAiAssistantGenerationJob((int) $request->getKey()))->handle();
+    $requestId = $request->getKey();
+    throw_unless(is_int($requestId), RuntimeException::class, 'Expected an integer generation request key.');
+    (new RunAiAssistantGenerationJob($requestId))->handle();
 
     $completed = invokeExtender('generatePayload', [
         'fields' => ['title'],

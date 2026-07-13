@@ -27,7 +27,7 @@ class AIOrchestratorSettings extends Settings implements SettingsContract
 
     public string $image_default_size;
 
-    /** @phpstan-var array<string, bool|array<string, string|int|float>> */
+    /** @phpstan-var array<string, bool|int|string|array<string, string|int|float>> */
     public array $prompts;
 
     public static function group(): string

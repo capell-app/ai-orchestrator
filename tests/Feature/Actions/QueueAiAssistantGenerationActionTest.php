@@ -56,7 +56,9 @@ it('executes queued assistant generation and stores its result', function (): vo
         keywords: 'launch',
     ));
 
-    (new RunAiAssistantGenerationJob((int) $request->getKey()))->handle();
+    $requestId = $request->getKey();
+    throw_unless(is_int($requestId), RuntimeException::class, 'Expected an integer generation request key.');
+    (new RunAiAssistantGenerationJob($requestId))->handle();
     $request->refresh();
 
     expect($request->status)->toBe(AiGenerationRequestStatus::Completed)
@@ -72,12 +74,15 @@ it('encrypts transient generation payloads and prunes expired requests', functio
     ));
 
     $rawRequest = DB::table('ai_generation_requests')->where('id', $request->getKey())->first();
+    throw_unless($rawRequest instanceof stdClass && is_string($rawRequest->payload ?? null), RuntimeException::class, 'Expected an encrypted request payload.');
+    $requestId = $request->getKey();
+    throw_unless(is_int($requestId), RuntimeException::class, 'Expected an integer generation request key.');
 
     expect($rawRequest)->not->toBeNull()
-        ->and((string) $rawRequest->payload)->not->toContain('customer-secret')
+        ->and($rawRequest->payload)->not->toContain('customer-secret')
         ->not->toContain('private-launch')
         ->and($request->refresh()->payload['content'] ?? null)->toBe('Unpublished body with customer-secret')
-        ->and(serialize(new RunAiAssistantGenerationJob((int) $request->getKey())))
+        ->and(serialize(new RunAiAssistantGenerationJob($requestId)))
         ->not->toContain('customer-secret');
 
     $request->forceFill(['expires_at' => now()->subMinute()])->save();

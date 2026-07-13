@@ -8,7 +8,7 @@ use Capell\AIOrchestrator\Actions\Ai\EstimateAiGenerationCostAction;
 use Capell\AIOrchestrator\Data\Ai\AiSpendReservationData;
 use Capell\AIOrchestrator\Exceptions\AiSpendBudgetExceededException;
 use Capell\AIOrchestrator\Models\AIGenerationHistory;
-use Illuminate\Cache\Repository;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;

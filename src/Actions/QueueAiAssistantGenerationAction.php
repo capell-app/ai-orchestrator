@@ -59,7 +59,8 @@ final class QueueAiAssistantGenerationAction
 
         if ($shouldDispatch) {
             $this->assertAsynchronousProductionQueue();
-            $job = new RunAiAssistantGenerationJob((int) $request->getKey());
+            $requestKey = $request->getKey();
+            $job = new RunAiAssistantGenerationJob(is_int($requestKey) ? $requestKey : 0);
             $connection = config('capell-ai-orchestrator.queue.connection');
 
             if (is_string($connection) && $connection !== '') {
