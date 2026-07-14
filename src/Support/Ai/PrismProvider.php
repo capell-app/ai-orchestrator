@@ -81,7 +81,7 @@ class PrismProvider implements ServiceContract
         $cacheKey = $this->generationCache?->keyForRequest($requestIdentity);
 
         if ($cacheKey !== null) {
-            $cachedResponse = $this->generationCache?->get($cacheKey);
+            $cachedResponse = $this->generationCache->get($cacheKey);
 
             if ($cachedResponse instanceof AiResponse) {
                 return new AiResponse(
@@ -160,7 +160,7 @@ class PrismProvider implements ServiceContract
                 );
 
                 if ($cacheKey !== null) {
-                    $this->generationCache?->put($cacheKey, $aiResponse);
+                    $this->generationCache->put($cacheKey, $aiResponse);
                 }
 
                 return $aiResponse;
