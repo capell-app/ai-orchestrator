@@ -6,9 +6,11 @@
 
 AI Orchestrator is an **Available**, **Schema-owning** Capell package in the **Capell AI** product group. It ships as `capell-app/ai-orchestrator` and extends these surfaces: admin.
 
-A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.
+AI Orchestrator provides a shared capability registry, governed execution path, generation history, and request queue for AI features owned by other Capell packages.
 
-After install, admins get package-owned management or reporting surfaces inside Capell.
+Admins can inspect registered capability metadata in the capability catalog. Consuming packages keep ownership of their editor actions and approval screens.
+
+Evidence: [`capell.json`](capell.json), [`src/Support/AIOrchestratorModuleRegistry.php`](src/Support/AIOrchestratorModuleRegistry.php), [`src/Actions/RunAIOrchestratorCapabilityAction.php`](src/Actions/RunAIOrchestratorCapabilityAction.php), [`src/Filament/Pages/AIOrchestratorCapabilityCatalogPage.php`](src/Filament/Pages/AIOrchestratorCapabilityCatalogPage.php), [`tests/Feature/AIOrchestratorCapabilityCatalogPageTest.php`](tests/Feature/AIOrchestratorCapabilityCatalogPageTest.php), [`docs/screenshots.json`](docs/screenshots.json).
 
 Status details:
 
@@ -21,9 +23,11 @@ Status details:
 
 ## Why It Matters
 
-**For developers:** The package gives developers package-owned service providers, Actions, Data objects, models, Filament classes, and Blade views instead of pushing this behaviour into core or application code.
+**For developers:** Packages implement AIOrchestratorModule and register typed capabilities, while RunAIOrchestratorCapabilityAction enforces runnable actions, authorization, and policy guardrails in one place.
 
-**For teams:** A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.
+**For teams:** AI-assisted features across Capell share the same registration, approval, execution, and recording boundaries instead of behaving differently in each package.
+
+Evidence: [`src/Contracts/AIOrchestratorModule.php`](src/Contracts/AIOrchestratorModule.php), [`src/Contracts/AIOrchestratorPolicyGuardrail.php`](src/Contracts/AIOrchestratorPolicyGuardrail.php), [`src/Actions/RunAIOrchestratorCapabilityAction.php`](src/Actions/RunAIOrchestratorCapabilityAction.php), [`tests/Feature/RunAIOrchestratorCapabilityActionTest.php`](tests/Feature/RunAIOrchestratorCapabilityActionTest.php), [`docs/overview.admin.md`](docs/overview.admin.md), [`tests/Feature/Integrations/AIAuthoringModuleTest.php`](tests/Feature/Integrations/AIAuthoringModuleTest.php), [`tests/Feature/Actions/QueueAiAssistantGenerationActionTest.php`](tests/Feature/Actions/QueueAiAssistantGenerationActionTest.php).
 
 ## Screens And Workflow
 
@@ -42,12 +46,14 @@ Screenshot contract: `docs/screenshots.json`.
 - Settings classes: `AIOrchestratorSettings`.
 - Models: `AIGenerationHistory`, `AiGenerationRequest`.
 - Filament classes: `AIOrchestratorCapabilityCatalogPage`, `AIOrchestratorSettingsSchema`.
+- Extension contracts: `AIOrchestratorModule`, `AIOrchestratorPolicyGuardrail`, `AiActionContextInterface`, `AiCreatorContextInterface`.
 - Events: `AIOrchestratorCapabilityRunRecorded`, `AiGenerationCompleted`, `AiGenerationFailed`, `AiGenerationStarted`.
 - Listeners: `LogAiGeneration`, `NotifyAiFailure`.
 - Actions: `AssertAiModelPriceConfiguredAction`, `AssertAiRequestBudgetAction`, `EstimateAiGenerationCostAction`, `GeneratorPageContentAction`, `PruneAiGenerationPayloadsAction`, `RecordAiGenerationAction`, `SuggestMetaDescriptionsAction`, `SuggestPageTitlesAction`, `GenerateAiAssistantFieldsAction`, `ListAIOrchestratorCapabilitiesAction`, `QueueAiAssistantGenerationAction`, `RegisterAIOrchestratorModuleAction`, `and 2 more`.
 - Data objects: `AIOrchestratorCapabilityData`, `AIOrchestratorRunData`, `AIOrchestratorRuntimeSettingsData`, `AiGenerationInputData`, `AiGenerationResultData`, `AiSpendReservationData`, `AiAssistantGenerationData`, `AiAssistantGenerationResultData`.
 - Jobs: `RunAiAssistantGenerationJob`.
 - Command signatures: `capell:ai-orchestrator:prune-generation-payloads`.
+- Scheduled commands: `capell:ai-orchestrator:prune-generation-payloads (daily)`.
 - Console command classes: `PruneAiGenerationPayloadsCommand`.
 - Manifest contributions: `admin-page: Capell\AIOrchestrator\Manifest\AiOrchestratorAdminPageContribution`, `console-command: Capell\AIOrchestrator\Manifest\AiOrchestratorPruneScheduleContribution`, `scheduled-job: Capell\AIOrchestrator\Manifest\AiOrchestratorPruneScheduleContribution`.
 - Health checks: `Capell\AIOrchestrator\Health\AiOrchestratorHealthCheck`.
@@ -57,26 +63,31 @@ Screenshot contract: `docs/screenshots.json`.
 
 - Required tables: `ai_generation_histories`, `ai_generation_requests`.
 - Models: `AIGenerationHistory`, `AiGenerationRequest`.
+- Core record references in migrations: `sites via site_id`, `languages via language_id`.
 - Migration files: `2026_05_10_190870_02_create_ai_generation_histories_table.php`, `2026_06_08_000001_add_cost_fields_to_ai_generation_histories_table.php`, `2026_07_10_000001_add_site_id_to_ai_generation_histories_table.php`, `2026_07_10_000002_create_ai_generation_requests_table.php`, `2026_07_10_000003_encrypt_ai_generation_history_payloads.php`, `2026_07_10_000003_encrypt_ai_generation_requests_table.php`.
 - Migration impact: run host migrations through the package install flow before opening package surfaces.
-- Deletion/retention behaviour: Docs gap unless the package has an explicit pruning command, retention setting, or tested cascade path.
+- Deletion/retention behaviour: retention is scheduled through `capell:ai-orchestrator:prune-generation-payloads` (daily).
 
 ## Install Impact
 
-- Admin navigation: adds package-owned Filament classes when registered.
+- Required packages: `capell-app/admin`, `capell-app/core`, `capell-app/layout-builder`.
+- Admin navigation: declares `admin-page: AiOrchestratorAdminPageContribution`; each Filament page or resource controls its own navigation visibility.
+- Admin/editor extensions: none declared.
 - Permissions: none declared in `capell.json`.
-- Public routes: none detected in package route files.
+- Public routes: none declared.
 - Database changes: package migrations are declared.
+- Config: `config/capell-ai-orchestrator.php`.
 - Settings: `Capell\AIOrchestrator\Settings\AIOrchestratorSettings`.
-- Queues or schedules: review package jobs or schedules before install.
+- Queues or schedules: scheduled commands `capell:ai-orchestrator:prune-generation-payloads (daily)`; queue jobs `RunAiAssistantGenerationJob`.
 - Cache tags: none declared.
 - Commands: `capell:ai-orchestrator:prune-generation-payloads`.
 
 ## Common Pitfalls
 
+- Keep required Capell packages on compatible v4 releases: `capell-app/admin`, `capell-app/core`, `capell-app/layout-builder`.
 - Run migrations before opening package resources or public routes.
-- Configure package settings before testing production-like workflows.
-- Keep `composer.json`, `composer.local.json`, `capell.json`, docs, screenshots, and tests aligned when the package surface changes.
+- Review package configuration before production-like verification: `config/capell-ai-orchestrator.php`, `Capell\AIOrchestrator\Settings\AIOrchestratorSettings`.
+- Register the host scheduler so these declared commands run at their documented frequencies: `capell:ai-orchestrator:prune-generation-payloads (daily)`.
 
 ## Troubleshooting
 
@@ -84,18 +95,20 @@ Screenshot contract: `docs/screenshots.json`.
 | --- | --- | --- | --- |
 | Package surface is missing after install | Provider or manifest is not loaded | Confirm `capell.json`, package `composer.json`, and provider registration | Reinstall the package, refresh Composer autoload, and clear host caches |
 | Admin screen or command fails on missing table | Package migrations have not run | Check the tables listed in `Data Model` | Run host migrations and rerun the focused package test |
-| Background work does not run | Queue worker or scheduled command is not active | Check package jobs, commands, and host scheduler configuration | Start the queue or scheduler, then run the focused command or package test |
+| Background work does not run | Queue worker or declared schedule is not active | Check the jobs and scheduled commands listed in `Technical Shape` | Start the queue worker or host scheduler, then run the focused command or package test |
 
 ## Quick Start
 
 1. Install the package: `composer require capell-app/ai-orchestrator`.
 2. Run the required setup: `php artisan migrate`.
-3. Open the related Capell admin surface and verify AI Orchestrator appears.
+3. Open the package admin page or resource and verify AI Orchestrator is available.
 
 ## Next Steps
 
 - [Package docs](docs/README.md)
 - [Overview](docs/overview.md)
+- Configuration files: [`config/capell-ai-orchestrator.php`](config/capell-ai-orchestrator.php).
+- [Troubleshooting](#troubleshooting)
 - [Screenshot contract](docs/screenshots.json)
 - [Marketplace assets](docs/assets/marketplace/)
 - [Capell content language plan](../../docs/CONTENT_LANGUAGE_PLAN.md)

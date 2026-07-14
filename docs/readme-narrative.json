@@ -1,0 +1,37 @@
+{
+    "whatThisPluginAdds": {
+        "text": "AI Orchestrator provides a shared capability registry, governed execution path, generation history, and request queue for AI features owned by other Capell packages.",
+        "evidence": [
+            "capell.json",
+            "src/Support/AIOrchestratorModuleRegistry.php",
+            "src/Actions/RunAIOrchestratorCapabilityAction.php"
+        ]
+    },
+    "surfaceOutcome": {
+        "text": "Admins can inspect registered capability metadata in the capability catalog. Consuming packages keep ownership of their editor actions and approval screens.",
+        "evidence": [
+            "src/Filament/Pages/AIOrchestratorCapabilityCatalogPage.php",
+            "tests/Feature/AIOrchestratorCapabilityCatalogPageTest.php",
+            "docs/screenshots.json"
+        ]
+    },
+    "whyItMatters": {
+        "developers": {
+            "text": "Packages implement AIOrchestratorModule and register typed capabilities, while RunAIOrchestratorCapabilityAction enforces runnable actions, authorization, and policy guardrails in one place.",
+            "evidence": [
+                "src/Contracts/AIOrchestratorModule.php",
+                "src/Contracts/AIOrchestratorPolicyGuardrail.php",
+                "src/Actions/RunAIOrchestratorCapabilityAction.php",
+                "tests/Feature/RunAIOrchestratorCapabilityActionTest.php"
+            ]
+        },
+        "teams": {
+            "text": "AI-assisted features across Capell share the same registration, approval, execution, and recording boundaries instead of behaving differently in each package.",
+            "evidence": [
+                "docs/overview.admin.md",
+                "tests/Feature/Integrations/AIAuthoringModuleTest.php",
+                "tests/Feature/Actions/QueueAiAssistantGenerationActionTest.php"
+            ]
+        }
+    }
+}

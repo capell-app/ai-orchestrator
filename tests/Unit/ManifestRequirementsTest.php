@@ -42,8 +42,8 @@ it('positions the package as headless ai orchestration infrastructure', function
             'pageClass' => AIOrchestratorCapabilityCatalogPage::class,
             'labelKey' => 'capell-ai-orchestrator::package.catalog_title',
         ])
-        ->and($readme)->toContain($expectedSummary)
-        ->and($readme)->toContain('Public routes: none detected in package route files')
+        ->and($readme)->toContain('AI Orchestrator provides a shared capability registry, governed execution path, generation history, and request queue for AI features owned by other Capell packages.')
+        ->and($readme)->toContain('Public routes: none declared.')
         ->and($overview)->toContain($expectedSummary)
         ->and($overview)->toContain('explicitly labelled as illustrative Beta contract artwork')
         ->and(File::exists($packagePath . '/docs-move-refs.txt'))->toBeFalse();
