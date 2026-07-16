@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Capell\AIOrchestrator\Actions\Ai;
 
-use Lorisleiva\Actions\Concerns\AsAction;
+use Lorisleiva\Actions\Concerns\AsFake;
+use Lorisleiva\Actions\Concerns\AsObject;
 use RuntimeException;
 
 /** @method static bool run(string $model) */
 final class AssertAiModelPriceConfiguredAction
 {
-    use AsAction;
+    use AsFake;
+    use AsObject;
 
     public function handle(string $model): bool
     {

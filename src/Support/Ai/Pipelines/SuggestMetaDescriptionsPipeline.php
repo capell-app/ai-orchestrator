@@ -158,7 +158,7 @@ class SuggestMetaDescriptionsPipeline
             siteId: $this->positiveIntOrNull($input->options['site_id'] ?? null),
         );
 
-        $resultData->history = $this->recordAiGenerationAction->handle($resultData);
+        $resultData->history = RecordAiGenerationAction::run($resultData);
         $payload['result_data'] = $resultData;
 
         return $next($payload);

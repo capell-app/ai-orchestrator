@@ -8,14 +8,16 @@ use Capell\AIOrchestrator\Data\Ai\AiGenerationResultData;
 use Capell\AIOrchestrator\Models\AIGenerationHistory;
 use Capell\AIOrchestrator\Support\Ai\AiSpendGuard;
 use Illuminate\Support\Facades\Auth;
-use Lorisleiva\Actions\Concerns\AsAction;
+use Lorisleiva\Actions\Concerns\AsFake;
+use Lorisleiva\Actions\Concerns\AsObject;
 
 /**
  * @method static AIGenerationHistory run(AiGenerationResultData|array<string, mixed> $result)
  */
 class RecordAiGenerationAction
 {
-    use AsAction;
+    use AsFake;
+    use AsObject;
 
     public function __construct(private readonly ?AiSpendGuard $spendGuard = null) {}
 

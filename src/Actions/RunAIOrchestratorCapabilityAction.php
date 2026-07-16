@@ -13,12 +13,14 @@ use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\AIOrchestrator\Support\AIOrchestratorPolicyGuardrailRegistry;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
+use Lorisleiva\Actions\Concerns\AsFake;
 use Lorisleiva\Actions\Concerns\AsObject;
 use RuntimeException;
 use Throwable;
 
 class RunAIOrchestratorCapabilityAction
 {
+    use AsFake;
     use AsObject;
 
     public function handle(AIOrchestratorRunData $run): mixed

@@ -40,7 +40,7 @@ it('maps run data to the title suggestion action and returns titles', function (
         'actor' => null,
     ]);
 
-    $result = app(SuggestTitleCapabilityAction::class)->handle($run);
+    $result = SuggestTitleCapabilityAction::run($run);
 
     expect($result)->toBe($fakeTitles);
 });

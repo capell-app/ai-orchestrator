@@ -59,7 +59,7 @@ final class RunAiAssistantGenerationJob implements ShouldBeUnique, ShouldQueue
 
         try {
             $data = $this->generationData($request->payload);
-            $result = app(GenerateAiAssistantFieldsAction::class)->handle($data);
+            $result = GenerateAiAssistantFieldsAction::run($data);
 
             $request->update([
                 'status' => AiGenerationRequestStatus::Completed,

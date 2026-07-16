@@ -9,13 +9,15 @@ use Capell\AIOrchestrator\Enums\AiGenerationRequestStatus;
 use Capell\AIOrchestrator\Jobs\RunAiAssistantGenerationJob;
 use Capell\AIOrchestrator\Models\AiGenerationRequest;
 use Illuminate\Database\Eloquent\Model;
-use Lorisleiva\Actions\Concerns\AsAction;
+use Lorisleiva\Actions\Concerns\AsFake;
+use Lorisleiva\Actions\Concerns\AsObject;
 use RuntimeException;
 
 /** @method static AiGenerationRequest run(AiAssistantGenerationData $data) */
 final class QueueAiAssistantGenerationAction
 {
-    use AsAction;
+    use AsFake;
+    use AsObject;
 
     public function handle(AiAssistantGenerationData $data): AiGenerationRequest
     {

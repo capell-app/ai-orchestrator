@@ -18,7 +18,7 @@ it('uses persisted provider model prompts and rate limits as one runtime source'
         'title_generation_user_template' => 'Saved {{content}}',
     ];
 
-    $runtime = app(ResolveAIOrchestratorRuntimeSettingsAction::class)->handle($settings);
+    $runtime = ResolveAIOrchestratorRuntimeSettingsAction::run($settings);
 
     expect($runtime->provider)->toMatchArray(['provider' => 'anthropic', 'model' => 'saved-model', 'api_key' => 'secret-key'])
         ->and($runtime->rateLimiting)->toMatchArray(['enabled' => true, 'requests_per_minute' => 7])

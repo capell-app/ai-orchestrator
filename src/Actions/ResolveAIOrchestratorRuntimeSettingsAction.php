@@ -6,12 +6,14 @@ namespace Capell\AIOrchestrator\Actions;
 
 use Capell\AIOrchestrator\Data\AIOrchestratorRuntimeSettingsData;
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
-use Lorisleiva\Actions\Concerns\AsAction;
+use Lorisleiva\Actions\Concerns\AsFake;
+use Lorisleiva\Actions\Concerns\AsObject;
 use Throwable;
 
 final class ResolveAIOrchestratorRuntimeSettingsAction
 {
-    use AsAction;
+    use AsFake;
+    use AsObject;
 
     public function handle(?AIOrchestratorSettings $settings = null): AIOrchestratorRuntimeSettingsData
     {

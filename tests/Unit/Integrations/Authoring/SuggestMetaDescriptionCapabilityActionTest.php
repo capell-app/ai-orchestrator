@@ -40,7 +40,7 @@ it('maps run data to the meta description action and returns descriptions', func
         'actor' => null,
     ]);
 
-    $result = app(SuggestMetaDescriptionCapabilityAction::class)->handle($run);
+    $result = SuggestMetaDescriptionCapabilityAction::run($run);
 
     expect($result)->toBe($fakeDescriptions);
 });

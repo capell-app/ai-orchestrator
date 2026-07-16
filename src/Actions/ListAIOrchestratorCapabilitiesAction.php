@@ -6,10 +6,12 @@ namespace Capell\AIOrchestrator\Actions;
 
 use Capell\AIOrchestrator\Data\AIOrchestratorCapabilityData;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
+use Lorisleiva\Actions\Concerns\AsFake;
 use Lorisleiva\Actions\Concerns\AsObject;
 
 class ListAIOrchestratorCapabilitiesAction
 {
+    use AsFake;
     use AsObject;
 
     /**

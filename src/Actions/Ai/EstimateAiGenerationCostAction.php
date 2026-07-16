@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Capell\AIOrchestrator\Actions\Ai;
 
-use Lorisleiva\Actions\Concerns\AsAction;
+use Lorisleiva\Actions\Concerns\AsFake;
+use Lorisleiva\Actions\Concerns\AsObject;
 
 /**
  * @method static array{cost_micros: int, currency: string} run(?string $model, int $promptTokens = 0, int $completionTokens = 0, int $totalTokens = 0, array<string, mixed> $metadata = [])
  */
 final class EstimateAiGenerationCostAction
 {
-    use AsAction;
+    use AsFake;
+    use AsObject;
 
     /**
      * @param  array<string, mixed>  $metadata

@@ -6,12 +6,14 @@ namespace Capell\AIOrchestrator\Actions\Ai;
 
 use Capell\AIOrchestrator\Exceptions\AiSpendBudgetExceededException;
 use InvalidArgumentException;
-use Lorisleiva\Actions\Concerns\AsAction;
+use Lorisleiva\Actions\Concerns\AsFake;
+use Lorisleiva\Actions\Concerns\AsObject;
 
 /** @method static bool run(string $model, int $budgetCents, int $promptTokens = 0, int $completionTokens = 0) */
 final class AssertAiRequestBudgetAction
 {
-    use AsAction;
+    use AsFake;
+    use AsObject;
 
     private const int MICROS_PER_CENT = 10_000;
 

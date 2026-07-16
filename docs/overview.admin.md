@@ -1,19 +1,19 @@
 ## What it does
 
-AI Orchestrator powers the AI features that other packages offer, such as the AI Creator buttons in SEO Suite and Blog. It coordinates the AI work behind the scenes.
+AI Orchestrator provides the shared AI capability layer used by other Capell packages, such as AI Creator, Blog, Layout Builder, Media AI, SEO Suite, and Translation Manager. Those packages own the editor-facing actions that create, suggest, or apply content.
 
-A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.
+## Where to review it
 
-## Do I need to do anything?
+Go to **System → AI Orchestrator** to open the **AI Orchestrator Capability Catalog**. This is a review screen, not a content-generation tool: it lists the AI modules and capabilities currently registered by installed packages, together with each capability's approval level, required ability, and underlying action.
 
-Usually no. It works automatically once installed and configured. You will see its effect in the **AI Creator** buttons and AI suggestions inside other packages, not in a screen of its own.
+Use it when an AI feature is unexpectedly unavailable, when checking what an installed package contributes, or when your developer is reviewing permissions and approval boundaries. It does not run a capability, change its approval level, or approve generated content.
 
-## Where it shows up
+## Settings
 
-In the AI features of other packages, for example drafting a title and description in SEO Suite, or AI help in Blog.
+The central AI settings surface controls the shared model, request-rate limit, and prompt templates for title, meta-description, and content generation. Change these only if you are responsible for the site's AI configuration; package-specific AI buttons and their generated content remain in the package that provides them.
 
 ## Good to know
 
-- There is nothing to operate here directly; use the AI features in the packages that rely on it.
-- If AI features stop working across packages, this is the package to check with your developer.
-- The Beta contract diagram is explicitly labelled as illustrative Beta contract artwork; consuming packages own the user-facing AI screens.
+- Use **AI Creator** and other AI actions from the package where you are editing content; this catalog is for visibility into the registered capabilities.
+- If AI features stop working across packages, review the catalog and ask a developer to check the shared AI configuration and provider credentials.
+- Generated AI output still follows the approval and editing flow of the package that requested it.

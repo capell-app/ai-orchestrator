@@ -12,12 +12,14 @@ use Capell\AIOrchestrator\Events\Ai\AiGenerationStarted;
 use Capell\AIOrchestrator\Support\Ai\Pipelines\SuggestTitlesPipeline;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use Lorisleiva\Actions\Concerns\AsAction;
+use Lorisleiva\Actions\Concerns\AsFake;
+use Lorisleiva\Actions\Concerns\AsObject;
 use Throwable;
 
 class SuggestPageTitlesAction
 {
-    use AsAction;
+    use AsFake;
+    use AsObject;
 
     public function __construct(private readonly SuggestTitlesPipeline $pipeline) {}
 

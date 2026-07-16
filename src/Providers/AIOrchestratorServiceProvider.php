@@ -108,7 +108,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 
     private function registerAiEngineBindings(): self
     {
-        $this->app->singleton(AIOrchestratorRuntimeSettingsData::class, fn (): AIOrchestratorRuntimeSettingsData => app(ResolveAIOrchestratorRuntimeSettingsAction::class)->handle());
+        $this->app->singleton(AIOrchestratorRuntimeSettingsData::class, fn (): AIOrchestratorRuntimeSettingsData => ResolveAIOrchestratorRuntimeSettingsAction::run());
         $this->app->singleton(PrismProvider::class, fn (Application $app): PrismProvider => new PrismProvider(
             $app->make(AIOrchestratorRuntimeSettingsData::class)->provider,
             $app->make(AIGenerationCache::class),

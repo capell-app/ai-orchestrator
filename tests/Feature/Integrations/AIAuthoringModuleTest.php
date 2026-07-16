@@ -22,7 +22,7 @@ it('registers the authoring module with three capabilities', function (): void {
         ->toContain('generate-content')
         ->toContain('suggest-meta-description');
 
-    $allCapabilityKeys = collect(app(ListAIOrchestratorCapabilitiesAction::class)->handle())
+    $allCapabilityKeys = collect(ListAIOrchestratorCapabilitiesAction::run())
         ->pluck('key')
         ->all();
 

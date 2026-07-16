@@ -7,6 +7,7 @@ namespace Capell\AIOrchestrator\Actions;
 use Capell\AIOrchestrator\Data\AiAssistantGenerationData;
 use Capell\AIOrchestrator\Data\AiAssistantGenerationResultData;
 use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
+use Lorisleiva\Actions\Concerns\AsFake;
 use Lorisleiva\Actions\Concerns\AsObject;
 use Throwable;
 
@@ -17,6 +18,7 @@ use Throwable;
  */
 class GenerateAiAssistantFieldsAction
 {
+    use AsFake;
     use AsObject;
 
     /**

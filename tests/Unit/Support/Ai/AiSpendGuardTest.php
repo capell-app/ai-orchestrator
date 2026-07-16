@@ -70,7 +70,7 @@ it('settles a reservation after generation history is recorded', function (): vo
     $guard = testAiSpendGuard();
     $reservation = $guard->reserve(10, 'test-model', 0, 0, 'request-one');
 
-    $history = (new RecordAiGenerationAction($guard))->handle([
+    $history = runBoundAction(RecordAiGenerationAction::class, new RecordAiGenerationAction($guard), [
         'site_id' => 10,
         'action' => 'test-generation',
         'model' => 'test-model',

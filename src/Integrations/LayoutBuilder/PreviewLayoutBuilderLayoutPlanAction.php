@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Capell\AIOrchestrator\Integrations\LayoutBuilder;
 
 use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
+use Lorisleiva\Actions\Concerns\AsFake;
 use Lorisleiva\Actions\Concerns\AsObject;
 use RuntimeException;
 
 class PreviewLayoutBuilderLayoutPlanAction
 {
+    use AsFake;
     use AsObject;
 
     public function handle(AIOrchestratorRunData $run): mixed

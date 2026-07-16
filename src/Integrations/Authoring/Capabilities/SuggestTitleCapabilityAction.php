@@ -7,10 +7,12 @@ namespace Capell\AIOrchestrator\Integrations\Authoring\Capabilities;
 use Capell\AIOrchestrator\Actions\Ai\SuggestPageTitlesAction;
 use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
 use Capell\AIOrchestrator\Support\Ai\Context\ContentActionContext;
+use Lorisleiva\Actions\Concerns\AsFake;
 use Lorisleiva\Actions\Concerns\AsObject;
 
 class SuggestTitleCapabilityAction
 {
+    use AsFake;
     use AsObject;
 
     public function __construct(private readonly SuggestPageTitlesAction $suggestPageTitlesAction) {}
@@ -23,7 +25,7 @@ class SuggestTitleCapabilityAction
         $context = $this->contextFromRun($run);
         $options = is_array($run->context['options'] ?? null) ? $run->context['options'] : [];
 
-        return $this->suggestPageTitlesAction->handle($context, $options);
+        return SuggestPageTitlesAction::run($context, $options);
     }
 
     private function contextFromRun(AIOrchestratorRunData $run): ContentActionContext

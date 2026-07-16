@@ -36,7 +36,7 @@ it('maps run data to the content generation action and returns generated html', 
         'actor' => null,
     ]);
 
-    $result = app(GenerateContentCapabilityAction::class)->handle($run);
+    $result = GenerateContentCapabilityAction::run($run);
 
     expect($result)->toBe($generatedHtml);
 });

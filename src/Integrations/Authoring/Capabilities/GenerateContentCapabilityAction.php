@@ -7,10 +7,12 @@ namespace Capell\AIOrchestrator\Integrations\Authoring\Capabilities;
 use Capell\AIOrchestrator\Actions\Ai\GeneratorPageContentAction;
 use Capell\AIOrchestrator\Data\AIOrchestratorRunData;
 use Capell\AIOrchestrator\Support\Ai\Context\ContentActionContext;
+use Lorisleiva\Actions\Concerns\AsFake;
 use Lorisleiva\Actions\Concerns\AsObject;
 
 class GenerateContentCapabilityAction
 {
+    use AsFake;
     use AsObject;
 
     public function __construct(private readonly GeneratorPageContentAction $generatorPageContentAction) {}
@@ -20,7 +22,7 @@ class GenerateContentCapabilityAction
         $context = $this->contextFromRun($run);
         $options = $this->optionsFromRun($run);
 
-        return $this->generatorPageContentAction->handle($context, $options);
+        return GeneratorPageContentAction::run($context, $options);
     }
 
     /**

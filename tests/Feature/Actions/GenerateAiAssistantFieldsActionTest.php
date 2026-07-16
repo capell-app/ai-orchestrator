@@ -42,7 +42,7 @@ it('runs each selected capability and returns its output keyed by field', functi
         default => null,
     });
 
-    $result = GenerateAiAssistantFieldsAction::make()->handle(new AiAssistantGenerationData(
+    $result = GenerateAiAssistantFieldsAction::run(new AiAssistantGenerationData(
         fields: ['title', 'content', 'meta'],
         keywords: 'launch, pricing',
     ));
@@ -117,7 +117,7 @@ it('records a failure and continues instead of aborting when a capability throws
         return ['Title A'];
     });
 
-    $result = GenerateAiAssistantFieldsAction::make()->handle(new AiAssistantGenerationData(
+    $result = GenerateAiAssistantFieldsAction::run(new AiAssistantGenerationData(
         fields: ['title', 'content'],
     ));
 
@@ -128,7 +128,7 @@ it('records a failure and continues instead of aborting when a capability throws
 it('skips fields that are not real capabilities', function (): void {
     fakeCapabilityRunner(fn (AIOrchestratorRunData $run): mixed => ['Title A']);
 
-    $result = GenerateAiAssistantFieldsAction::make()->handle(new AiAssistantGenerationData(
+    $result = GenerateAiAssistantFieldsAction::run(new AiAssistantGenerationData(
         fields: ['title', 'not-a-field'],
     ));
 

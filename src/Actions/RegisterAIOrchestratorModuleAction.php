@@ -6,10 +6,12 @@ namespace Capell\AIOrchestrator\Actions;
 
 use Capell\AIOrchestrator\Contracts\AIOrchestratorModule;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
+use Lorisleiva\Actions\Concerns\AsFake;
 use Lorisleiva\Actions\Concerns\AsObject;
 
 class RegisterAIOrchestratorModuleAction
 {
+    use AsFake;
     use AsObject;
 
     public function handle(AIOrchestratorModule $module): void
