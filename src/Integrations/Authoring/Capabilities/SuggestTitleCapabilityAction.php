@@ -15,8 +15,6 @@ class SuggestTitleCapabilityAction
     use AsFake;
     use AsObject;
 
-    public function __construct(private readonly SuggestPageTitlesAction $suggestPageTitlesAction) {}
-
     /**
      * @return array<int, string>
      */

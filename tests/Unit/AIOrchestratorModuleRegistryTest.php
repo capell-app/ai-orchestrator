@@ -15,8 +15,6 @@ it('registers shallow ai-orchestrator modules and lists their capabilities', fun
 
     $capabilities = ListAIOrchestratorCapabilitiesAction::run();
 
-    throw_unless(is_array($capabilities), RuntimeException::class, 'AI Orchestrator capabilities must be an array.');
-
     $capability = collect($capabilities)
         ->first(fn (AIOrchestratorCapabilityData $candidateCapability): bool => $candidateCapability->key === 'test-capability');
 
@@ -28,12 +26,16 @@ it('registers shallow ai-orchestrator modules and lists their capabilities', fun
 it('throws when a module key is registered twice', function (): void {
     RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(moduleKey: 'duplicate-module'));
 
-    expect(fn (): mixed => RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(moduleKey: 'duplicate-module')))
+    expect(function (): void {
+        RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(moduleKey: 'duplicate-module'));
+    })
         ->toThrow(InvalidArgumentException::class, 'AIOrchestrator module [duplicate-module] is already registered.');
 });
 
 it('throws when a module registers duplicate capability keys', function (): void {
-    expect(fn (): mixed => RegisterAIOrchestratorModuleAction::run(new DuplicateCapabilityAIOrchestratorModuleFixture))
+    expect(function (): void {
+        RegisterAIOrchestratorModuleAction::run(new DuplicateCapabilityAIOrchestratorModuleFixture);
+    })
         ->toThrow(InvalidArgumentException::class, 'AIOrchestrator module [duplicate-capability-module] registers duplicate capability [duplicate-capability].');
 });
 

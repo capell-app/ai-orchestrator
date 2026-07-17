@@ -16,6 +16,7 @@ use Lorisleiva\Actions\Concerns\AsFake;
 use Lorisleiva\Actions\Concerns\AsObject;
 use Throwable;
 
+/** @method static string run(AiActionContextInterface $context, array{user_id?: int|null, site_id?: int|null, current_title?: string|null, target_length?: int|null, refactor?: bool|null} $options = []) */
 class GeneratorPageContentAction
 {
     use AsFake;

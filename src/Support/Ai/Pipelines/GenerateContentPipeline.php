@@ -28,7 +28,6 @@ class GenerateContentPipeline
         private readonly PromptRepository $prompts,
         private readonly PrismProvider $provider,
         private readonly AiRateLimiter $rateLimiter,
-        private readonly RecordAiGenerationAction $recordAiGenerationAction,
     ) {}
 
     public function execute(AiGenerationInputData $input): AiGenerationResultData

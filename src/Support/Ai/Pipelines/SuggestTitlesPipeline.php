@@ -27,7 +27,6 @@ class SuggestTitlesPipeline
         private readonly PrismProvider $provider,
         private readonly AiResponseParser $parser,
         private readonly AiRateLimiter $rateLimiter,
-        private readonly RecordAiGenerationAction $recordAiGenerationAction,
     ) {}
 
     public function execute(AiGenerationInputData $input): AiGenerationResultData

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Capell\AIOrchestrator\Actions\Ai\RecordAiGenerationAction;
 use Capell\AIOrchestrator\Contracts\AiActionContextInterface;
 use Capell\AIOrchestrator\Data\Ai\AiGenerationInputData;
 use Capell\AIOrchestrator\Support\Ai\AiRateLimiter;
@@ -44,7 +43,6 @@ function executeGenerateContentPipelineWithHtml(string $html): string
             }
         },
         new AiRateLimiter(resolve(RateLimitCache::class), ['enabled' => false]),
-        new RecordAiGenerationAction,
     );
 
     $context = new class implements AiActionContextInterface

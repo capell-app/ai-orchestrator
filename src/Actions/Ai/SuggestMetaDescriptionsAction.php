@@ -16,6 +16,7 @@ use Lorisleiva\Actions\Concerns\AsFake;
 use Lorisleiva\Actions\Concerns\AsObject;
 use Throwable;
 
+/** @method static array<int, string> run(AiActionContextInterface $context, array<array-key, mixed> $options = []) */
 class SuggestMetaDescriptionsAction
 {
     use AsFake;

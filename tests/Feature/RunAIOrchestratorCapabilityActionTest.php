@@ -209,11 +209,13 @@ it('rejects duplicate policy guardrail keys', function (): void {
 it('throws when a capability action class does not exist', function (): void {
     $missingActionClass = 'Capell\\AIOrchestrator\\Tests\\Fixtures\\Autoload\\MissingAIOrchestratorActionFixture';
 
-    expect(fn (): mixed => RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
-        moduleKey: 'missing-action-module',
-        capabilityKey: 'missing-action-capability',
-        actionClass: $missingActionClass,
-    )))->toThrow(
+    expect(function () use ($missingActionClass): void {
+        RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
+            moduleKey: 'missing-action-module',
+            capabilityKey: 'missing-action-capability',
+            actionClass: $missingActionClass,
+        ));
+    })->toThrow(
         RuntimeException::class,
         'The configured AI Orchestrator action fixture does not exist.',
     );

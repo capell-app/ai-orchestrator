@@ -1,6 +1,10 @@
 ## What it does
 
+A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.
+
 AI Orchestrator provides the shared AI capability layer used by other Capell packages, such as AI Creator, Blog, Layout Builder, Media AI, SEO Suite, and Translation Manager. Those packages own the editor-facing actions that create, suggest, or apply content.
+
+Its marketplace diagram is explicitly labelled as illustrative Beta contract artwork, not a product-screen claim.
 
 ## Where to review it
 
@@ -11,6 +15,16 @@ Use it when an AI feature is unexpectedly unavailable, when checking what an ins
 ## Settings
 
 The central AI settings surface controls the shared model, request-rate limit, and prompt templates for title, meta-description, and content generation. Change these only if you are responsible for the site's AI configuration; package-specific AI buttons and their generated content remain in the package that provides them.
+
+The host must also have working provider credentials, model pricing, spend limits, an asynchronous queue worker, and the application scheduler. Outside local and test environments, web-based generation refuses to use the synchronous queue.
+
+## Processing, failures, and privacy
+
+- Identical assistant requests share one durable queued request instead of sending duplicate provider calls. A stalled request can be queued again after five minutes.
+- A generation job can run three times and has a 120-second timeout. A failure leaves the edited content unchanged and sends the requesting user a database notification; check the queue and provider configuration before trying again.
+- Rate, price, and spend guards can stop a request before content is generated. Raising a limit does not approve or publish any previous output.
+- Prompts, unpublished content, generated results, and stored error details are encrypted in the database.
+- Generation requests expire after one day. A daily scheduled task removes expired requests and clears detailed generation-history payloads after the configured retention window, which defaults to 30 days. Aggregate token, cost, duration, and failure fields remain available for audit reporting.
 
 ## Good to know
 

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /** @contract-migration-approved Widens encrypted storage before rewriting existing values. */
     public function up(): void
     {
         Schema::table('ai_generation_histories', function (Blueprint $table): void {

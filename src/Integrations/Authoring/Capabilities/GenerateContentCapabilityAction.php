@@ -15,8 +15,6 @@ class GenerateContentCapabilityAction
     use AsFake;
     use AsObject;
 
-    public function __construct(private readonly GeneratorPageContentAction $generatorPageContentAction) {}
-
     public function handle(AIOrchestratorRunData $run): string
     {
         $context = $this->contextFromRun($run);

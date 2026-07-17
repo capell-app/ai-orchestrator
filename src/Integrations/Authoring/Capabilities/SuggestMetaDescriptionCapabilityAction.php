@@ -15,8 +15,6 @@ class SuggestMetaDescriptionCapabilityAction
     use AsFake;
     use AsObject;
 
-    public function __construct(private readonly SuggestMetaDescriptionsAction $suggestMetaDescriptionsAction) {}
-
     /**
      * @return array<int, string>
      */

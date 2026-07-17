@@ -18,6 +18,7 @@ return new class extends Migration
         'error_message',
     ];
 
+    /** @contract-migration-approved Widens encrypted storage before rewriting existing values. */
     public function up(): void
     {
         Schema::table('ai_generation_requests', function (Blueprint $table): void {
