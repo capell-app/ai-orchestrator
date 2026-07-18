@@ -73,6 +73,8 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 
     public function registeringPackage(): void
     {
+        parent::registeringPackage();
+
         $this
             ->registerBindings()
             ->registerAiEngineBindings();

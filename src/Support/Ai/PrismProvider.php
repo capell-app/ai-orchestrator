@@ -6,7 +6,6 @@ namespace Capell\AIOrchestrator\Support\Ai;
 
 use Capell\AIOrchestrator\Actions\Ai\AssertAiModelPriceConfiguredAction;
 use Capell\AIOrchestrator\Exceptions\OpenAICircuitBreakerOpenException;
-use Capell\Core\Contracts\ServiceContract;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +18,7 @@ use Prism\Prism\Facades\Prism;
 use RuntimeException;
 use Throwable;
 
-class PrismProvider implements ServiceContract
+class PrismProvider
 {
     private const string CIRCUIT_BREAKER_KEY_PREFIX = 'ai_circuit_breaker_state';
 
@@ -43,6 +42,9 @@ class PrismProvider implements ServiceContract
         $this->retryDelay = max(0, $this->intConfig('retry_delay_ms', 1000));
     }
 
+    /**
+     * @param  array<array-key, mixed>  $input
+     */
     public function execute(array $input): mixed
     {
         return $this->chat($input);
