@@ -11,7 +11,6 @@ use Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\Core\Facades\CapellCore;
 use Capell\LayoutBuilder\Data\LayoutPlanResultData;
-use Illuminate\Config\Repository;
 use Illuminate\Foundation\Application;
 
 it('describes the layout builder ai orchestrator module capability', function (): void {
@@ -28,21 +27,21 @@ it('describes the layout builder ai orchestrator module capability', function ()
 });
 
 it('registers the layout builder module when the registry resolves after services register', function (): void {
-    $application = new Application;
-    $application->singleton(AIOrchestratorModuleRegistry::class);
+    $this->app->forgetInstance(AIOrchestratorModuleRegistry::class);
+    $this->app->singleton(AIOrchestratorModuleRegistry::class);
 
-    aiOrchestratorRegisterServices($application);
+    aiOrchestratorRegisterServices($this->app);
 
-    expect($application->make(AIOrchestratorModuleRegistry::class)->modules())
+    expect($this->app->make(AIOrchestratorModuleRegistry::class)->modules())
         ->toHaveKey('layout-builder');
 });
 
 it('registers the layout builder module when the registry was already resolved', function (): void {
-    $application = new Application;
-    $application->singleton(AIOrchestratorModuleRegistry::class);
-    $registry = $application->make(AIOrchestratorModuleRegistry::class);
+    $this->app->forgetInstance(AIOrchestratorModuleRegistry::class);
+    $this->app->singleton(AIOrchestratorModuleRegistry::class);
+    $registry = $this->app->make(AIOrchestratorModuleRegistry::class);
 
-    aiOrchestratorRegisterServices($application);
+    aiOrchestratorRegisterServices($this->app);
 
     expect($registry->modules())
         ->toHaveKey('layout-builder');
@@ -65,7 +64,6 @@ it('delegates layout builder preview planning through the integration action', f
 function aiOrchestratorRegisterServices(Application $application): void
 {
     CapellCore::forcePackageInstalled('capell-app/layout-builder');
-    $application->instance('config', new Repository);
 
     $provider = new AIOrchestratorServiceProvider($application);
     $method = new ReflectionMethod($provider, 'registerServices');
