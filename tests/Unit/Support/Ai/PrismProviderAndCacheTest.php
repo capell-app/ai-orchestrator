@@ -294,10 +294,8 @@ it('reuses identical successful generations without rebilling', function (): voi
 
     expect($first->metadata['cache_hit'] ?? null)->toBeFalse()
         ->and($second->content)->toBe('Cached response')
-        ->and($second->metadata)->toMatchArray([
-            'cache_hit' => true,
-            'cost_micros' => 0,
-        ]);
+        ->and($second->metadata)->toMatchArray(['cache_hit' => true])
+        ->and($second->metadata)->not->toHaveKey('cost_micros');
 });
 
 it('normalizes missing prism usage telemetry to zero tokens', function (): void {

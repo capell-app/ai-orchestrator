@@ -24,8 +24,6 @@ class AIGenerationHistoryFactory extends Factory
             'prompt_tokens' => 10,
             'completion_tokens' => 20,
             'total_tokens' => 30,
-            'cost_micros' => 0,
-            'cost_currency' => 'USD',
             'duration' => $this->faker->randomFloat(2, 0.01, 2.0),
             'metadata' => ['test' => true],
         ];

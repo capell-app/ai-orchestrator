@@ -16,15 +16,15 @@ Use it when an AI feature is unexpectedly unavailable, when checking what an ins
 
 The central AI settings surface controls the shared model, request-rate limit, and prompt templates for title, meta-description, and content generation. Change these only if you are responsible for the site's AI configuration; package-specific AI buttons and their generated content remain in the package that provides them.
 
-The host must also have working provider credentials, model pricing, spend limits, an asynchronous queue worker, and the application scheduler. Outside local and test environments, web-based generation refuses to use the synchronous queue.
+The host must also have working provider credentials, an asynchronous queue worker, and the application scheduler. Financial authorization and settlement belong to the consuming application; this package accepts only opaque authorization evidence and non-financial execution allowances.
 
 ## Processing, failures, and privacy
 
 - Identical assistant requests share one durable queued request instead of sending duplicate provider calls. A stalled request can be queued again after five minutes.
 - A generation job can run three times and has a 120-second timeout. A failure leaves the edited content unchanged and sends the requesting user a database notification; check the queue and provider configuration before trying again.
-- Rate, price, and spend guards can stop a request before content is generated. Raising a limit does not approve or publish any previous output.
+- Rate limits and caller-issued execution allowances can stop a request before content is generated. Raising a limit does not approve or publish any previous output.
 - Prompts, unpublished content, generated results, and stored error details are encrypted in the database.
-- Generation requests expire after one day. A daily scheduled task removes expired requests and clears detailed generation-history payloads after the configured retention window, which defaults to 30 days. Aggregate token, cost, duration, and failure fields remain available for audit reporting.
+- Generation requests expire after one day. A daily scheduled task removes expired requests and clears detailed generation-history payloads after the configured retention window, which defaults to 30 days. Aggregate token, duration, and failure fields remain available for audit reporting.
 
 ## Good to know
 

@@ -20,10 +20,10 @@ use Capell\AIOrchestrator\Support\Admin\AiAssistantPageResourceExtender;
 use Capell\AIOrchestrator\Support\Ai\AIGenerationCache;
 use Capell\AIOrchestrator\Support\Ai\AiRateLimiter;
 use Capell\AIOrchestrator\Support\Ai\AiResponseParser;
-use Capell\AIOrchestrator\Support\Ai\AiSpendGuard;
 use Capell\AIOrchestrator\Support\Ai\AiTokenCounter;
 use Capell\AIOrchestrator\Support\Ai\Cache\RateLimitCache;
 use Capell\AIOrchestrator\Support\Ai\Concerns\NormalizesAiValues;
+use Capell\AIOrchestrator\Support\Ai\ManagedProviderCallRepository;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
 use Capell\AIOrchestrator\Support\Ai\PromptRepository;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
@@ -68,6 +68,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
                 '2026_07_10_000001_add_site_id_to_ai_generation_histories_table',
                 '2026_07_10_000002_create_ai_generation_requests_table',
                 '2026_07_10_000003_encrypt_ai_generation_requests_table',
+                '2026_07_20_000001_create_ai_managed_provider_calls_table',
             ]);
     }
 
@@ -102,6 +103,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     {
         $this->app->singleton(AIOrchestratorModuleRegistry::class);
         $this->app->singleton(AIOrchestratorPolicyGuardrailRegistry::class);
+        $this->app->singleton(ManagedProviderCallRepository::class);
 
         $this->app->tag([AiAssistantPageResourceExtender::class], ResourceHeaderActionExtender::TAG);
 
@@ -114,12 +116,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         $this->app->singleton(PrismProvider::class, fn (Application $app): PrismProvider => new PrismProvider(
             $app->make(AIOrchestratorRuntimeSettingsData::class)->provider,
             $app->make(AIGenerationCache::class),
-            $app->make(AiSpendGuard::class),
-        ));
-
-        $this->app->singleton(AiSpendGuard::class, fn (Application $app): AiSpendGuard => new AiSpendGuard(
-            $this->aiString(config('cache.default')),
-            $this->aiArray(config('capell-ai-orchestrator.spend_limits', [])),
+            $app->make(ManagedProviderCallRepository::class),
         ));
 
         $this->app->singleton(PromptRepository::class, fn (Application $app): PromptRepository => new PromptRepository($app->make(AIOrchestratorRuntimeSettingsData::class)->prompts));

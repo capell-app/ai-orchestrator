@@ -21,8 +21,6 @@ use Override;
  * @property int $prompt_tokens
  * @property int $completion_tokens
  * @property int $total_tokens
- * @property int $cost_micros
- * @property string $cost_currency
  * @property float $duration
  * @property bool $failed
  * @property string|null $error_message
@@ -41,8 +39,6 @@ use Override;
  * @method static Builder<static>|AIGenerationHistory whereCompletionTokens($value)
  * @method static Builder<static>|AIGenerationHistory whereCreatedAt($value)
  * @method static Builder<static>|AIGenerationHistory whereCreatedByUserId($value)
- * @method static Builder<static>|AIGenerationHistory whereCostCurrency($value)
- * @method static Builder<static>|AIGenerationHistory whereCostMicros($value)
  * @method static Builder<static>|AIGenerationHistory whereDuration($value)
  * @method static Builder<static>|AIGenerationHistory whereId($value)
  * @method static Builder<static>|AIGenerationHistory whereInput($value)
@@ -74,8 +70,6 @@ class AIGenerationHistory extends Model
         'prompt_tokens',
         'completion_tokens',
         'total_tokens',
-        'cost_micros',
-        'cost_currency',
         'duration',
         'failed',
         'error_message',
@@ -92,12 +86,10 @@ class AIGenerationHistory extends Model
         return [
             'failed' => 'boolean',
             // Generation content can contain unpublished copy, prompts, or provider diagnostics.
-            // Retain only the encrypted audit record; aggregate cost fields remain queryable.
             'input' => 'encrypted',
             'output' => 'encrypted',
             'error_message' => 'encrypted',
             'metadata' => 'encrypted:array',
-            'cost_micros' => 'integer',
         ];
     }
 }

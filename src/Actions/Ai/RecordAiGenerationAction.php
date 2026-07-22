@@ -6,7 +6,6 @@ namespace Capell\AIOrchestrator\Actions\Ai;
 
 use Capell\AIOrchestrator\Data\Ai\AiGenerationResultData;
 use Capell\AIOrchestrator\Models\AIGenerationHistory;
-use Capell\AIOrchestrator\Support\Ai\AiSpendGuard;
 use Illuminate\Support\Facades\Auth;
 use Lorisleiva\Actions\Concerns\AsFake;
 use Lorisleiva\Actions\Concerns\AsObject;
@@ -19,19 +18,13 @@ class RecordAiGenerationAction
     use AsFake;
     use AsObject;
 
-    public function __construct(private readonly ?AiSpendGuard $spendGuard = null) {}
-
     /**
      * @param  AiGenerationResultData|array<string, mixed>  $result
      */
     public function handle(AiGenerationResultData|array $result): AIGenerationHistory
     {
         if (is_array($result)) {
-            $history = AIGenerationHistory::query()->create($this->withCostAndActor($result));
-            $metadata = is_array($result['metadata'] ?? null) ? $result['metadata'] : [];
-            $this->spendGuard?->release($this->stringOrNull($metadata['spend_reservation_id'] ?? null));
-
-            return $history;
+            return AIGenerationHistory::query()->create($this->withActor($result));
         }
 
         $responseMetadata = $result->response->metadata ?? [];
@@ -49,7 +42,7 @@ class RecordAiGenerationAction
             $metadata['ai_creator_session_id'] = $result->aiCreatorSessionId;
         }
 
-        $history = AIGenerationHistory::query()->create($this->withCostAndActor([
+        return AIGenerationHistory::query()->create($this->withActor([
             'site_id' => $result->siteId ?? $this->integerOrNull($metadata['site_id'] ?? null),
             'action' => $result->actionKey,
             'model' => $result->response?->model,
@@ -64,33 +57,17 @@ class RecordAiGenerationAction
             'language_id' => $result->languageId,
             'metadata' => $metadata,
         ]));
-
-        $this->spendGuard?->release($this->stringOrNull($metadata['spend_reservation_id'] ?? null));
-
-        return $history;
     }
 
     /**
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
-    private function withCostAndActor(array $payload): array
+    private function withActor(array $payload): array
     {
         $metadata = $payload['metadata'] ?? [];
         $metadata = is_array($metadata) ? $this->stringKeyedArray($metadata) : [];
-        $promptTokens = $this->integerValue($payload['prompt_tokens'] ?? 0);
-        $completionTokens = $this->integerValue($payload['completion_tokens'] ?? 0);
-        $totalTokens = $this->integerValue($payload['total_tokens'] ?? 0);
-        $cost = EstimateAiGenerationCostAction::run(
-            model: is_string($payload['model'] ?? null) ? $payload['model'] : null,
-            promptTokens: $promptTokens,
-            completionTokens: $completionTokens,
-            totalTokens: $totalTokens,
-            metadata: $metadata,
-        );
-
-        $payload['cost_micros'] ??= $cost['cost_micros'];
-        $payload['cost_currency'] ??= $cost['currency'];
+        $payload['metadata'] = $metadata;
         $payload['created_by_user_id'] ??= $this->createdByUserId($metadata);
 
         return $payload;
@@ -118,11 +95,6 @@ class RecordAiGenerationAction
     private function integerOrNull(mixed $value): ?int
     {
         return is_numeric($value) && (int) $value > 0 ? (int) $value : null;
-    }
-
-    private function stringOrNull(mixed $value): ?string
-    {
-        return is_string($value) && $value !== '' ? $value : null;
     }
 
     /**

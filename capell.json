@@ -5,7 +5,7 @@
     "displayName": "AI Orchestrator",
     "kind": "package",
     "capellApiVersion": "^1.0",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
     "product": {
         "group": "Capell AI",
@@ -96,14 +96,12 @@
                 "Capell\\AIOrchestrator\\Models\\AiGenerationRequest::$error_message",
                 "Capell\\AIOrchestrator\\Models\\AiGenerationRequest::$failures",
                 "Capell\\AIOrchestrator\\Models\\AiGenerationRequest::$generated",
-                "Capell\\AIOrchestrator\\Models\\AiGenerationRequest::$payload"
+                "Capell\\AIOrchestrator\\Models\\AiGenerationRequest::$payload",
+                "Capell\\AIOrchestrator\\Models\\ManagedProviderCall::$attempts",
+                "Capell\\AIOrchestrator\\Models\\ManagedProviderCall::$terminal_result"
             ],
             "hashedTokenFields": [],
-            "redactedOutputClasses": [
-                "Capell\\AIOrchestrator\\Actions\\Ai\\AssertAiModelPriceConfiguredAction",
-                "Capell\\AIOrchestrator\\Actions\\Ai\\AssertAiRequestBudgetAction",
-                "Capell\\AIOrchestrator\\Support\\Ai\\PrismProvider"
-            ],
+            "redactedOutputClasses": [],
             "plaintextJustifications": []
         },
         "publicOutput": {

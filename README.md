@@ -49,8 +49,8 @@ Screenshot contract: `docs/screenshots.json`.
 - Extension contracts: `AIOrchestratorModule`, `AIOrchestratorPolicyGuardrail`, `AiActionContextInterface`, `AiCreatorContextInterface`.
 - Events: `AIOrchestratorCapabilityRunRecorded`, `AiGenerationCompleted`, `AiGenerationFailed`, `AiGenerationStarted`.
 - Listeners: `LogAiGeneration`, `NotifyAiFailure`.
-- Actions: `AssertAiModelPriceConfiguredAction`, `AssertAiRequestBudgetAction`, `EstimateAiGenerationCostAction`, `GeneratorPageContentAction`, `PruneAiGenerationPayloadsAction`, `RecordAiGenerationAction`, `SuggestMetaDescriptionsAction`, `SuggestPageTitlesAction`, `GenerateAiAssistantFieldsAction`, `ListAIOrchestratorCapabilitiesAction`, `QueueAiAssistantGenerationAction`, `RegisterAIOrchestratorModuleAction`, `and 2 more`.
-- Data objects: `AIOrchestratorCapabilityData`, `AIOrchestratorRunData`, `AIOrchestratorRuntimeSettingsData`, `AiGenerationInputData`, `AiGenerationResultData`, `AiSpendReservationData`, `AiAssistantGenerationData`, `AiAssistantGenerationResultData`.
+- Actions: `GeneratorPageContentAction`, `PruneAiGenerationPayloadsAction`, `RecordAiGenerationAction`, `SuggestMetaDescriptionsAction`, `SuggestPageTitlesAction`, `GenerateAiAssistantFieldsAction`, `ListAIOrchestratorCapabilitiesAction`, `QueueAiAssistantGenerationAction`, `RegisterAIOrchestratorModuleAction`, `and 2 more`.
+- Data objects: `AIOrchestratorCapabilityData`, `AIOrchestratorRunData`, `AIOrchestratorRuntimeSettingsData`, `AiGenerationInputData`, `AiGenerationResultData`, `AiAssistantGenerationData`, `AiAssistantGenerationResultData`.
 - Jobs: `RunAiAssistantGenerationJob`.
 - Command signatures: `capell:ai-orchestrator:prune-generation-payloads`.
 - Scheduled commands: `capell:ai-orchestrator:prune-generation-payloads (daily)`.

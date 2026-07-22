@@ -16,34 +16,11 @@ return [
         'timeout_seconds' => 30,
         'connect_timeout_seconds' => 5,
         'max_prompt_chars' => 32_000,
-        'enforce_price_map' => true,
         'require_queue_for_web' => true,
         'max_tokens' => 4096,
         'image_provider' => env('AI_IMAGE_PROVIDER', 'openai'),
         'image_model' => env('AI_IMAGE_MODEL', 'dall-e-3'),
         'image_size' => env('AI_IMAGE_SIZE', '1024x1024'),
-    ],
-    'ai_costs' => [
-        'currency' => 'USD',
-        'models' => [
-            'gpt-4o' => [
-                'prompt_micros_per_million_tokens' => 5_000_000,
-                'completion_micros_per_million_tokens' => 15_000_000,
-            ],
-            'gpt-4o-mini' => [
-                'prompt_micros_per_million_tokens' => 150_000,
-                'completion_micros_per_million_tokens' => 600_000,
-            ],
-            'dall-e-3' => [
-                'flat_cost_micros' => 40_000,
-            ],
-        ],
-    ],
-    'spend_limits' => [
-        'enabled' => true,
-        'monthly_limit_micros' => 50_000_000,
-        'per_request_limit_micros' => 5_000_000,
-        'reservation_ttl_seconds' => 3_600,
     ],
     'queue' => [
         'connection' => env('AI_QUEUE_CONNECTION'),
