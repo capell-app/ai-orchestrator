@@ -18,6 +18,8 @@ The central AI settings surface controls the shared model, request-rate limit, a
 
 The host must also have working provider credentials, an asynchronous queue worker, and the application scheduler. Financial authorization and settlement belong to the consuming application; this package accepts only opaque authorization evidence and non-financial execution allowances.
 
+Developers integrating hosted calls should use the versioned types in [Managed provider contract v1](managed-provider-contract-v1.md). Do not pass wallet, journal, price, entitlement, refund, or balance models into AI Orchestrator.
+
 ## Processing, failures, and privacy
 
 - Identical assistant requests share one durable queued request instead of sending duplicate provider calls. A stalled request can be queued again after five minutes.

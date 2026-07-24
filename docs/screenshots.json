@@ -10,6 +10,7 @@
     "entries": [
         {
             "id": "ai-orchestrator-beta-contract",
+            "colorSchemes": ["light"],
             "title": "AI Orchestrator beta contract artwork.",
             "package": "ai-orchestrator",
             "surface": "marketplace",

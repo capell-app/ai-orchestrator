@@ -10,6 +10,8 @@ AI Orchestrator provides the shared AI capability layer used by other Capell pac
 
 Its marketplace diagram is explicitly labelled as illustrative Beta contract artwork, not a product-screen claim.
 
+The provider-neutral managed-call boundary is frozen in [Managed provider contract v1](managed-provider-contract-v1.md). It carries caller authorization, allowances, exact provider usage, validated output evidence, usable Website Version attachment, and terminal settlement results without giving this package financial authority.
+
 ## Where to review it
 
 Go to **System → AI Orchestrator** to open the **AI Orchestrator Capability Catalog**. This is a review screen, not a content-generation tool: it lists the AI modules and capabilities currently registered by installed packages, together with each capability's approval level, required ability, and underlying action.

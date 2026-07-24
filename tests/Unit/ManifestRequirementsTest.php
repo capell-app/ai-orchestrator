@@ -22,6 +22,15 @@ it('positions the package as headless ai orchestration infrastructure', function
     expect($manifest['description'])->toBe($expectedSummary)
         ->and(data_get($manifest, 'marketplace.summary'))->toBe($expectedSummary)
         ->and($composer['description'])->toBe(rtrim($expectedSummary, '.'))
+        ->and(data_get($manifest, 'dependencies.requires'))->toBe([
+            'capell-app/admin',
+            'capell-app/core',
+        ])
+        ->and(data_get($manifest, 'dependencies.supports'))->toContain('capell-app/layout-builder')
+        ->and(data_get($composer, 'require.capell-app/layout-builder'))->toBeNull()
+        ->and(data_get($composer, 'suggest.capell-app/layout-builder'))->toBe(
+            'Adds the optional AI-assisted layout planning module.',
+        )
         ->and(data_get($manifest, 'marketplace.screenshots'))->toBe([[
             'path' => 'docs/screenshots/beta-contract.svg',
             'alt' => 'Illustrative AI Orchestrator Beta contract from capability registration to consumer-owned UI',
@@ -51,6 +60,7 @@ it('positions the package as headless ai orchestration infrastructure', function
     expect($screenshotContract['requiredEvidencePolicy'] ?? null)->toBe('distinct-required-surfaces')
         ->and(ai_orchestrator_array_value($screenshotContract, 'entries'))->toBe([[
             'id' => 'ai-orchestrator-beta-contract',
+            'colorSchemes' => ['light'],
             'title' => 'AI Orchestrator beta contract artwork.',
             'package' => 'ai-orchestrator',
             'surface' => 'marketplace',
@@ -64,6 +74,26 @@ it('positions the package as headless ai orchestration infrastructure', function
         ]])
         ->and(File::exists($packagePath . '/docs/screenshots/beta-contract.svg'))->toBeTrue()
         ->and($betaArtwork)->toContain('BETA / CONTRACT ARTWORK', 'ILLUSTRATION ONLY', 'no product-screen claim');
+});
+
+it('advertises and documents the managed provider contract v1 boundary', function (): void {
+    $packagePath = dirname(__DIR__, 2);
+    $manifest = ai_orchestrator_json_file_array($packagePath . '/capell.json');
+    $contract = File::get($packagePath . '/docs/managed-provider-contract-v1.md');
+
+    expect(data_get($manifest, 'capabilities'))->toContain('managed-provider-contract-v1')
+        ->and($contract)->toContain(
+            'ProviderCallAuthorizationData',
+            'ProviderCallAllowanceData',
+            'ProviderIdempotencyHeaderData',
+            'ProviderExecutionResultData',
+            'MeasuredUsageData',
+            'ValidatedProviderOutputData',
+            'UsableVersionAttachmentData',
+            'TerminalSettlementResultData',
+        )
+        ->and($contract)->toContain('The consuming application remains the sole financial authority.')
+        ->and($contract)->toContain('Schema version: `1`');
 });
 
 /**

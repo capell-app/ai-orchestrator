@@ -27,6 +27,8 @@ Status details:
 
 **For teams:** AI-assisted features across Capell share the same registration, approval, execution, and recording boundaries instead of behaving differently in each package.
 
+For hosted managed calls, the versioned producer boundary is documented in [`docs/managed-provider-contract-v1.md`](docs/managed-provider-contract-v1.md). The consuming application remains the sole financial authority; AI Orchestrator accepts opaque reservation evidence and bounded execution allowances but cannot mutate wallets, journals, pricing, entitlements, refunds, or balances.
+
 Evidence: [`src/Contracts/AIOrchestratorModule.php`](src/Contracts/AIOrchestratorModule.php), [`src/Contracts/AIOrchestratorPolicyGuardrail.php`](src/Contracts/AIOrchestratorPolicyGuardrail.php), [`src/Actions/RunAIOrchestratorCapabilityAction.php`](src/Actions/RunAIOrchestratorCapabilityAction.php), [`tests/Feature/RunAIOrchestratorCapabilityActionTest.php`](tests/Feature/RunAIOrchestratorCapabilityActionTest.php), [`docs/overview.admin.md`](docs/overview.admin.md), [`tests/Feature/Integrations/AIAuthoringModuleTest.php`](tests/Feature/Integrations/AIAuthoringModuleTest.php), [`tests/Feature/Actions/QueueAiAssistantGenerationActionTest.php`](tests/Feature/Actions/QueueAiAssistantGenerationActionTest.php).
 
 ## Screens And Workflow
@@ -70,7 +72,8 @@ Screenshot contract: `docs/screenshots.json`.
 
 ## Install Impact
 
-- Required packages: `capell-app/admin`, `capell-app/core`, `capell-app/layout-builder`.
+- Required packages: `capell-app/admin`, `capell-app/core`.
+- Optional integration: `capell-app/layout-builder` adds AI-assisted layout planning when installed.
 - Admin navigation: declares `admin-page: AiOrchestratorAdminPageContribution`; each Filament page or resource controls its own navigation visibility.
 - Admin/editor extensions: none declared.
 - Permissions: none declared in `capell.json`.
@@ -84,7 +87,7 @@ Screenshot contract: `docs/screenshots.json`.
 
 ## Common Pitfalls
 
-- Keep required Capell packages on compatible v4 releases: `capell-app/admin`, `capell-app/core`, `capell-app/layout-builder`.
+- Keep required Capell packages on compatible v4 releases: `capell-app/admin`, `capell-app/core`.
 - Run migrations before opening package resources or public routes.
 - Review package configuration before production-like verification: `config/capell-ai-orchestrator.php`, `Capell\AIOrchestrator\Settings\AIOrchestratorSettings`.
 - Register the host scheduler so these declared commands run at their documented frequencies: `capell:ai-orchestrator:prune-generation-payloads (daily)`.
@@ -107,6 +110,7 @@ Screenshot contract: `docs/screenshots.json`.
 
 - [Package docs](docs/README.md)
 - [Overview](docs/overview.md)
+- [Managed provider contract v1](docs/managed-provider-contract-v1.md)
 - Configuration files: [`config/capell-ai-orchestrator.php`](config/capell-ai-orchestrator.php).
 - [Troubleshooting](#troubleshooting)
 - [Screenshot contract](docs/screenshots.json)

@@ -5,6 +5,8 @@ All notable changes to `capell-app/ai-orchestrator` will be documented in this f
 ## Unreleased
 
 - Removed producer-owned pricing, spend reservation, release, and cost-estimation APIs. Managed execution now relies exclusively on caller-issued non-financial allowances and opaque reservation evidence.
+- Published the provider-neutral managed-provider contract v1 inventory for call authorization, idempotency, bounded allowance and deadline enforcement, execution classification, exact provider-reported usage, validated output, usable Website Version attachment, and terminal settlement results.
+- Advertised `managed-provider-contract-v1` in package catalogue metadata for exact consumer capability checks.
 
 ### 2.0 migration
 
