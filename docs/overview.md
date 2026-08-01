@@ -10,8 +10,6 @@ AI Orchestrator provides the shared AI capability layer used by other Capell pac
 
 Its marketplace diagram is explicitly labelled as illustrative Beta contract artwork, not a product-screen claim.
 
-The provider-neutral managed-call boundary is frozen in [Managed provider contract v1](managed-provider-contract-v1.md). It carries caller authorization, allowances, exact provider usage, validated output evidence, usable Website Version attachment, and terminal settlement results without giving this package financial authority.
-
 ## Where to review it
 
 Go to **System → AI Orchestrator** to open the **AI Orchestrator Capability Catalog**. This is a review screen, not a content-generation tool: it lists the AI modules and capabilities currently registered by installed packages, together with each capability's approval level, required ability, and underlying action.
@@ -23,6 +21,8 @@ Use it when an AI feature is unexpectedly unavailable, when checking what an ins
 The central AI settings surface controls the shared model, request-rate limit, and prompt templates for title, meta-description, and content generation. Change these only if you are responsible for the site's AI configuration; package-specific AI buttons and their generated content remain in the package that provides them.
 
 The host must also have working provider credentials, an asynchronous queue worker, and the application scheduler. Financial authorization and settlement belong to the consuming application; this package accepts only opaque authorization evidence and non-financial execution allowances.
+
+Developers integrating hosted calls should use the versioned types in [Managed provider contract v1](managed-provider-contract-v1.md). Do not pass wallet, journal, price, entitlement, refund, or balance models into AI Orchestrator.
 
 ## Processing, failures, and privacy
 
