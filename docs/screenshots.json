@@ -4,7 +4,7 @@
     "generatedFor": "deployment-screenshot-runner",
     "requiresInstalledPackage": true,
     "auditStatus": "visual-exempt",
-    "auditReason": "AI Orchestrator is a headless capability registry and execution contract. The required Marketplace asset is explicitly illustrative; product-screen proof belongs to consuming packages that render registered capabilities, approvals, and execution results.",
+    "auditReason": "AI Orchestrator is a headless capability registry and execution contract. The optional Marketplace asset is explicitly illustrative; product-screen proof belongs to consuming packages that render registered capabilities, approvals, and execution results.",
     "requiredEvidencePolicy": "distinct-required-surfaces",
     "outputDirectory": "packages/ai-orchestrator/docs/screenshots",
     "entries": [
@@ -16,10 +16,9 @@
             "surface": "marketplace",
             "targetType": "marketplace-asset",
             "target": "beta-contract",
-            "required": true,
+            "required": false,
             "path": "docs/assets/marketplace/beta-contract.svg",
-            "screenshotPath": "packages/ai-orchestrator/docs/screenshots/beta-contract.svg",
-            "notes": "Committed Beta Marketplace artwork that labels itself as an illustration and describes the headless registration, governance, approval, and consumer-UI boundary.",
+            "notes": "Optional illustrative Beta Marketplace artwork; no raster product screenshot is claimed. Product-screen proof belongs to consuming packages that render the registered capabilities, approvals, and execution results.",
             "useCase": "A buyer evaluates the Beta orchestration contract without mistaking a generic consuming screen for package-owned product evidence."
         }
     ]

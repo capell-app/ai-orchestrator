@@ -15,7 +15,7 @@ Evidence: [`capell.json`](capell.json), [`src/Support/AIOrchestratorModuleRegist
 Status details:
 
 - Status: Available
-- Tier: premium
+- Tier: free
 - Bundle: ai
 - Composer package: `capell-app/ai-orchestrator`
 - Namespace: `Capell\AIOrchestrator`
@@ -33,9 +33,9 @@ Evidence: [`src/Contracts/AIOrchestratorModule.php`](src/Contracts/AIOrchestrato
 
 Screenshot contract: `docs/screenshots.json`.
 
-![AI Orchestrator beta contract artwork](docs/screenshots/beta-contract.svg)
+![Illustrative AI Orchestrator Beta contract from capability registration to consumer-owned UI](docs/assets/marketplace/beta-contract.svg)
 
-- AI Orchestrator beta contract artwork (marketplace, required evidence).
+- AI Orchestrator beta contract artwork (marketplace, supplementary evidence).
 
 ## Technical Shape
 

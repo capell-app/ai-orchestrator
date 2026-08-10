@@ -9,7 +9,7 @@
     "description": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
     "product": {
         "group": "Capell AI",
-        "tier": "premium",
+        "tier": "free",
         "bundle": "ai"
     },
     "namespace": "Capell\\AIOrchestrator",
@@ -61,7 +61,11 @@
     "database": {
         "migrations": true,
         "settings": true,
-        "requiredTables": ["ai_generation_histories", "ai_generation_requests"]
+        "requiredTables": [
+            "ai_generation_histories",
+            "ai_generation_requests",
+            "ai_managed_provider_calls"
+        ]
     },
     "commands": {
         "install": null,
@@ -143,7 +147,7 @@
         }
     ],
     "commercial": {
-        "proposedLicense": "paid",
+        "proposedLicense": "free",
         "requestedCertification": "first-party",
         "supportPolicy": "priority",
         "privateDocsRequested": true
@@ -152,7 +156,7 @@
         "summary": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
         "screenshots": [
             {
-                "path": "docs/screenshots/beta-contract.svg",
+                "path": "docs/assets/marketplace/beta-contract.svg",
                 "alt": "Illustrative AI Orchestrator Beta contract from capability registration to consumer-owned UI",
                 "caption": "Illustrative Beta contract artwork: AI Orchestrator owns registration, governed execution, and approval boundaries while consuming packages own the screens."
             }

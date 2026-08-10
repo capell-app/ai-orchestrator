@@ -13,7 +13,7 @@ it('positions the package as headless ai orchestration infrastructure', function
     $manifest = ai_orchestrator_json_file_array($packagePath . '/capell.json');
     $composer = ai_orchestrator_json_file_array($packagePath . '/composer.json');
     $screenshotContract = ai_orchestrator_json_file_array($packagePath . '/docs/screenshots.json');
-    $betaArtwork = File::get($packagePath . '/docs/screenshots/beta-contract.svg');
+    $betaArtwork = File::get($packagePath . '/docs/assets/marketplace/beta-contract.svg');
     $readme = File::get($packagePath . '/README.md');
     $overview = File::get($packagePath . '/docs/overview.md');
 
@@ -32,7 +32,7 @@ it('positions the package as headless ai orchestration infrastructure', function
             'Adds the optional AI-assisted layout planning module.',
         )
         ->and(data_get($manifest, 'marketplace.screenshots'))->toBe([[
-            'path' => 'docs/screenshots/beta-contract.svg',
+            'path' => 'docs/assets/marketplace/beta-contract.svg',
             'alt' => 'Illustrative AI Orchestrator Beta contract from capability registration to consumer-owned UI',
             'caption' => 'Illustrative Beta contract artwork: AI Orchestrator owns registration, governed execution, and approval boundaries while consuming packages own the screens.',
         ]])
@@ -40,7 +40,11 @@ it('positions the package as headless ai orchestration infrastructure', function
         ->and(data_get($manifest, 'providers.frontend'))->toBe([])
         ->and(data_get($manifest, 'database.migrations'))->toBeTrue()
         ->and(data_get($manifest, 'database.settings'))->toBeTrue()
-        ->and(data_get($manifest, 'database.requiredTables'))->toBe(['ai_generation_histories', 'ai_generation_requests'])
+        ->and(data_get($manifest, 'database.requiredTables'))->toBe([
+            'ai_generation_histories',
+            'ai_generation_requests',
+            'ai_managed_provider_calls',
+        ])
         ->and(data_get($manifest, 'settings'))->toBe([AIOrchestratorSettings::class])
         ->and(data_get($manifest, 'security.externalHttpClients.requiresTimeouts'))->toBeTrue()
         ->and(data_get($manifest, 'security.externalHttpClients.requiresSecretRedaction'))->toBeTrue()
@@ -66,13 +70,12 @@ it('positions the package as headless ai orchestration infrastructure', function
             'surface' => 'marketplace',
             'targetType' => 'marketplace-asset',
             'target' => 'beta-contract',
-            'required' => true,
+            'required' => false,
             'path' => 'docs/assets/marketplace/beta-contract.svg',
-            'screenshotPath' => 'packages/ai-orchestrator/docs/screenshots/beta-contract.svg',
-            'notes' => 'Committed Beta Marketplace artwork that labels itself as an illustration and describes the headless registration, governance, approval, and consumer-UI boundary.',
+            'notes' => 'Optional illustrative Beta Marketplace artwork; no raster product screenshot is claimed. Product-screen proof belongs to consuming packages that render the registered capabilities, approvals, and execution results.',
             'useCase' => 'A buyer evaluates the Beta orchestration contract without mistaking a generic consuming screen for package-owned product evidence.',
         ]])
-        ->and(File::exists($packagePath . '/docs/screenshots/beta-contract.svg'))->toBeTrue()
+        ->and(File::exists($packagePath . '/docs/assets/marketplace/beta-contract.svg'))->toBeTrue()
         ->and($betaArtwork)->toContain('BETA / CONTRACT ARTWORK', 'ILLUSTRATION ONLY', 'no product-screen claim');
 });
 
