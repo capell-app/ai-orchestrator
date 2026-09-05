@@ -34,4 +34,10 @@ class AIOrchestratorSettings extends Settings implements SettingsContract
     {
         return 'ai-orchestrator';
     }
+
+    /** @return list<string> */
+    public static function encrypted(): array
+    {
+        return ['ai_api_key'];
+    }
 }

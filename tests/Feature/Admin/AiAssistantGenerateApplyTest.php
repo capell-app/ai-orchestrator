@@ -16,7 +16,10 @@ use Illuminate\Support\Facades\Queue;
 beforeEach(function (): void {
     Queue::fake();
     test()->registerAndMigrateSettings(
-        ['2026_05_10_190871_01_create_ai-orchestrator_settings'],
+        [
+            '2026_05_10_190871_01_create_ai-orchestrator_settings',
+            '2026_09_04_213000_01_encrypt_ai_orchestrator_api_key',
+        ],
         dirname(__DIR__, 3) . '/database/settings',
     );
 
