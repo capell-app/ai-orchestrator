@@ -1,6 +1,6 @@
 ---
 name: capell-ai-orchestrator-development
-description: Use when editing Capell AIOrchestrator modules, capabilities, or orchestration.
+description: AIOrchestrator module registry, capability execution, and LayoutBuilder planning integration. Use when editing Capell AIOrchestrator modules, capabilities, or orchestration.
 ---
 
 # Capell AIOrchestrator

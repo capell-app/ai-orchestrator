@@ -11,9 +11,11 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Override;
 
 class AIOrchestratorSettingsSchema implements HasSchema
 {
+    #[Override]
     public static function make(Schema $configurator): array
     {
         return [
@@ -34,6 +36,7 @@ class AIOrchestratorSettingsSchema implements HasSchema
                         ->schema([
                             Checkbox::make('title_generation')
                                 ->label(__('capell-admin::form.enabled'))
+                                ->helperText(__('capell-ai-orchestrator::package.settings_title_generation_info'))
                                 ->reactive(),
                             Grid::make()
                                 ->columnSpanFull()
@@ -41,9 +44,11 @@ class AIOrchestratorSettingsSchema implements HasSchema
                                 ->schema([
                                     Textarea::make('title_generation_system')
                                         ->label(__('capell-ai-orchestrator::package.settings_prompt_system'))
+                                        ->helperText(__('capell-ai-orchestrator::package.settings_title_generation_system_info'))
                                         ->rows(4),
                                     Textarea::make('title_generation_user_template')
                                         ->label(__('capell-ai-orchestrator::package.settings_prompt_user_template'))
+                                        ->helperText(__('capell-ai-orchestrator::package.settings_title_generation_user_template_info'))
                                         ->rows(4),
                                 ]),
                         ]),
@@ -52,6 +57,7 @@ class AIOrchestratorSettingsSchema implements HasSchema
                         ->schema([
                             Checkbox::make('meta_description')
                                 ->label(__('capell-admin::form.enabled'))
+                                ->helperText(__('capell-ai-orchestrator::package.settings_meta_description_info'))
                                 ->reactive(),
                             Grid::make()
                                 ->columnSpanFull()
@@ -59,9 +65,11 @@ class AIOrchestratorSettingsSchema implements HasSchema
                                 ->schema([
                                     Textarea::make('meta_description_system')
                                         ->label(__('capell-ai-orchestrator::package.settings_prompt_system'))
+                                        ->helperText(__('capell-ai-orchestrator::package.settings_meta_description_system_info'))
                                         ->rows(4),
                                     Textarea::make('meta_description_user_template')
                                         ->label(__('capell-ai-orchestrator::package.settings_prompt_user_template'))
+                                        ->helperText(__('capell-ai-orchestrator::package.settings_meta_description_user_template_info'))
                                         ->rows(4),
                                 ]),
                         ]),
@@ -70,6 +78,7 @@ class AIOrchestratorSettingsSchema implements HasSchema
                         ->schema([
                             Checkbox::make('content_generation')
                                 ->label(__('capell-admin::form.enabled'))
+                                ->helperText(__('capell-ai-orchestrator::package.settings_content_generation_info'))
                                 ->reactive(),
                             Grid::make()
                                 ->columnSpanFull()
@@ -77,9 +86,11 @@ class AIOrchestratorSettingsSchema implements HasSchema
                                 ->schema([
                                     Textarea::make('content_generation_system')
                                         ->label(__('capell-ai-orchestrator::package.settings_prompt_system'))
+                                        ->helperText(__('capell-ai-orchestrator::package.settings_content_generation_system_info'))
                                         ->rows(4),
                                     Textarea::make('content_generation_user_template')
                                         ->label(__('capell-ai-orchestrator::package.settings_prompt_user_template'))
+                                        ->helperText(__('capell-ai-orchestrator::package.settings_content_generation_user_template_info'))
                                         ->rows(4),
                                 ]),
                         ]),

@@ -10,8 +10,6 @@ AI Orchestrator provides a shared capability registry, governed execution path, 
 
 Admins can inspect registered capability metadata in the capability catalog. Consuming packages keep ownership of their editor actions and approval screens.
 
-Evidence: [`capell.json`](capell.json), [`src/Support/AIOrchestratorModuleRegistry.php`](src/Support/AIOrchestratorModuleRegistry.php), [`src/Actions/RunAIOrchestratorCapabilityAction.php`](src/Actions/RunAIOrchestratorCapabilityAction.php), [`src/Filament/Pages/AIOrchestratorCapabilityCatalogPage.php`](src/Filament/Pages/AIOrchestratorCapabilityCatalogPage.php), [`tests/Feature/AIOrchestratorCapabilityCatalogPageTest.php`](tests/Feature/AIOrchestratorCapabilityCatalogPageTest.php), [`docs/screenshots.json`](docs/screenshots.json).
-
 Status details:
 
 - Status: Available
@@ -26,8 +24,6 @@ Status details:
 **For developers:** Packages implement AIOrchestratorModule and register typed capabilities, while RunAIOrchestratorCapabilityAction enforces runnable actions, authorization, and policy guardrails in one place.
 
 **For teams:** AI-assisted features across Capell share the same registration, approval, execution, and recording boundaries instead of behaving differently in each package.
-
-Evidence: [`src/Contracts/AIOrchestratorModule.php`](src/Contracts/AIOrchestratorModule.php), [`src/Contracts/AIOrchestratorPolicyGuardrail.php`](src/Contracts/AIOrchestratorPolicyGuardrail.php), [`src/Actions/RunAIOrchestratorCapabilityAction.php`](src/Actions/RunAIOrchestratorCapabilityAction.php), [`tests/Feature/RunAIOrchestratorCapabilityActionTest.php`](tests/Feature/RunAIOrchestratorCapabilityActionTest.php), [`docs/overview.admin.md`](docs/overview.admin.md), [`tests/Feature/Integrations/AIAuthoringModuleTest.php`](tests/Feature/Integrations/AIAuthoringModuleTest.php), [`tests/Feature/Actions/QueueAiAssistantGenerationActionTest.php`](tests/Feature/Actions/QueueAiAssistantGenerationActionTest.php).
 
 ## Screens And Workflow
 
@@ -65,6 +61,7 @@ Screenshot contract: `docs/screenshots.json`.
 ### Settings classes
 
 - `AIOrchestratorSettings`
+- `AIOrchestratorSettingsRepository`
 
 ### Models
 
@@ -221,6 +218,5 @@ Screenshot contract: `docs/screenshots.json`.
 - [Capell documentation design system](../../docs/DESIGN_SYSTEM.md)
 - [Capell and package ERD notes](../../docs/erd/capell-and-package-erds.md)
 - Related packages: [Ai Creator](../ai-creator/README.md), [Content Sections](../content-sections/README.md), [Layout Builder](../layout-builder/README.md), [Media Ai](../media-ai/README.md), [Seo Suite](../seo-suite/README.md), [Translation Manager](../translation-manager/README.md).
-- Focused tests: `vendor/bin/pest packages/ai-orchestrator/tests --configuration=phpunit.xml`.
 
 <!-- prettier-ignore-end -->
