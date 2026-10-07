@@ -18,4 +18,4 @@ AIOrchestrator module registry, capability execution, and LayoutBuilder planning
 - Keep package-provided AI modules behind the AIOrchestratorModule contract.
 - Capability execution belongs in Actions, not UI glue.
 - AIOrchestrator modules should expose previewable, bounded operations.
-- Run `vendor/bin/pest packages/ai-orchestrator/tests`.
+- Verify customisations in the consuming application's test suite.
