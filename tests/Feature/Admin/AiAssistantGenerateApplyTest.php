@@ -8,9 +8,13 @@ use Capell\AIOrchestrator\Models\AiGenerationRequest;
 use Capell\AIOrchestrator\Support\Admin\AiAssistantPageResourceExtender;
 use Capell\AIOrchestrator\Support\Ai\AiResponse;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
+use Capell\Tests\Support\SchemaStateHarness;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Wizard;
+use Filament\Schemas\Components\Wizard\Step;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function (): void {
@@ -39,28 +43,55 @@ beforeEach(function (): void {
     });
 });
 
-/**
- * Build a stub EditPage Livewire component holding only the `data` form state.
- * No getRecord() is defined, so the extender resolves a null record.
- *
- * @param  array<string, mixed>  $data
- * @return object{data: array<string, mixed>}
- */
-function stubApplyLivewire(array $data): object
+/** @param array<string, mixed> $data */
+function stubApplyLivewire(array $data): SchemaStateHarness
 {
-    return new class($data)
-    {
-        /** @param  array<string, mixed>  $data */
-        public function __construct(public array $data) {}
-    };
+    $livewire = new SchemaStateHarness;
+    $livewire->data = $data;
+
+    return $livewire;
 }
 
-function invokeExtender(string $method, mixed ...$arguments): mixed
+/** @param array<string, mixed> $state */
+function aiAssistantStep(SchemaStateHarness $livewire, array $state, int $index): Step
 {
-    $extender = app(AiAssistantPageResourceExtender::class);
+    $livewire->data = [...$livewire->data, ...$state];
+    $action = resolve(AiAssistantPageResourceExtender::class)->actions()[0]->livewire($livewire);
+    $schema = $action->getSchema(Schema::make($livewire)->statePath('data'));
+    $wizard = $schema?->getComponents(withHidden: true)[0] ?? null;
+    throw_unless($wizard instanceof Wizard, RuntimeException::class);
+    $step = $wizard->getChildSchema()?->getComponents(withHidden: true)[$index] ?? null;
+    throw_unless($step instanceof Step, RuntimeException::class);
 
-    return (new ReflectionMethod(AiAssistantPageResourceExtender::class, $method))
-        ->invoke($extender, ...$arguments);
+    return $step;
+}
+
+/**
+ * @param  array<string, mixed>  $inputs
+ * @return array<array-key, mixed>
+ */
+function generateAiAssistantPayload(array $inputs, SchemaStateHarness $livewire): array
+{
+    aiAssistantStep($livewire, $inputs, 1)->callAfterValidation();
+    $generated = $livewire->data['generated'] ?? null;
+    throw_unless(is_array($generated), RuntimeException::class);
+
+    return $generated;
+}
+
+/**
+ * @param  array<string, mixed>  $generated
+ * @return array<array-key, mixed>
+ */
+function aiAssistantReviewComponents(array $generated): array
+{
+    return aiAssistantStep(new SchemaStateHarness, ['generated' => $generated], 2)->getChildSchema()?->getComponents(withHidden: true) ?? [];
+}
+
+/** @param array<string, mixed> $data */
+function applyAiAssistantSelections(SchemaStateHarness $livewire, array $data): void
+{
+    resolve(AiAssistantPageResourceExtender::class)->actions()[0]->livewire($livewire)->call(['data' => $data]);
 }
 
 /**
@@ -85,7 +116,7 @@ function applyFormTranslations(): array
 it('queues the selected capability and returns the completed result on the next review attempt', function (): void {
     $livewire = stubApplyLivewire(['translations' => applyFormTranslations()]);
 
-    $generated = invokeExtender('generatePayload', [
+    $generated = generateAiAssistantPayload([
         'fields' => ['title'],
         'targetLanguageId' => 2,
         'keywords' => 'seo, marketing',
@@ -98,27 +129,26 @@ it('queues the selected capability and returns the completed result on the next 
     $request = AiGenerationRequest::query()->sole();
     $requestId = $request->getKey();
     throw_unless(is_int($requestId), RuntimeException::class, 'Expected an integer generation request key.');
-    (new RunAiAssistantGenerationJob($requestId))->handle();
+    new RunAiAssistantGenerationJob($requestId)->handle();
 
-    $completed = invokeExtender('generatePayload', [
+    $completed = generateAiAssistantPayload([
         'fields' => ['title'],
         'targetLanguageId' => 2,
         'keywords' => 'seo, marketing',
     ], $livewire);
 
-    expect($completed)->toBeArray()
-        ->toMatchArray(['title' => ['Alpha title', 'Beta title', 'Gamma title']]);
+    expect($completed)->toMatchArray(['title' => ['Alpha title', 'Beta title', 'Gamma title']]);
 
     // The pipeline records exactly one history row for the single capability run.
     expect(AIGenerationHistory::query()->count())->toBe(1);
 });
 
 it('builds review components for title, content, and meta suggestions', function (): void {
-    $components = asArray(invokeExtender('reviewComponents', [
+    $components = aiAssistantReviewComponents([
         'title' => ['Title A', 'Title B'],
         'content' => '<p>Generated body</p>',
         'meta' => ['Meta A'],
-    ]));
+    ]);
 
     expect($components)->toHaveCount(3);
 
@@ -138,7 +168,7 @@ it('builds review components for title, content, and meta suggestions', function
 });
 
 it('shows an empty-state placeholder when nothing was generated', function (): void {
-    $components = asArray(invokeExtender('reviewComponents', []));
+    $components = aiAssistantReviewComponents([]);
 
     expect($components)->toHaveCount(1);
 
@@ -154,7 +184,7 @@ it('shows an empty-state placeholder when nothing was generated', function (): v
 it('applies the reviewed selections to the translation matching the target language', function (): void {
     $livewire = stubApplyLivewire(['translations' => applyFormTranslations()]);
 
-    invokeExtender('applySelections', $livewire, [
+    applyAiAssistantSelections($livewire, [
         'targetLanguageId' => 2,
         'fields' => ['title', 'meta'],
         'apply' => ['title' => 'New FR Title', 'meta' => 'New FR Meta'],
@@ -176,7 +206,7 @@ it('applies the reviewed selections to the translation matching the target langu
 it('applies nothing when no translation matches the target language', function (): void {
     $livewire = stubApplyLivewire(['translations' => applyFormTranslations()]);
 
-    invokeExtender('applySelections', $livewire, [
+    applyAiAssistantSelections($livewire, [
         'targetLanguageId' => 99,
         'fields' => ['title'],
         'apply' => ['title' => 'Should not land'],

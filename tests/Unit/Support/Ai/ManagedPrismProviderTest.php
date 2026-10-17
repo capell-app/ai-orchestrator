@@ -7,6 +7,7 @@ use Capell\AIOrchestrator\Data\Ai\ManagedProviderCallClaimData;
 use Capell\AIOrchestrator\Data\Ai\ProviderAttemptEvidenceData;
 use Capell\AIOrchestrator\Data\Ai\ProviderCallAllowanceData;
 use Capell\AIOrchestrator\Data\Ai\ProviderCallAuthorizationData;
+use Capell\AIOrchestrator\Data\Ai\ProviderExecutionResultData;
 use Capell\AIOrchestrator\Data\Ai\ValidatedProviderOutputData;
 use Capell\AIOrchestrator\Enums\Ai\ContractRefusal;
 use Capell\AIOrchestrator\Enums\Ai\ExecutionValidity;
@@ -18,6 +19,7 @@ use Capell\AIOrchestrator\Support\Ai\ManagedProviderCallRepository;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
 use Capell\AIOrchestrator\Tests\Fixtures\AcceptingProviderOutputValidator;
 use Capell\AIOrchestrator\Tests\Fixtures\ManagedProviderOverlapState;
+use Capell\Tests\Support\FailingPrismTransport;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
@@ -25,6 +27,7 @@ use Prism\Prism\Enums\FinishReason;
 use Prism\Prism\Exceptions\PrismException;
 use Prism\Prism\Exceptions\PrismRateLimitedException;
 use Prism\Prism\Facades\Prism;
+use Prism\Prism\PrismManager;
 use Prism\Prism\Text\Response as PrismTextResponse;
 use Prism\Prism\ValueObjects\Meta;
 use Prism\Prism\ValueObjects\Usage;
@@ -34,7 +37,7 @@ function managedPrismAuthorization(PrismProvider $provider, array $params, int $
 {
     $validator ??= managedOutputValidator();
 
-    return new ProviderCallAuthorizationData('opaque-reservation', 'operation-1', 'stage-1', 4, 'EXACT/call-key', $provider->managedRequestDigest($params), $outputIdentity, $validator->policyIdentity(), $validator->policyDigest(), new ProviderCallAllowanceData($requestAllowance, $inputAllowance, $outputAllowance), new DateTimeImmutable('2030-01-01T00:00:00+00:00'));
+    return new ProviderCallAuthorizationData('opaque-reservation', 'operation-1', 'stage-1', 4, 'EXACT/call-key', $provider->managedRequestDigest($params), $outputIdentity, $validator->policyIdentity(), $validator->policyDigest(), new ProviderCallAllowanceData($requestAllowance, $inputAllowance, $outputAllowance), CarbonImmutable::parse('2030-01-01T00:00:00+00:00'));
 }
 
 function managedPrismResponseWithoutUsage(string $text): PrismTextResponse
@@ -44,7 +47,7 @@ function managedPrismResponseWithoutUsage(string $text): PrismTextResponse
     $response = $reflection->newInstanceWithoutConstructor();
 
     foreach (['steps' => collect(), 'text' => $text, 'finishReason' => FinishReason::Stop, 'toolCalls' => [], 'toolResults' => [], 'meta' => new Meta('run-without-usage', 'model-x'), 'messages' => collect(), 'additionalContent' => [], 'raw' => null] as $property => $value) {
-        (new ReflectionProperty(PrismTextResponse::class, $property))->setValue($response, $value);
+        new ReflectionProperty(PrismTextResponse::class, $property)->setValue($response, $value);
     }
 
     return $response;
@@ -128,7 +131,7 @@ it('uses only authorization allowances for managed execution', function (): void
     Cache::flush();
     app()->instance('prism', new \Prism\Prism\Prism);
     Prism::fake([new PrismTextResponse(collect(), 'managed', FinishReason::Stop, [], [], new Usage(1, 1), new Meta('guard-run', 'model-x'), collect())]);
-    $provider = new PrismProvider(['model' => 'model-x', 'max_retries' => 1], null, app(ManagedProviderCallRepository::class));
+    $provider = new PrismProvider(['model' => 'model-x', 'max_retries' => 1], null, resolve(ManagedProviderCallRepository::class));
     $params = ['messages' => [['role' => 'user', 'content' => 'Managed only']], 'max_tokens' => 20];
 
     $success = $provider->authorizedChat(managedPrismAuthorization($provider, $params), 'operation-1', 'stage-1', 4, 'output', managedOutputValidator(), $params);
@@ -142,7 +145,7 @@ it('continues durable attempt numbering and evidence after lease takeover', func
     Cache::flush();
     app()->instance('prism', new \Prism\Prism\Prism);
     Prism::fake([new PrismTextResponse(collect(), 'recovered', FinishReason::Stop, [], [], new Usage(2, 2), new Meta('takeover-success', 'model-x'), collect())]);
-    $repository = app(ManagedProviderCallRepository::class);
+    $repository = resolve(ManagedProviderCallRepository::class);
     $provider = new PrismProvider(['model' => 'model-x', 'max_retries' => 2, 'retry_delay_ms' => 0], null, $repository);
     $params = ['messages' => [['role' => 'user', 'content' => 'Recover']], 'max_tokens' => 20];
     $authorization = managedPrismAuthorization($provider, $params, requestAllowance: 2);
@@ -164,14 +167,14 @@ it('replays without another provider call after response loss following durable 
     Cache::flush();
     app()->instance('prism', new \Prism\Prism\Prism);
     $fake = Prism::fake([new PrismTextResponse(collect(), 'committed', FinishReason::Stop, [], [], new Usage(2, 1), new Meta('response-loss-run', 'model-x'), collect())]);
-    $repository = app(ManagedProviderCallRepository::class);
+    $repository = resolve(ManagedProviderCallRepository::class);
     $params = ['messages' => [['role' => 'user', 'content' => 'Commit first']], 'max_tokens' => 20];
     $losingProvider = new PrismProvider(['model' => 'model-x', 'max_retries' => 1, 'after_managed_commit' => static function (): never {
         throw new RuntimeException('response lost');
     }], null, $repository);
     $authorization = managedPrismAuthorization($losingProvider, $params);
 
-    expect(fn () => $losingProvider->authorizedChat($authorization, 'operation-1', 'stage-1', 4, 'output', managedOutputValidator(), $params))->toThrow(RuntimeException::class, 'response lost');
+    expect(fn (): ProviderExecutionResultData => $losingProvider->authorizedChat($authorization, 'operation-1', 'stage-1', 4, 'output', managedOutputValidator(), $params))->toThrow(RuntimeException::class, 'response lost');
 
     $recoveryProvider = new PrismProvider(['model' => 'model-x', 'max_retries' => 1], null, $repository);
     $replayed = $recoveryProvider->authorizedChat($authorization, 'operation-1', 'stage-1', 4, 'output', managedOutputValidator(), $params);
@@ -182,17 +185,19 @@ it('replays without another provider call after response loss following durable 
 });
 
 it('does not repeat an in-doubt physical call after a worker dies at dispatch', function (): void {
+    $this->freezeTime();
+
     Cache::flush();
     app()->instance('prism', new \Prism\Prism\Prism);
     $fake = Prism::fake();
-    $repository = app(ManagedProviderCallRepository::class);
+    $repository = resolve(ManagedProviderCallRepository::class);
     $params = ['messages' => [['role' => 'user', 'content' => 'Dispatch once']], 'max_tokens' => 20];
     $dyingProvider = new PrismProvider(['model' => 'model-x', 'max_retries' => 1, 'after_managed_dispatch' => static function (): never {
         throw new RuntimeException('worker died');
     }], null, $repository);
     $authorization = managedPrismAuthorization($dyingProvider, $params);
 
-    expect(fn () => $dyingProvider->authorizedChat($authorization, 'operation-1', 'stage-1', 4, 'output', managedOutputValidator(), $params))->toThrow(RuntimeException::class, 'worker died');
+    expect(fn (): ProviderExecutionResultData => $dyingProvider->authorizedChat($authorization, 'operation-1', 'stage-1', 4, 'output', managedOutputValidator(), $params))->toThrow(RuntimeException::class, 'worker died');
     ManagedProviderCall::query()->firstOrFail()->forceFill(['lease_expires_at' => now()->subSecond()])->save();
 
     $takeoverProvider = new PrismProvider(['model' => 'model-x', 'max_retries' => 1], null, $repository);
@@ -211,7 +216,7 @@ it('uses one injected clock for authorization leases and terminal recovery', fun
     app()->instance('prism', new \Prism\Prism\Prism);
     Prism::fake([new PrismTextResponse(collect(), 'clocked', FinishReason::Stop, [], [], new Usage(1, 1), new Meta('clock-run', 'model-x'), collect())]);
     $now = CarbonImmutable::parse('2029-01-01T12:00:00Z');
-    $repository = app(ManagedProviderCallRepository::class);
+    $repository = resolve(ManagedProviderCallRepository::class);
     $provider = new PrismProvider(['model' => 'model-x', 'max_retries' => 1, 'managed_recovery_seconds' => 7200], null, $repository, static fn (): CarbonImmutable => $now);
     $params = ['messages' => [['role' => 'user', 'content' => 'Use clock']], 'max_tokens' => 20];
 
@@ -222,20 +227,22 @@ it('uses one injected clock for authorization leases and terminal recovery', fun
 });
 
 it('does not redispatch when provider evidence was recorded but terminal persistence failed', function (): void {
+    $this->freezeTime();
+
     Cache::flush();
     app()->instance('prism', new \Prism\Prism\Prism);
     $fake = Prism::fake([new PrismTextResponse(collect(), 'reported', FinishReason::Stop, [], [], new Usage(1, 1), new Meta('reported-run', 'model-x'), collect())]);
-    $repository = app(ManagedProviderCallRepository::class);
+    $repository = resolve(ManagedProviderCallRepository::class);
     $params = ['messages' => [['role' => 'user', 'content' => 'Persist terminal']], 'max_tokens' => 20];
     $failingProvider = new PrismProvider(['model' => 'model-x', 'max_retries' => 1, 'before_managed_complete' => static function (): never {
         throw new RuntimeException('database unavailable');
     }], null, $repository);
     $authorization = managedPrismAuthorization($failingProvider, $params);
 
-    expect(fn () => $failingProvider->authorizedChat($authorization, 'operation-1', 'stage-1', 4, 'output', managedOutputValidator(), $params))->toThrow(RuntimeException::class, 'database unavailable');
+    expect(fn (): ProviderExecutionResultData => $failingProvider->authorizedChat($authorization, 'operation-1', 'stage-1', 4, 'output', managedOutputValidator(), $params))->toThrow(RuntimeException::class, 'database unavailable');
     ManagedProviderCall::query()->firstOrFail()->forceFill(['lease_expires_at' => now()->subSecond()])->save();
 
-    $takeover = (new PrismProvider(['model' => 'model-x', 'max_retries' => 1], null, $repository))->authorizedChat($authorization, 'operation-1', 'stage-1', 4, 'output', managedOutputValidator(), $params);
+    $takeover = new PrismProvider(['model' => 'model-x', 'max_retries' => 1], null, $repository)->authorizedChat($authorization, 'operation-1', 'stage-1', 4, 'output', managedOutputValidator(), $params);
 
     $fake->assertCallCount(1);
     expect($takeover->refusal)->toBe(ContractRefusal::ProviderOutcomeUnknown)
@@ -333,11 +340,20 @@ it('refuses validated output and validator policy drift under the same durable c
 });
 
 it('treats every post-handoff transport response failure as outcome unknown', function (Throwable $failure): void {
-    $classifier = new ReflectionMethod(PrismProvider::class, 'managedPostHandoffFailure');
-    $retryClassifier = new ReflectionMethod(PrismProvider::class, 'managedPostHandoffRetryClassification');
+    Cache::flush();
+    app()->instance('prism', new \Prism\Prism\Prism);
+    $transport = new FailingPrismTransport($failure);
+    $manager = Mockery::mock(PrismManager::class);
+    $manager->shouldReceive('resolve')->andReturn($transport);
+    app()->instance(PrismManager::class, $manager);
+    $provider = new PrismProvider(['max_retries' => 3, 'retry_delay_ms' => 0]);
+    $params = ['messages' => [['role' => 'user', 'content' => 'Managed transport outcome probe']], 'max_tokens' => 20];
+    $validator = managedOutputValidator();
+    $result = $provider->authorizedChat(managedPrismAuthorization($provider, $params), 'operation-1', 'stage-1', 4, 'output', $validator, $params);
 
-    expect($classifier->invoke(new PrismProvider, $failure))->toBe(ContractRefusal::ProviderOutcomeUnknown)
-        ->and($retryClassifier->invoke(new PrismProvider))->toBe(RetryClassification::Terminal);
+    expect($result->refusal)->toBe(ContractRefusal::ProviderOutcomeUnknown)
+        ->and($result->retryClassification)->toBe(RetryClassification::Terminal)
+        ->and($transport->calls)->toBe(1);
 })->with([
     'connection loss after receipt' => new ConnectionException('connection lost'),
     'rate limit response' => PrismRateLimitedException::make(),
@@ -351,7 +367,7 @@ it('derives a lease beyond the maximum physical timeout and persistence margin',
     Cache::flush();
     app()->instance('prism', new \Prism\Prism\Prism);
     Prism::fake([new PrismTextResponse(collect(), 'slow result', FinishReason::Stop, [], [], new Usage(1, 1), new Meta('slow-run', 'model-x'), collect())]);
-    $repository = app(ManagedProviderCallRepository::class);
+    $repository = resolve(ManagedProviderCallRepository::class);
     $now = CarbonImmutable::parse('2029-01-01T00:00:00Z');
     $state = new ManagedProviderOverlapState;
     $provider = new PrismProvider([
@@ -365,6 +381,7 @@ it('derives a lease beyond the maximum physical timeout and persistence margin',
             if (! $authorization instanceof ProviderCallAuthorizationData) {
                 throw new RuntimeException('Authorization was not prepared.');
             }
+
             $state->claim = $repository->claim($authorization, $now->addSeconds(74), 75, 3600);
         },
     ], null, $repository, static fn (): CarbonImmutable => $now);
@@ -378,6 +395,7 @@ it('derives a lease beyond the maximum physical timeout and persistence margin',
     if (! $overlapClaim instanceof ManagedProviderCallClaimData) {
         throw new RuntimeException('Overlap claim was not captured.');
     }
+
     expect($overlapClaim->status)->toBe(ManagedProviderClaimStatus::InProgress)
         ->and($result->validity)->toBe(ExecutionValidity::Validated);
 });

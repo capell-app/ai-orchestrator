@@ -56,6 +56,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         ];
     }
 
+    #[Override]
     public function configurePackage(Package $package): void
     {
         $package
@@ -83,20 +84,6 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
         $this
             ->registerBindings()
             ->registerAiEngineBindings();
-
-        $this->app->booted(function (): void {
-            if (! $this->isPackageInstalled()) {
-                return;
-            }
-
-            $this->app->tag([AiAssistantPageResourceExtender::class], ResourceHeaderActionExtender::TAG);
-
-            $this
-                ->registerServices()
-                ->registerAiEventListeners()
-                ->registerSettingsSchema()
-                ->registerPayloadPruningSchedule();
-        });
     }
 
     public function registerSettingsRepository(): void
@@ -108,9 +95,15 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
     }
 
     #[Override]
-    protected function isPackageInstalled(): bool
+    protected function bootInstalledRuntime(): void
     {
-        return CapellCore::isPackageInstalled(self::$packageName);
+        $this->app->tag([AiAssistantPageResourceExtender::class], ResourceHeaderActionExtender::TAG);
+
+        $this
+            ->registerServices()
+            ->registerAiEventListeners()
+            ->registerSettingsSchema()
+            ->registerPayloadPruningSchedule();
     }
 
     private function registerBindings(): self
@@ -186,7 +179,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 
     private function registerPayloadPruningSchedule(): self
     {
-        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule): void {
+        $this->registerSchedule(static function (Schedule $schedule): void {
             $schedule->command('capell:ai-orchestrator:prune-generation-payloads')
                 ->daily()
                 ->withoutOverlapping()
@@ -198,13 +191,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 
     private function registerServices(): self
     {
-        if ($this->app->resolved(AIOrchestratorModuleRegistry::class)) {
-            $this->registerOrchestratorModules($this->app->make(AIOrchestratorModuleRegistry::class));
-
-            return $this;
-        }
-
-        $this->app->afterResolving(
+        $this->callAfterResolving(
             AIOrchestratorModuleRegistry::class,
             function (AIOrchestratorModuleRegistry $registry): void {
                 $this->registerOrchestratorModules($registry);
@@ -226,19 +213,11 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             return;
         }
 
-        if (array_key_exists('layout-builder', $registry->modules())) {
-            return;
-        }
-
         $registry->register(new LayoutBuilderAIOrchestratorModule);
     }
 
     private function registerAuthoringModule(AIOrchestratorModuleRegistry $registry): void
     {
-        if (array_key_exists('ai-authoring', $registry->modules())) {
-            return;
-        }
-
         $registry->register(new AIAuthoringModule);
     }
 }

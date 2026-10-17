@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
+use Capell\AIOrchestrator\Enums\AiAssistantFieldEnum;
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
 use Capell\AIOrchestrator\Support\Admin\AiAssistantPageResourceExtender;
+use Capell\AIOrchestrator\Tests\Fixtures\AiAssistantFormHost;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
-use Illuminate\Database\Eloquent\Model;
+use Filament\Schemas\Schema;
 
 beforeEach(function (): void {
     test()->registerAndMigrateSettings(
@@ -35,8 +37,7 @@ beforeEach(function (): void {
 function invokeWizardSchema(): array
 {
     $extender = app(AiAssistantPageResourceExtender::class);
-    $wizardSchema = new ReflectionMethod(AiAssistantPageResourceExtender::class, 'wizardSchema');
-    $schema = $wizardSchema->invoke($extender);
+    $schema = $extender->actions()[0]->getSchema(Schema::make())?->getComponents();
 
     throw_unless(is_array($schema), RuntimeException::class, 'Expected AI assistant wizard schema array.');
 
@@ -86,16 +87,12 @@ function stepComponents(Step $step): array
 it('builds a wizard with exactly three steps', function (): void {
     $schema = invokeWizardSchema();
 
-    expect($schema)->toHaveCount(1)
-        ->and($schema[0])->toBeInstanceOf(Wizard::class);
+    expect($schema)->toHaveCount(1);
 
     $steps = wizardSteps($schema[0]);
 
     expect($steps)->toHaveCount(3);
 
-    foreach ($steps as $step) {
-        expect($step)->toBeInstanceOf(Step::class);
-    }
 });
 
 it('puts the language select and field checkbox list in the choose step', function (): void {
@@ -131,47 +128,32 @@ it('puts the keywords textarea in the inputs step', function (): void {
     expect($keywords)->not->toBeNull();
 });
 
-it('maps enabled fields to enum labels', function (): void {
-    $extender = app(AiAssistantPageResourceExtender::class);
-    $fieldOptions = new ReflectionMethod(AiAssistantPageResourceExtender::class, 'fieldOptions');
+it('maps enabled fields to their translated labels in the assistant form', function (): void {
+    $steps = wizardSteps(invokeWizardSchema()[0]);
+    $fields = collect(stepComponents($steps[0]))->first(fn (object $component): bool => $component instanceof CheckboxList);
+    throw_unless($fields instanceof CheckboxList, RuntimeException::class);
 
-    $options = $fieldOptions->invoke($extender);
-
-    throw_unless(is_array($options), RuntimeException::class, 'Expected AI assistant field options array.');
-
-    expect(array_keys($options))->toBe(['title', 'content', 'meta']);
+    expect($fields->getOptions())->toBe([
+        'title' => AiAssistantFieldEnum::Title->getLabel(),
+        'content' => AiAssistantFieldEnum::Content->getLabel(),
+        'meta' => AiAssistantFieldEnum::Meta->getLabel(),
+    ]);
 });
 
 /**
- * Build a stub EditPage Livewire component exposing only the form-state shape
- * the extender reads: the `data` array, the integer `activeTab`, and getRecord().
- *
- * @param  array<string, mixed>  $data
+ * @param  array<string, array<string, mixed>>  $translations
+ * @return array<string, mixed>
  */
-function stubEditPageLivewire(array $data, ?int $activeTab, ?Model $record = null): object
+function mountAssistantForm(array $translations, ?int $activeTab): array
 {
-    return new class($data, $activeTab, $record)
-    {
-        /** @param  array<string, mixed>  $data */
-        public function __construct(
-            public array $data,
-            public ?int $activeTab,
-            private ?Model $record,
-        ) {}
+    $host = new AiAssistantFormHost;
+    $host->data = ['translations' => $translations];
+    $host->activeTab = $activeTab;
+    $action = app(AiAssistantPageResourceExtender::class)->actions()[0]->livewire($host);
+    $schema = $action->getSchema(Schema::make($host)->statePath('assistantData'));
+    $action->mount(['schema' => $schema]);
 
-        public function getRecord(): ?Model
-        {
-            return $this->record;
-        }
-    };
-}
-
-function invokeExtenderMethod(string $method, mixed ...$arguments): mixed
-{
-    $extender = app(AiAssistantPageResourceExtender::class);
-
-    return (new ReflectionMethod(AiAssistantPageResourceExtender::class, $method))
-        ->invoke($extender, ...$arguments);
+    return $host->assistantData;
 }
 
 /**
@@ -185,46 +167,20 @@ function uuidKeyedTranslations(): array
     ];
 }
 
-it('resolves the active translation positionally for an in-range tab', function (): void {
-    $translations = uuidKeyedTranslations();
+it('prefills the selected translation when the assistant opens', function (int $tab, int $language, string $keywords): void {
+    expect(mountAssistantForm(uuidKeyedTranslations(), $tab))->toMatchArray([
+        'targetLanguageId' => $language,
+        'keywords' => $keywords,
+    ]);
+})->with(['English' => [1, 1, 'alpha, beta'], 'French' => [2, 2, 'gamma, delta']]);
 
-    // activeTab 2 must select the SECOND translation, not silently fall to the first.
-    expect(invokeExtenderMethod('activeTranslationState', stubEditPageLivewire([], 2), $translations))
-        ->toBeArray()->toHaveKey('language_id', 2)
-        ->and(invokeExtenderMethod('activeTranslationState', stubEditPageLivewire([], 1), $translations))
-        ->toBeArray()->toHaveKey('language_id', 1);
-});
+it('opens without selecting a different translation for an invalid active tab', function (?int $tab): void {
+    expect(mountAssistantForm(uuidKeyedTranslations(), $tab))->toMatchArray([
+        'targetLanguageId' => null,
+        'keywords' => '',
+    ]);
+})->with(['out of range' => 5, 'zero' => 0, 'negative' => -1, 'unset' => null]);
 
-it('returns null for an out-of-range, zero, or negative active tab rather than the first translation', function (int $activeTab): void {
-    expect(invokeExtenderMethod('activeTranslationState', stubEditPageLivewire([], $activeTab), uuidKeyedTranslations()))
-        ->toBeNull();
-})->with([
-    'out of range' => 5,
-    'zero' => 0,
-    'negative' => -1,
-]);
-
-it('returns null when the active tab is not an integer', function (): void {
-    expect(invokeExtenderMethod('activeTranslationState', stubEditPageLivewire([], null), uuidKeyedTranslations()))
-        ->toBeNull();
-});
-
-it('returns null when there are no translations', function (): void {
-    expect(invokeExtenderMethod('activeTranslationState', stubEditPageLivewire([], 1), []))
-        ->toBeNull();
-});
-
-it('prefills the active translation language and keywords from form state', function (): void {
-    $livewire = stubEditPageLivewire(['translations' => uuidKeyedTranslations()], 2);
-
-    expect(invokeExtenderMethod('prefillFromActiveTranslation', $livewire))
-        ->toBe(['targetLanguageId' => 2, 'keywords' => 'gamma, delta']);
-});
-
-it('does not leak a wrong target language when the active tab is out of range', function (): void {
-    // Out-of-range tab => no active translation => no record => no default language.
-    $livewire = stubEditPageLivewire(['translations' => uuidKeyedTranslations()], 9);
-
-    expect(invokeExtenderMethod('prefillFromActiveTranslation', $livewire))
-        ->toBe(['targetLanguageId' => null, 'keywords' => '']);
+it('opens without a target language when the page has no translations', function (): void {
+    expect(mountAssistantForm([], 1))->toMatchArray(['targetLanguageId' => null, 'keywords' => '']);
 });

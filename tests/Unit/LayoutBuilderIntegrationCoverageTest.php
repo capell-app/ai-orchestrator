@@ -7,10 +7,12 @@ use Capell\AIOrchestrator\Enums\AIOrchestratorApprovalLevel;
 use Capell\AIOrchestrator\Health\AiOrchestratorHealthCheck;
 use Capell\AIOrchestrator\Integrations\LayoutBuilder\LayoutBuilderAIOrchestratorModule;
 use Capell\AIOrchestrator\Integrations\LayoutBuilder\PreviewLayoutBuilderLayoutPlanAction;
-use Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\Core\Facades\CapellCore;
 use Capell\LayoutBuilder\Data\LayoutPlanResultData;
+use Capell\Tests\Support\InstalledRuntimeParity;
+use Capell\Tests\Support\InstalledRuntimeState;
+use Capell\Tests\Support\InstalledRuntimeTestCase;
 use Illuminate\Foundation\Application;
 
 it('describes the layout builder ai orchestrator module capability', function (): void {
@@ -26,26 +28,25 @@ it('describes the layout builder ai orchestrator module capability', function ()
         ->and(AiOrchestratorHealthCheck::compatibleCapellApiVersion())->toBe('^1.0');
 });
 
-it('registers the layout builder module when the registry resolves after services register', function (): void {
-    $this->app->forgetInstance(AIOrchestratorModuleRegistry::class);
-    $this->app->singleton(AIOrchestratorModuleRegistry::class);
-
-    aiOrchestratorRegisterServices($this->app);
-
-    expect($this->app->make(AIOrchestratorModuleRegistry::class)->modules())
-        ->toHaveKey('layout-builder');
-});
-
-it('registers the layout builder module when the registry was already resolved', function (): void {
-    $this->app->forgetInstance(AIOrchestratorModuleRegistry::class);
-    $this->app->singleton(AIOrchestratorModuleRegistry::class);
-    $registry = $this->app->make(AIOrchestratorModuleRegistry::class);
-
-    aiOrchestratorRegisterServices($this->app);
-
-    expect($registry->modules())
-        ->toHaveKey('layout-builder');
-});
+it('makes layout planning available after the package boots', function (bool $resolveBeforeBoot): void {
+    InstalledRuntimeState::run(function () use ($resolveBeforeBoot): void {
+        $registry = null;
+        $application = InstalledRuntimeTestCase::boot(
+            InstalledRuntimeParity::manifest('ai-orchestrator'),
+            true,
+            function (Application $application) use ($resolveBeforeBoot, &$registry): void {
+                CapellCore::forcePackageInstalled('capell-app/layout-builder');
+                if ($resolveBeforeBoot) {
+                    $application->booting(function () use ($application, &$registry): void {
+                        $registry = $application->make(AIOrchestratorModuleRegistry::class);
+                    });
+                }
+            },
+        );
+        $registry ??= $application->make(AIOrchestratorModuleRegistry::class);
+        expect($registry->module('layout-builder')->capabilities()[0]->key)->toBe('preview-layout-plan');
+    });
+})->with(['registry resolved after boot' => false, 'registry resolved before boot' => true]);
 
 it('delegates layout builder preview planning through the integration action', function (): void {
     $run = new AIOrchestratorRunData(
@@ -57,15 +58,7 @@ it('delegates layout builder preview planning through the integration action', f
 
     $result = PreviewLayoutBuilderLayoutPlanAction::run($run);
 
-    expect($result)->toBeInstanceOf(LayoutPlanResultData::class)
-        ->and($result->plan->prompt)->toBe('Draft a landing page');
+    expect($result)->toBeInstanceOf(LayoutPlanResultData::class);
+    throw_unless($result instanceof LayoutPlanResultData, RuntimeException::class, 'Expected a preview layout plan result.');
+    expect($result->plan->prompt)->toBe('Draft a landing page');
 });
-
-function aiOrchestratorRegisterServices(Application $application): void
-{
-    CapellCore::forcePackageInstalled('capell-app/layout-builder');
-
-    $provider = new AIOrchestratorServiceProvider($application);
-    $method = new ReflectionMethod($provider, 'registerServices');
-    $method->invoke($provider);
-}

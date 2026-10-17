@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
 use Capell\AIOrchestrator\Support\Admin\AiAssistantPageResourceExtender;
+use Illuminate\Log\Logger as LaravelLogger;
 use Illuminate\Support\Facades\Log;
-use Mockery\MockInterface;
+use Monolog\Handler\TestHandler;
+use Monolog\Logger;
 use Spatie\LaravelSettings\Migrations\SettingsMigrator;
 use Spatie\LaravelSettings\Models\SettingsProperty;
 
@@ -96,24 +98,12 @@ it('treats an invalid empty api key payload as unset during capability resolutio
         'meta_description' => false,
     ]);
 
-    Log::spy();
+    $logs = new TestHandler;
+    Log::swap(new LaravelLogger(new Logger('settings', [$logs])));
 
-    $enabledFields = null;
-    $exception = null;
+    $actionVisible = (new AiAssistantPageResourceExtender)->actions()[0]->isVisible();
 
-    try {
-        $enabledFields = new ReflectionMethod(AiAssistantPageResourceExtender::class, 'enabledFields')
-            ->invoke(new AiAssistantPageResourceExtender);
-    } catch (Throwable $throwable) {
-        $exception = $throwable;
-    }
-
-    expect($exception)->toBeNull()
-        ->and($enabledFields)->toBe([])
-        ->and(resolve(AIOrchestratorSettings::class)->ai_api_key)->toBe('');
-
-    $logger = Log::getFacadeRoot();
-    throw_unless($logger instanceof MockInterface, RuntimeException::class, 'Expected a spied logger.');
-
-    $logger->shouldHaveReceived('warning')->once();
+    expect($actionVisible)->toBeFalse()
+        ->and(resolve(AIOrchestratorSettings::class)->ai_api_key)->toBe('')
+        ->and($logs->hasWarningRecords())->toBeTrue();
 });

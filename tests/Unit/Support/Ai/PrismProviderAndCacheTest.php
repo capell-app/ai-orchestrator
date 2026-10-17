@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use Capell\AIOrchestrator\Exceptions\OpenAICircuitBreakerOpenException;
 use Capell\AIOrchestrator\Support\Ai\AIGenerationCache;
+use Capell\AIOrchestrator\Support\Ai\AiResponse;
 use Capell\AIOrchestrator\Support\Ai\Cache\RateLimitCache;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
+use Capell\Tests\Support\FailingPrismTransport;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Prism\Prism\Enums\FinishReason;
@@ -14,6 +16,8 @@ use Prism\Prism\Exceptions\PrismException;
 use Prism\Prism\Exceptions\PrismProviderOverloadedException;
 use Prism\Prism\Exceptions\PrismRateLimitedException;
 use Prism\Prism\Facades\Prism;
+use Prism\Prism\PrismManager;
+use Prism\Prism\Testing\PrismFake;
 use Prism\Prism\Text\Request as PrismTextRequest;
 use Prism\Prism\Text\Response as PrismTextResponse;
 use Prism\Prism\ValueObjects\Meta;
@@ -37,7 +41,7 @@ function makePrismTextResponseWithoutUsage(string $text): PrismTextResponse
         'additionalContent' => [],
         'raw' => null,
     ] as $property => $value) {
-        (new ReflectionProperty(PrismTextResponse::class, $property))->setValue($response, $value);
+        new ReflectionProperty(PrismTextResponse::class, $property)->setValue($response, $value);
     }
 
     return $response;
@@ -164,10 +168,16 @@ it('sends normalized chat messages through prism and maps the response telemetry
 });
 
 it('resolves configured prism provider names to prism enums', function (string $name, Provider $expected): void {
-    $provider = new PrismProvider;
-    $resolveProvider = new ReflectionMethod(PrismProvider::class, 'resolveProvider');
+    Cache::flush();
+    app()->instance('prism', new \Prism\Prism\Prism);
+    $transport = new PrismFake;
+    $manager = Mockery::mock(PrismManager::class);
+    $manager->shouldReceive('resolve')->once()->with($expected->value, Mockery::type('array'))->andReturn($transport);
+    app()->instance(PrismManager::class, $manager);
+    $provider = new PrismProvider(['provider' => $name, 'max_retries' => 1]);
 
-    expect($resolveProvider->invoke($provider, $name))->toBe($expected);
+    expect($provider->chat(['messages' => [['role' => 'user', 'content' => 'Provider routing probe']]])->tokensUsed)->toBe(0);
+    $transport->assertCallCount(1);
 })->with([
     'anthropic' => ['anthropic', Provider::Anthropic],
     'gemini' => ['gemini', Provider::Gemini],
@@ -179,13 +189,13 @@ it('resolves configured prism provider names to prism enums', function (string $
 it('opens and resets the prism circuit breaker after repeated failures', function (): void {
     Cache::flush();
 
-    $provider = new PrismProvider(['provider' => 'openai']);
-    $recordFailure = new ReflectionMethod(PrismProvider::class, 'recordFailure');
+    $provider = new PrismProvider(['provider' => 'openai', 'max_retries' => 1, 'retry_delay_ms' => 0]);
+    installFailingPrismTransport(new ConnectionException('Controlled outage'));
 
     expect($provider->isAvailable())->toBeTrue();
 
     for ($failure = 1; $failure <= 5; $failure++) {
-        $recordFailure->invoke($provider);
+        expect(fn (): AiResponse => $provider->chat(['messages' => [['role' => 'user', 'content' => 'Breaker failure probe']]]))->toThrow(ConnectionException::class);
     }
 
     expect($provider->isAvailable())->toBeFalse()
@@ -199,13 +209,13 @@ it('opens and resets the prism circuit breaker after repeated failures', functio
 it('scopes prism circuit breakers by provider and model', function (): void {
     Cache::flush();
 
-    $openAiProvider = new PrismProvider(['provider' => 'openai']);
+    $openAiProvider = new PrismProvider(['provider' => 'openai', 'max_retries' => 1, 'retry_delay_ms' => 0]);
     $otherOpenAiModel = new PrismProvider(['provider' => 'openai', 'model' => 'gpt-4o-mini']);
     $anthropicProvider = new PrismProvider(['provider' => 'anthropic']);
-    $recordFailure = new ReflectionMethod(PrismProvider::class, 'recordFailure');
+    installFailingPrismTransport(new ConnectionException('Controlled outage'));
 
     for ($failure = 1; $failure <= 5; $failure++) {
-        $recordFailure->invoke($openAiProvider);
+        expect(fn (): AiResponse => $openAiProvider->chat(['messages' => [['role' => 'user', 'content' => 'Scoped breaker failure probe']]]))->toThrow(ConnectionException::class);
     }
 
     expect($openAiProvider->circuitBreakerKey())->toBe('ai_circuit_breaker_state:openai:gpt-4o')
@@ -217,10 +227,12 @@ it('scopes prism circuit breakers by provider and model', function (): void {
 });
 
 it('only retries transient provider failures', function (Throwable $exception, bool $expected): void {
-    $provider = new PrismProvider;
-    $isRetryable = new ReflectionMethod(PrismProvider::class, 'isRetryable');
+    Cache::flush();
+    $transport = installFailingPrismTransport($exception);
+    $provider = new PrismProvider(['max_retries' => 2, 'retry_delay_ms' => 0]);
 
-    expect($isRetryable->invoke($provider, $exception))->toBe($expected);
+    expect(fn (): AiResponse => $provider->chat(['messages' => [['role' => 'user', 'content' => 'Retry classification probe']]]))->toThrow($exception::class);
+    expect($transport->calls)->toBe($expected ? 2 : 1);
 })->with([
     'connection failure' => [new ConnectionException('connection failed'), true],
     'rate limit' => [PrismRateLimitedException::make(), true],
@@ -299,12 +311,13 @@ it('reuses identical successful generations without rebilling', function (): voi
 });
 
 it('normalizes missing prism usage telemetry to zero tokens', function (): void {
-    $provider = new PrismProvider;
-    $promptTokens = new ReflectionMethod(PrismProvider::class, 'promptTokens');
-    $completionTokens = new ReflectionMethod(PrismProvider::class, 'completionTokens');
+    Cache::flush();
+    app()->instance('prism', new \Prism\Prism\Prism);
+    Prism::fake([makePrismTextResponseWithoutUsage('Zero usage probe')]);
+    $response = new PrismProvider(['max_retries' => 1])->chat(['messages' => [['role' => 'user', 'content' => 'Usage probe']]]);
 
-    expect($promptTokens->invoke($provider, null))->toBe(0)
-        ->and($completionTokens->invoke($provider, null))->toBe(0);
+    expect($response->metadata['prompt_tokens'])->toBe(0)
+        ->and($response->metadata['completion_tokens'])->toBe(0);
 });
 
 it('maps prism chat responses with missing usage telemetry to zero tokens', function (): void {
@@ -339,3 +352,14 @@ it('maps prism chat responses with missing usage telemetry to zero tokens', func
         ])
         ->and($provider->isAvailable())->toBeTrue();
 });
+
+function installFailingPrismTransport(Throwable $failure): FailingPrismTransport
+{
+    app()->instance('prism', new \Prism\Prism\Prism);
+    $transport = new FailingPrismTransport($failure);
+    $manager = Mockery::mock(PrismManager::class);
+    $manager->shouldReceive('resolve')->andReturn($transport);
+    app()->instance(PrismManager::class, $manager);
+
+    return $transport;
+}

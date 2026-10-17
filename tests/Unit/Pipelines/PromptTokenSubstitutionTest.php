@@ -15,12 +15,12 @@ use Capell\AIOrchestrator\Support\Ai\Pipelines\SuggestMetaDescriptionsPipeline;
 use Capell\AIOrchestrator\Support\Ai\Pipelines\SuggestTitlesPipeline;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
 use Capell\AIOrchestrator\Support\Ai\PromptRepository;
+use Capell\AIOrchestrator\Tests\Support\PromptTokenCapture;
 use Mockery\MockInterface;
 
-final class AIOrchestratorTokenCapture
+function aiOrchestratorTokenCapture(): PromptTokenCapture
 {
-    /** @var array<int, array{role: string, content: string}> */
-    public array $messages = [];
+    return new PromptTokenCapture;
 }
 
 beforeEach(function (): void {
@@ -30,7 +30,7 @@ beforeEach(function (): void {
 });
 
 it('substitutes every title prompt token before calling the provider', function (): void {
-    $capture = new AIOrchestratorTokenCapture;
+    $capture = aiOrchestratorTokenCapture();
     $pipeline = new SuggestTitlesPipeline(
         new PromptRepository(['title_generation' => [
             'system' => 'Title system',
@@ -52,7 +52,7 @@ it('substitutes every title prompt token before calling the provider', function 
 });
 
 it('substitutes every meta description prompt token before calling the provider', function (): void {
-    $capture = new AIOrchestratorTokenCapture;
+    $capture = aiOrchestratorTokenCapture();
     $pipeline = new SuggestMetaDescriptionsPipeline(
         new PromptRepository(['meta_description' => [
             'system' => 'Meta system',
@@ -73,7 +73,7 @@ it('substitutes every meta description prompt token before calling the provider'
 });
 
 it('substitutes every content prompt token before calling the provider', function (): void {
-    $capture = new AIOrchestratorTokenCapture;
+    $capture = aiOrchestratorTokenCapture();
     $pipeline = new GenerateContentPipeline(
         new PromptRepository(['content_generation' => [
             'system' => 'Content system',
@@ -93,18 +93,19 @@ it('substitutes every content prompt token before calling the provider', functio
     expect($capture->messages[1]['content'])->toBe('Page body|Current title|widgets|800|yes');
 });
 
-function aiOrchestratorTokenProvider(AIOrchestratorTokenCapture $capture, string $response): PrismProvider
+function aiOrchestratorTokenProvider(PromptTokenCapture $capture, string $response): PrismProvider
 {
     return new class($capture, $response) extends PrismProvider
     {
         public function __construct(
-            private readonly AIOrchestratorTokenCapture $capture,
+            private readonly PromptTokenCapture $capture,
             private readonly string $response,
         ) {
             parent::__construct(['max_retries' => 1]);
         }
 
         /** @param array<array-key, mixed> $params */
+        #[Override]
         public function chat(array $params): AiResponse
         {
             $rawMessages = $params['messages'] ?? null;
@@ -136,26 +137,31 @@ function aiOrchestratorTokenContext(): AiActionContextInterface
 {
     return new class implements AiActionContextInterface
     {
+        #[Override]
         public function getContent(): string
         {
             return 'Page body';
         }
 
+        #[Override]
         public function getKeywords(): string
         {
             return 'widgets';
         }
 
+        #[Override]
         public function getPageId(): int
         {
             return 1;
         }
 
+        #[Override]
         public function getPageType(): string
         {
             return 'page';
         }
 
+        #[Override]
         public function getLanguageId(): int
         {
             return 1;
