@@ -61,6 +61,7 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
             remediation: $installed
                 ? null
                 : $this->translation('capell-ai-orchestrator::package.health_package_installed_remediation'),
+            id: 'legacy.ai.orchestrator.installation',
         );
     }
 
@@ -77,6 +78,7 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
             remediation: $bound
                 ? null
                 : $this->translation('capell-ai-orchestrator::package.health_registry_binding_remediation'),
+            id: 'legacy.ai.orchestrator.registry.binding',
         );
     }
 
@@ -93,6 +95,7 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
             remediation: $moduleCount > 0
                 ? null
                 : $this->translation('capell-ai-orchestrator::package.health_module_registry_remediation'),
+            id: 'legacy.ai.orchestrator.registered.modules',
         );
     }
 
@@ -109,6 +112,7 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
             remediation: $available
                 ? null
                 : $this->translation('capell-ai-orchestrator::package.health_layout_builder_module_remediation'),
+            id: 'legacy.ai.orchestrator.layout.builder.module',
         );
     }
 
@@ -125,6 +129,7 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
             remediation: $protected
                 ? null
                 : $this->translation('capell-ai-orchestrator::package.health_duplicate_capability_remediation'),
+            id: 'legacy.ai.orchestrator.duplicate.capability.protection',
         );
     }
 
@@ -141,6 +146,7 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
             remediation: $notRunnableCapabilities === []
                 ? null
                 : $this->translation('capell-ai-orchestrator::package.health_runnable_actions_remediation'),
+            id: 'legacy.ai.orchestrator.runnable.actions',
         );
     }
 
