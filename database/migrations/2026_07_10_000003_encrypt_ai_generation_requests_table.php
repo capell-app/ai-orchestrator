@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Capell\Core\Support\TableName;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Crypt;
@@ -21,7 +22,7 @@ return new class extends Migration
     /** @contract-migration-approved Widens encrypted storage before rewriting existing values. */
     public function up(): void
     {
-        Schema::table('ai_generation_requests', function (Blueprint $table): void {
+        Schema::table(TableName::resolve('ai_generation_requests'), function (Blueprint $table): void {
             $table->mediumText('payload')->change();
             $table->mediumText('generated')->nullable()->change();
             $table->mediumText('failures')->nullable()->change();
@@ -35,7 +36,7 @@ return new class extends Migration
     {
         $this->transform(encrypt: false);
 
-        Schema::table('ai_generation_requests', function (Blueprint $table): void {
+        Schema::table(TableName::resolve('ai_generation_requests'), function (Blueprint $table): void {
             $table->json('payload')->nullable(false)->change();
             $table->json('generated')->nullable()->change();
             $table->json('failures')->nullable()->change();
@@ -45,7 +46,7 @@ return new class extends Migration
 
     private function transform(bool $encrypt): void
     {
-        DB::table('ai_generation_requests')->orderBy('id')->each(function (object $request) use ($encrypt): void {
+        DB::table(TableName::resolve('ai_generation_requests'))->orderBy('id')->each(function (object $request) use ($encrypt): void {
             $values = [];
 
             foreach (self::ENCRYPTED_COLUMNS as $column) {
@@ -55,7 +56,7 @@ return new class extends Migration
                     : null;
             }
 
-            DB::table('ai_generation_requests')->where('id', $request->id)->update($values);
+            DB::table(TableName::resolve('ai_generation_requests'))->where('id', $request->id)->update($values);
         });
     }
 };

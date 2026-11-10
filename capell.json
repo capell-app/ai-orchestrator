@@ -27,7 +27,9 @@
         "conflicts": []
     },
     "providers": {
-        "metadata": [],
+        "metadata": [
+            "Capell\\AIOrchestrator\\Providers\\MigrationMetadataServiceProvider"
+        ],
         "install": [],
         "runtime": [
             "Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider"
@@ -154,6 +156,22 @@
     },
     "marketplace": {
         "summary": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
+        "problem": "Our package developers need consistent approval and execution boundaries for AI workflows.",
+        "outcome": "AI-assisted packages share a governed execution and recording boundary.",
+        "faq": [
+            {
+                "question": "Who owns the approval screens?",
+                "answer": "Consuming packages retain ownership of their editor actions and approval screens."
+            },
+            {
+                "question": "What can administrators inspect?",
+                "answer": "The capability catalogue shows registered capability metadata."
+            },
+            {
+                "question": "How are AI capabilities governed?",
+                "answer": "The shared execution path enforces runnable actions, authorisation and policy guardrails."
+            }
+        ],
         "screenshots": [
             {
                 "path": "docs/assets/marketplace/beta-contract.svg",

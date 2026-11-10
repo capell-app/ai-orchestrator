@@ -1,0 +1,31 @@
+{
+    "create_ai_generation_histories_table": {
+        "names": [
+            "2026_05_10_190870_02_create_ai_generation_histories_table"
+        ],
+        "sha256": [
+            "748838350d64709866d18a442dbdd0ecc2f9751ec8ee73ffb0de4ad4d8af3c7c",
+            "d5e768bbf6cc40e23dcc28266dcbabfa1ef84c11bf8916e3f85687e1a06d88dc"
+        ]
+    },
+    "create_ai_generation_requests_table": {
+        "names": [
+            "2026_07_10_000002_create_ai_generation_requests_table"
+        ],
+        "sha256": [
+            "00ba17aee8981fbfe5341da7ca389987d7b5181a6a21270bda4ff3c46a72b62c",
+            "030e4f75036e87573a627d9d6774f7aa37beeba3a83a3a209fb89d72c39f602a",
+            "84c6ab38382fb85fe9c630aa62b91d498713af5679036030a870ebbb4af05644"
+        ]
+    },
+    "create_ai_managed_provider_calls_table": {
+        "names": [
+            "2026_07_20_000001_create_ai_managed_provider_calls_table"
+        ],
+        "sha256": [
+            "2df41e94b4c19903af9bcfa843247670cb1c9255720a0fc01eb5c6ffad0eb1d3",
+            "35052db9d8ed4d82d99b65e6c88a362838b69443d3ef40173c117f446bf1ec8c",
+            "fee97044885823812f5aea175f8664ee932a20685b8ddbdba050f248c79a37c9"
+        ]
+    }
+}

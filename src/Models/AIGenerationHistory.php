@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Capell\AIOrchestrator\Models;
 
+use Capell\Core\Concerns\HasCapellTable;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -53,6 +54,8 @@ use Override;
  */
 class AIGenerationHistory extends Model
 {
+    use HasCapellTable;
+
     /** @use HasFactory<Factory<static>> */
     use HasFactory;
 

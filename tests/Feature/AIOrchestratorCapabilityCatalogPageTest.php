@@ -32,6 +32,6 @@ it('exposes translated catalog navigation metadata', function (): void {
     $page = new AIOrchestratorCapabilityCatalogPage;
 
     expect(AIOrchestratorCapabilityCatalogPage::getNavigationLabel())->toBe('AI Orchestrator')
-        ->and($page->getTitle())->toBe('AI Orchestrator Capability Catalog')
+        ->and($page->getTitle())->toBe(__('capell-ai-orchestrator::package.catalog_title'))
         ->and($page->getSubheading())->toContain('registered AI modules');
 });

@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Capell\AIOrchestrator\Models;
 
 use Capell\AIOrchestrator\Enums\Ai\ManagedProviderCallState;
+use Capell\Core\Concerns\HasCapellTable;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 
@@ -24,6 +27,11 @@ use Override;
  */
 final class ManagedProviderCall extends Model
 {
+    use HasCapellTable;
+
+    /** @use HasFactory<Factory<static>> */
+    use HasFactory;
+
     protected $table = 'ai_managed_provider_calls';
 
     protected $fillable = ['call_key_digest', 'authorization_digest', 'request_digest', 'state', 'lease_token', 'lease_expires_at', 'attempts', 'terminal_result', 'terminal_at', 'recovery_expires_at'];

@@ -8,7 +8,7 @@
         ]
     },
     "surfaceOutcome": {
-        "text": "Admins can inspect registered capability metadata in the capability catalog. Consuming packages keep ownership of their editor actions and approval screens.",
+        "text": "Admins can inspect registered capability metadata in the capability catalogue. Consuming packages keep ownership of their editor actions and approval screens.",
         "evidence": [
             "src/Filament/Pages/AIOrchestratorCapabilityCatalogPage.php",
             "tests/Feature/AIOrchestratorCapabilityCatalogPageTest.php",
@@ -17,7 +17,7 @@
     },
     "whyItMatters": {
         "developers": {
-            "text": "Packages implement AIOrchestratorModule and register typed capabilities, while RunAIOrchestratorCapabilityAction enforces runnable actions, authorization, and policy guardrails in one place.",
+            "text": "Packages implement AIOrchestratorModule and register typed capabilities, while RunAIOrchestratorCapabilityAction enforces runnable actions, authorisation, and policy guardrails in one place.",
             "evidence": [
                 "src/Contracts/AIOrchestratorModule.php",
                 "src/Contracts/AIOrchestratorPolicyGuardrail.php",

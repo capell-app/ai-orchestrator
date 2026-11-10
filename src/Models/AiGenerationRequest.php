@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Capell\AIOrchestrator\Models;
 
 use Capell\AIOrchestrator\Enums\AiGenerationRequestStatus;
+use Capell\Core\Concerns\HasCapellTable;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 
@@ -25,6 +28,11 @@ use Override;
  */
 final class AiGenerationRequest extends Model
 {
+    use HasCapellTable;
+
+    /** @use HasFactory<Factory<static>> */
+    use HasFactory;
+
     protected $table = 'ai_generation_requests';
 
     protected $fillable = [

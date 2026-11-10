@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Capell\Core\Support\TableName;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -10,11 +11,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('ai_managed_provider_calls')) {
+        if (TableName::existsAndIsOwned('ai_managed_provider_calls', basename(__FILE__, '.php'))) {
             return;
         }
 
-        Schema::create('ai_managed_provider_calls', function (Blueprint $table): void {
+        Schema::create(TableName::resolve('ai_managed_provider_calls'), function (Blueprint $table): void {
             $table->id();
             $table->char('call_key_digest', 64)->unique();
             $table->char('authorization_digest', 64);
@@ -32,6 +33,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('ai_managed_provider_calls');
+        Schema::dropIfExists(TableName::resolve('ai_managed_provider_calls'));
     }
 };
