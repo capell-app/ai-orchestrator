@@ -114,8 +114,59 @@ it('rejects capabilities that require an actor when none is provided', function 
         prompt: 'Create a sidebar layout',
     )))->toThrow(
         AuthorizationException::class,
-        'AIOrchestrator capability [missing-actor-module:missing-actor-capability] requires ability [ai-orchestrator.run-safe-capability] but no actor was provided.',
+        (string) __('capell-ai-orchestrator::package.capability_requires_user', ['capability' => 'Test capability']),
     );
+});
+
+it('skips the ability check for an explicitly internal run with no actor', function (): void {
+    RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
+        moduleKey: 'internal-module',
+        capabilityKey: 'internal-capability',
+        requiredAbility: 'ai-orchestrator.run-safe-capability',
+    ));
+
+    $result = RunAIOrchestratorCapabilityAction::run(new AIOrchestratorRunData(
+        moduleKey: 'internal-module',
+        capabilityKey: 'internal-capability',
+        prompt: 'Scan',
+        context: ['page' => 'home'],
+        internal: true,
+    ));
+
+    expect($result)->toBe(['prompt' => 'Scan', 'page' => 'home']);
+});
+
+it('still checks the ability when an internal run names an acting user', function (): void {
+    Gate::define('ai-orchestrator.run-internal-actor', fn (AIOrchestratorActorFixture $actor): bool => false);
+
+    RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
+        moduleKey: 'internal-actor-module',
+        capabilityKey: 'internal-actor-capability',
+        requiredAbility: 'ai-orchestrator.run-internal-actor',
+    ));
+
+    expect(fn (): mixed => RunAIOrchestratorCapabilityAction::run(new AIOrchestratorRunData(
+        moduleKey: 'internal-actor-module',
+        capabilityKey: 'internal-actor-capability',
+        prompt: 'Scan',
+        context: ['page' => 'home'],
+        actor: new AIOrchestratorActorFixture,
+        internal: true,
+    )))->toThrow(AuthorizationException::class);
+});
+
+it('runs capabilities without a required ability for any caller', function (): void {
+    RegisterAIOrchestratorModuleAction::run(new AIOrchestratorModuleFixture(
+        moduleKey: 'open-module',
+        capabilityKey: 'open-capability',
+    ));
+
+    expect(RunAIOrchestratorCapabilityAction::run(new AIOrchestratorRunData(
+        moduleKey: 'open-module',
+        capabilityKey: 'open-capability',
+        prompt: 'Hello',
+        context: ['page' => 'home'],
+    )))->toBe(['prompt' => 'Hello', 'page' => 'home']);
 });
 
 it('rejects capabilities when the actor lacks the required ability before execution', function (): void {
@@ -139,7 +190,7 @@ it('rejects capabilities when the actor lacks the required ability before execut
         actor: new AIOrchestratorActorFixture,
     )))->toThrow(
         AuthorizationException::class,
-        'AIOrchestrator capability [denied-module:denied-capability] is not authorized for ability [ai-orchestrator.run-denied-capability].',
+        (string) __('capell-ai-orchestrator::package.capability_not_permitted', ['capability' => 'Test capability']),
     );
 
     Event::assertNotDispatched(AIOrchestratorCapabilityRunRecorded::class);

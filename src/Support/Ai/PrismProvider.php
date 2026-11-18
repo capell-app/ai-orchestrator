@@ -15,10 +15,15 @@ use Capell\AIOrchestrator\Enums\Ai\ManagedProviderClaimStatus;
 use Capell\AIOrchestrator\Enums\Ai\ProviderAttemptOutcome;
 use Capell\AIOrchestrator\Enums\Ai\RetryClassification;
 use Capell\AIOrchestrator\Exceptions\AiContractRefusedException;
+use Capell\AIOrchestrator\Exceptions\AIOrchestratorPolicyGuardrailException;
 use Capell\AIOrchestrator\Exceptions\ManagedProviderDispatchInterruptedException;
 use Capell\AIOrchestrator\Exceptions\ManagedProviderPersistenceException;
 use Capell\AIOrchestrator\Exceptions\ManagedProviderResultCommittedException;
 use Capell\AIOrchestrator\Exceptions\OpenAICircuitBreakerOpenException;
+use Capell\AIOrchestrator\Support\Ai\Redaction\PromptRedactor;
+use Capell\AIOrchestrator\Support\Ai\Redaction\RedactionResultData;
+use Capell\AIOrchestrator\Support\Ai\Redaction\RegexPromptRedactor;
+use Capell\AIOrchestrator\Support\AIOrchestratorPolicyGuardrailRegistry;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\Client\ConnectionException;
@@ -53,6 +58,7 @@ class PrismProvider
         private readonly ?AIGenerationCache $generationCache = null,
         private readonly ?ManagedProviderCallRepository $managedCalls = null,
         private readonly ?Closure $clock = null,
+        private readonly ?PromptRedactor $redactor = null,
     ) {
         $this->maxRetries = max(1, $this->intConfig('max_retries', 3));
         $this->retryDelay = max(0, $this->intConfig('retry_delay_ms', 1000));
@@ -137,8 +143,7 @@ class PrismProvider
     /** @param array<array-key, mixed> $params */
     public function managedRequestDigest(array $params): string
     {
-        [$systemPrompt, $userPrompt] = $this->promptsFrom($params['messages'] ?? []);
-        [$systemPrompt, $userPrompt] = $this->boundPrompts($systemPrompt, $userPrompt);
+        [$systemPrompt, $userPrompt, $redaction] = $this->outboundPrompts($params);
         $identity = [
             'max_tokens' => isset($params['max_tokens']) ? $this->intFrom($params['max_tokens']) : $this->intConfig('max_tokens', 512),
             'model' => $this->scalarString($params['model'] ?? $this->config['model'] ?? 'gpt-4o'),
@@ -147,6 +152,8 @@ class PrismProvider
             'system_prompt' => $systemPrompt,
             'temperature' => isset($params['temperature']) ? $this->floatFrom($params['temperature']) : 0.7,
             'user_prompt' => $userPrompt,
+            // Two inputs that differ only in masked values must not share an authorisation.
+            'redaction' => $redaction instanceof RedactionResultData ? hash('sha256', json_encode($redaction->replacements, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)) : null,
         ];
 
         return hash('sha256', json_encode($identity, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
@@ -155,6 +162,33 @@ class PrismProvider
     public function isAvailable(): bool
     {
         return ! $this->isCircuitOpen();
+    }
+
+    /**
+     * Whether the configured Prism provider has what it needs to be called: an API key, or for
+     * a keyless provider such as Ollama, a URL.
+     */
+    public function hasCredentials(): bool
+    {
+        $provider = strtolower($this->scalarString($this->config['provider'] ?? 'openai'));
+        $settings = config('prism.providers.' . $provider);
+
+        if (! is_array($settings)) {
+            return false;
+        }
+
+        $field = array_key_exists('api_key', $settings) ? 'api_key' : 'url';
+
+        return is_string($settings[$field] ?? null) && trim($settings[$field]) !== '';
+    }
+
+    /**
+     * Whether a provider call may run in the current process. Web requests are refused when
+     * the host requires provider calls to be queued, so callers must not offer them there.
+     */
+    public function canCallInThisContext(): bool
+    {
+        return ! (($this->config['require_queue_for_web'] ?? false) === true && ! app()->runningInConsole());
     }
 
     public function handles(): string
@@ -234,9 +268,9 @@ class PrismProvider
         array $attempts,
         ManagedProviderCallRepository $repository,
     ): ProviderExecutionResultData {
-        [$systemPrompt, $userMessage] = $this->promptsFrom($params['messages'] ?? []);
-        [$systemPrompt, $userMessage] = $this->boundPrompts($systemPrompt, $userMessage);
+        [$systemPrompt, $userMessage, $redaction] = $this->outboundPrompts($params);
         $model = $this->scalarString($params['model'] ?? $this->config['model'] ?? 'gpt-4o');
+        $this->assertModelAllowed($model);
         $providerName = $this->scalarString($this->config['provider'] ?? 'openai');
         $maxTokens = isset($params['max_tokens']) ? $this->intFrom($params['max_tokens']) : $this->intConfig('max_tokens', 512);
         $temperature = isset($params['temperature']) ? $this->floatFrom($params['temperature']) : 0.7;
@@ -306,7 +340,7 @@ class PrismProvider
                     return $this->persistManagedResult($repository, $authorization, $leaseToken, ProviderExecutionResultData::refused($authorization->providerCallIdempotencyKey, $exception->refusal, $this->errorCode($exception), RetryClassification::Terminal, $attempts), $recoverySeconds);
                 }
                 try {
-                    $validatedOutput = $outputValidator->validate($validatedOutputIdentity, $response->text);
+                    $validatedOutput = $outputValidator->validate($validatedOutputIdentity, $this->restoredOutput($response->text, $redaction));
                 } catch (Throwable) {
                     return $this->persistManagedResult($repository, $authorization, $leaseToken, new ProviderExecutionResultData($authorization->providerCallIdempotencyKey, ExecutionValidity::Invalid, null, null, RetryClassification::Terminal, ContractRefusal::InvalidOutput, ContractRefusal::InvalidOutput->value, null, null, false, $attempts), $recoverySeconds);
                 }
@@ -412,14 +446,14 @@ class PrismProvider
     /** @param array<array-key, mixed> $params */
     private function dispatchChat(array $params): AiResponse
     {
-        if (($this->config['require_queue_for_web'] ?? false) === true && ! app()->runningInConsole()) {
+        if (! $this->canCallInThisContext()) {
             throw new LogicException('AI provider calls must be executed by a queued worker.');
         }
 
-        [$systemPrompt, $userMessage] = $this->promptsFrom($params['messages'] ?? []);
-        [$systemPrompt, $userMessage] = $this->boundPrompts($systemPrompt, $userMessage);
+        [$systemPrompt, $userMessage, $redaction] = $this->outboundPrompts($params);
 
         $model = $this->scalarString($params['model'] ?? $this->config['model'] ?? 'gpt-4o');
+        $this->assertModelAllowed($model);
         $providerName = $this->scalarString($this->config['provider'] ?? 'openai');
         $maxTokens = isset($params['max_tokens']) ? $this->intFrom($params['max_tokens']) : $this->intConfig('max_tokens', 512);
         $temperature = isset($params['temperature']) ? $this->floatFrom($params['temperature']) : 0.7;
@@ -433,6 +467,7 @@ class PrismProvider
             'max_tokens' => $maxTokens,
             'temperature' => $temperature,
             'site_id' => $siteId,
+            'redaction' => $redaction instanceof RedactionResultData ? hash('sha256', json_encode($redaction->replacements, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)) : null,
         ];
         $cacheKey = $this->generationCache?->keyForRequest($requestIdentity);
 
@@ -441,8 +476,8 @@ class PrismProvider
 
             if ($cachedResponse instanceof AiResponse) {
                 return new AiResponse(
-                    content: $cachedResponse->content,
-                    tokensUsed: $cachedResponse->tokensUsed,
+                    content: $this->restoredOutput($cachedResponse->content, $redaction),
+                    tokensUsed: 0,
                     model: $cachedResponse->model,
                     duration: 0.0,
                     metadata: [
@@ -452,6 +487,8 @@ class PrismProvider
                 );
             }
         }
+
+        $this->assertProviderCallAllowed($model);
 
         throw_if($this->isCircuitOpen($model), OpenAICircuitBreakerOpenException::class);
 
@@ -505,10 +542,13 @@ class PrismProvider
                 );
 
                 if ($cacheKey !== null) {
+                    // The cache holds the raw provider text, never originals restored into it.
                     $this->generationCache->put($cacheKey, $aiResponse);
                 }
 
-                return $aiResponse;
+                return $redaction instanceof RedactionResultData && ($this->config['restore_redacted_output'] ?? false) === true
+                    ? new AiResponse($this->restoredOutput($aiResponse->content, $redaction), $aiResponse->tokensUsed, $aiResponse->model, $aiResponse->duration, $aiResponse->metadata)
+                    : $aiResponse;
             } catch (Throwable $e) {
                 $attempt++;
                 $lastException = $e;
@@ -604,6 +644,70 @@ class PrismProvider
         }
 
         return [implode("\n\n", $systemPrompts), implode("\n\n", $userMessages)];
+    }
+
+    private function assertProviderCallAllowed(string $model): void
+    {
+        $userId = auth()->id();
+
+        foreach (resolve(AIOrchestratorPolicyGuardrailRegistry::class)->providerCallGuards() as $guard) {
+            $denial = $guard->denialFor($model, is_int($userId) || is_string($userId) ? $userId : null);
+
+            if ($denial !== null) {
+                throw new AIOrchestratorPolicyGuardrailException($denial);
+            }
+        }
+    }
+
+    private function assertModelAllowed(string $model): void
+    {
+        $allowed = $this->config['allowed_models'] ?? [];
+
+        if (is_array($allowed) && $allowed !== [] && ! in_array($model, $allowed, true)) {
+            throw new LogicException('The model "' . $model . '" is not on the allowed model list.');
+        }
+    }
+
+    /**
+     * The prompts exactly as they leave this application: personal data masked, then bounded.
+     * The masking happens here, the one place every provider call passes through.
+     *
+     * @param  array<array-key, mixed>  $params
+     * @return array{string, string, ?RedactionResultData}
+     */
+    private function outboundPrompts(array $params): array
+    {
+        [$systemPrompt, $userPrompt] = $this->promptsFrom($params['messages'] ?? []);
+        $redaction = null;
+
+        if ($this->shouldRedact($params)) {
+            $redaction = ($this->redactor ?? new RegexPromptRedactor)->redact($systemPrompt, $userPrompt);
+            [$systemPrompt, $userPrompt] = $redaction->texts;
+        }
+
+        [$systemPrompt, $userPrompt] = $this->boundPrompts($systemPrompt, $userPrompt);
+
+        return [$systemPrompt, $userPrompt, $redaction];
+    }
+
+    /** @param array<array-key, mixed> $params */
+    private function shouldRedact(array $params): bool
+    {
+        if (($this->config['redact_personal_data'] ?? true) !== true) {
+            return false;
+        }
+
+        $siteId = $this->positiveIntOrNull($params['site_id'] ?? null);
+        $disabledSites = $this->config['redaction_disabled_site_ids'] ?? [];
+
+        return ! ($siteId !== null && is_array($disabledSites) && in_array($siteId, array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, $disabledSites), true));
+    }
+
+    private function restoredOutput(string $text, ?RedactionResultData $redaction): string
+    {
+        return $redaction instanceof RedactionResultData && ($this->config['restore_redacted_output'] ?? false) === true
+            ? $redaction->restore($text)
+            : $text;
     }
 
     /**

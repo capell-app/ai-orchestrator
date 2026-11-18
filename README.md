@@ -2,27 +2,25 @@
 
 <!-- prettier-ignore-start -->
 
-## What It Does
+Set up an AI service once and the AI Assistant button on the page editing screen is ready to use. An editor picks the fields, adds a few keywords and keeps working while titles, meta descriptions or body text are drafted in the background. Nothing reaches the live site until the editor reviews a suggestion and saves the page.
 
-AI Orchestrator provides a shared capability registry, governed execution path, generation history, and request queue for AI features owned by other Capell packages.
+AI Orchestrator is the shared setup behind that button. An administrator picks the AI service, adds your own key and lists the models allowed. They also set a brand voice with a tone, words to avoid and examples.
+
+You need your own account with an AI service, or a self-hosted Ollama, and the site's background processing has to be running. By default, emails and phone numbers are swapped for placeholders before text is sent, but names and addresses are not. What comes back is a set of title and description options to choose from and a content draft to edit, in the language version the editor picked.
 
 - **Price and availability:** Check current availability and price on the [Capell Marketplace listing](https://capell.app/extensions/ai-orchestrator).
 - **Licence:** Check the licence terms on the [Capell Marketplace listing](https://capell.app/extensions/ai-orchestrator).
 - **Requires:** `PHP ^8.4`, `capell-app/admin ^1.0`, `capell-app/core ^1.0.75`, `lorisleiva/laravel-actions ^2.8`, `prism-php/prism ^0.100`, `spatie/laravel-data ^4.5`, `spatie/laravel-package-tools ^1.14.1`.
 - **Install:** `composer require capell-app/ai-orchestrator`.
 
-Admins can inspect registered capability metadata in the capability catalogue. Consuming packages keep ownership of their editor actions and approval screens.
-
-## Who It Is For
-
-**For developers:** Packages implement AIOrchestratorModule and register typed capabilities, while RunAIOrchestratorCapabilityAction enforces runnable actions, authorisation, and policy guardrails in one place.
-
-**For teams:** AI-assisted features across Capell share the same registration, approval, execution, and recording boundaries instead of behaving differently in each package.
-
 ## Quick Start
 
 1. Install the package: `composer require capell-app/ai-orchestrator`.
 2. Open the package admin page or resource and verify AI Orchestrator is available.
+
+## For Developers
+
+Packages implement AIOrchestratorModule and register typed capabilities, while RunAIOrchestratorCapabilityAction enforces runnable actions, authorisation, and policy guardrails in one place.
 
 ## Configure
 
@@ -38,7 +36,7 @@ Admins can inspect registered capability metadata in the capability catalogue. C
 
 ## Screens And Workflow
 
-![Illustrative AI Orchestrator Beta contract from capability registration to consumer-owned UI](docs/assets/marketplace/beta-contract.svg)
+![Dark illustration of four linked steps, register, govern, approve and show, marked as artwork and not a product screen](docs/assets/marketplace/beta-contract.svg)
 
 - AI Orchestrator beta contract artwork (marketplace).
 
@@ -88,6 +86,6 @@ Read [CHANGELOG.md](CHANGELOG.md) before upgrading.
 - [Capell content language plan](../../docs/CONTENT_LANGUAGE_PLAN.md)
 - [Capell documentation design system](../../docs/DESIGN_SYSTEM.md)
 - [Capell and package ERD notes](../../docs/erd/capell-and-package-erds.md)
-- Related packages: [AI Creator](../ai-creator/README.md), [Content Sections](../content-sections/README.md), [Layout Builder](../layout-builder/README.md), [Media AI](../media-ai/README.md), [SEO Suite](../seo-suite/README.md), [Translation Manager](../translation-manager/README.md).
+- Related packages: [AI Creator](../ai-creator/README.md), [Content Sections](../content-sections/README.md), [Layout Builder](../layout-builder/README.md), [Media AI](../media-ai/README.md), [SEO Checks](../seo-suite/README.md), [Translation Manager](../translation-manager/README.md).
 
 <!-- prettier-ignore-end -->

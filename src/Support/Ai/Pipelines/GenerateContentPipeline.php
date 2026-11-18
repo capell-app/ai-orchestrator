@@ -12,6 +12,7 @@ use Capell\AIOrchestrator\Support\Ai\AiRateLimiter;
 use Capell\AIOrchestrator\Support\Ai\AiResponse;
 use Capell\AIOrchestrator\Support\Ai\Concerns\NormalizesAiValues;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
+use Capell\AIOrchestrator\Support\Ai\PromptData;
 use Capell\AIOrchestrator\Support\Ai\PromptRepository;
 use DOMDocument;
 use DOMElement;
@@ -74,7 +75,7 @@ class GenerateContentPipeline
     private function checkRateLimit(array $payload, callable $next): array
     {
         $options = $this->aiArray($payload['options'] ?? null);
-        $identifier = $this->aiString($options['user_id'] ?? 'global') ?: 'global';
+        $identifier = $this->aiString($options['user_id'] ?? '') ?: null;
         $this->rateLimiter->checkLimit($identifier, 'content_generation');
 
         return $next($payload);
@@ -89,18 +90,20 @@ class GenerateContentPipeline
         /** @var AiActionContextInterface $context */
         $context = $payload['context'];
         $options = $this->aiArray($payload['options'] ?? null);
-        $prompt = $this->aiArray($this->prompts->get('content_generation'));
+        $prompt = $this->aiArray($this->prompts->get($this->aiString($options['prompt_key'] ?? '') ?: 'content_generation'));
 
         $userMessage = strtr($this->aiString($prompt['user_template'] ?? ''), [
-            '{{current_title}}' => $this->aiString($options['current_title'] ?? ''),
-            '{{keywords}}' => $context->getKeywords() ?? '',
-            '{{content}}' => $context->getContent() ?? '',
+            '{{current_title}}' => PromptData::block('current_title', $this->aiString($options['current_title'] ?? '')),
+            '{{keywords}}' => PromptData::block('keywords', $context->getKeywords()),
+            '{{content}}' => PromptData::block('content', $context->getContent()),
             '{{target_length}}' => ($options['target_length'] ?? null) !== null ? $this->aiString($options['target_length']) : 'auto',
             '{{refactor}}' => ($options['refactor'] ?? true) ? 'yes' : 'no',
+            '{{mode}}' => $this->aiString($options['mode'] ?? ''),
+            '{{instruction}}' => PromptData::block('instruction', $this->aiString($options['instruction'] ?? '')),
         ]);
 
         $messages = [
-            ['role' => 'system', 'content' => $this->aiString($prompt['system'] ?? '')],
+            ['role' => 'system', 'content' => PromptData::harden($this->aiString($prompt['system'] ?? ''))],
             ['role' => 'user', 'content' => $userMessage],
         ];
 

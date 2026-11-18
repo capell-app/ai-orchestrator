@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Capell\AIOrchestrator\Filament\Pages;
 
 use BackedEnum;
+use Capell\Admin\Enums\NavigationGroupEnum;
 use Capell\AIOrchestrator\Contracts\AIOrchestratorModule;
 use Capell\AIOrchestrator\Data\AIOrchestratorCapabilityData;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
@@ -29,9 +30,9 @@ final class AIOrchestratorCapabilityCatalogPage extends Page
     }
 
     #[Override]
-    public static function getNavigationGroup(): string
+    public static function getNavigationGroup(): NavigationGroupEnum
     {
-        return (string) __('capell-admin::navigation.group_system');
+        return NavigationGroupEnum::Settings;
     }
 
     #[Override]

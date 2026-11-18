@@ -90,3 +90,83 @@ it('encrypts transient generation payloads and prunes expired requests', functio
     expect(PruneAiGenerationPayloadsAction::run())->toBe(1)
         ->and(AiGenerationRequest::query()->whereKey($request->getKey())->exists())->toBeFalse();
 });
+
+function queuedGenerationRequestId(string $keywords): int
+{
+    $id = QueueAiAssistantGenerationAction::run(new AiAssistantGenerationData(fields: ['title'], keywords: $keywords))->getKey();
+    throw_unless(is_int($id), RuntimeException::class, 'Expected an integer generation request key.');
+
+    return $id;
+}
+
+function bindThrowingGenerationAction(int &$calls): void
+{
+    $counter = &$calls;
+    app()->instance(GenerateAiAssistantFieldsAction::class, new class($counter) extends GenerateAiAssistantFieldsAction
+    {
+        public function __construct(private int &$counter) {}
+
+        public function handle(AiAssistantGenerationData $data): AiAssistantGenerationResultData
+        {
+            $this->counter++;
+
+            throw new RuntimeException('provider down');
+        }
+    });
+}
+
+it('does not re-run a failed provider result when the job is retried', function (): void {
+    $calls = 0;
+    bindThrowingGenerationAction($calls);
+    $requestId = queuedGenerationRequestId('retry-guard');
+
+    (new RunAiAssistantGenerationJob($requestId))->handle();
+    (new RunAiAssistantGenerationJob($requestId))->handle();
+    (new RunAiAssistantGenerationJob($requestId))->handle();
+
+    $request = AiGenerationRequest::query()->findOrFail($requestId);
+
+    expect($calls)->toBe(1)
+        ->and($request->status)->toBe(AiGenerationRequestStatus::Failed)
+        ->and($request->error_message)->toBe('provider down');
+});
+
+it('does not claim a request that another worker is still running', function (): void {
+    $calls = 0;
+    bindThrowingGenerationAction($calls);
+    $requestId = queuedGenerationRequestId('still-running');
+    AiGenerationRequest::query()->whereKey($requestId)->update(['status' => AiGenerationRequestStatus::Running]);
+
+    (new RunAiAssistantGenerationJob($requestId))->handle();
+
+    expect($calls)->toBe(0);
+});
+
+it('reclaims a running request whose worker died', function (): void {
+    $calls = 0;
+    bindThrowingGenerationAction($calls);
+    $requestId = queuedGenerationRequestId('dead-worker');
+    AiGenerationRequest::query()->whereKey($requestId)->toBase()->update([
+        'status' => AiGenerationRequestStatus::Running->value,
+        'updated_at' => now()->subMinutes(10),
+    ]);
+
+    (new RunAiAssistantGenerationJob($requestId))->handle();
+
+    expect($calls)->toBe(1);
+});
+
+it('marks a running request failed once when the queue reports the job failed', function (): void {
+    $requestId = queuedGenerationRequestId('killed-worker');
+    AiGenerationRequest::query()->whereKey($requestId)->update(['status' => AiGenerationRequestStatus::Running]);
+    $job = new RunAiAssistantGenerationJob($requestId);
+
+    $job->failed(new RuntimeException('worker killed'));
+    $job->failed(new RuntimeException('second report'));
+
+    $request = AiGenerationRequest::query()->findOrFail($requestId);
+
+    expect($request->status)->toBe(AiGenerationRequestStatus::Failed)
+        ->and($request->error_message)->toBe('worker killed')
+        ->and($job->backoff())->toBe([10, 60]);
+});

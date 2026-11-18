@@ -75,26 +75,20 @@ class RunAIOrchestratorCapabilityAction
             return;
         }
 
+        if ($run->actor === null && $run->internal) {
+            return;
+        }
+
         throw_unless(
             $run->actor !== null,
             AuthorizationException::class,
-            sprintf(
-                'AIOrchestrator capability [%s:%s] requires ability [%s] but no actor was provided.',
-                $run->moduleKey,
-                $run->capabilityKey,
-                $capability->requiredAbility,
-            ),
+            (string) __('capell-ai-orchestrator::package.capability_requires_user', ['capability' => $capability->label]),
         );
 
         throw_unless(
             Gate::forUser($run->actor)->allows($capability->requiredAbility, [$run, $capability]),
             AuthorizationException::class,
-            sprintf(
-                'AIOrchestrator capability [%s:%s] is not authorized for ability [%s].',
-                $run->moduleKey,
-                $run->capabilityKey,
-                $capability->requiredAbility,
-            ),
+            (string) __('capell-ai-orchestrator::package.capability_not_permitted', ['capability' => $capability->label]),
         );
     }
 

@@ -28,3 +28,16 @@ it('uses persisted provider model prompts and rate limits as one runtime source'
             'user_template' => 'Saved {{content}}',
         ]);
 });
+
+it('reads the allowed model list, masking choices and retention from saved settings', function (): void {
+    $settings = Mockery::mock(AIOrchestratorSettings::class)->makePartial();
+    $settings->ai_provider = 'openai';
+    $settings->ai_model = 'gpt-4o';
+    $settings->ai_api_key = 'k';
+    $settings->prompts = ['allowed_models' => [' gpt-4o ', '', 'gpt-4o', 'mistral-eu'], 'redact_personal_data' => false];
+
+    $runtime = ResolveAIOrchestratorRuntimeSettingsAction::run($settings);
+
+    expect($runtime->provider['allowed_models'])->toBe(['gpt-4o', 'mistral-eu'])
+        ->and($runtime->provider['redact_personal_data'])->toBeFalse();
+});

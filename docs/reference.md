@@ -6,7 +6,7 @@ Developer reference for `capell-app/ai-orchestrator`. Start with the [README](..
 
 ## Package Details
 
-AI Orchestrator is an **Available**, **Schema-owning** Capell package in the **Capell AI** product group. It ships as `capell-app/ai-orchestrator` and extends these surfaces: admin.
+AI Orchestrator is an **Available** Capell package in the **Capell AI** product group. It ships as `capell-app/ai-orchestrator` and extends these surfaces: admin.
 
 - Status: Available
 - Tier: free
@@ -61,6 +61,7 @@ AI Orchestrator is an **Available**, **Schema-owning** Capell package in the **C
 
 - `AIOrchestratorModule`
 - `AIOrchestratorPolicyGuardrail`
+- `AIProviderCallGuard`
 - `AiActionContextInterface`
 - `AiCreatorContextInterface`
 - `ProviderOutputValidator`
@@ -84,6 +85,7 @@ AI Orchestrator is an **Available**, **Schema-owning** Capell package in the **C
 - `GeneratorPageContentAction`
 - `PruneAiGenerationPayloadsAction`
 - `RecordAiGenerationAction`
+- `RewriteContentAction`
 - `SuggestMetaDescriptionsAction`
 - `SuggestPageTitlesAction`
 - `GenerateAiAssistantFieldsAction`

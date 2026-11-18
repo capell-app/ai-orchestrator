@@ -9,7 +9,7 @@ class PromptRepository
     /**
      * @param  array<array-key, mixed>  $prompts
      */
-    public function __construct(private array $prompts = []) {}
+    public function __construct(private array $prompts = [], private readonly BrandVoice $brandVoice = new BrandVoice) {}
 
     /**
      * @return array<array-key, mixed>
@@ -18,6 +18,15 @@ class PromptRepository
     {
         $prompt = $this->prompts[$key] ?? null;
 
-        return is_array($prompt) ? $prompt : null;
+        if (! is_array($prompt)) {
+            return null;
+        }
+
+        // The brand voice goes into the system prompt of every prompt the orchestrator sends.
+        if (is_string($prompt['system'] ?? null)) {
+            $prompt['system'] = $this->brandVoice->applyTo($prompt['system']);
+        }
+
+        return $prompt;
     }
 }

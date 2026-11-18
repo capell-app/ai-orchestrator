@@ -49,6 +49,22 @@ final class ExampleAIOrchestratorPolicyGuardrailImplementation implements \Capel
 app()->bind(\Capell\AIOrchestrator\Contracts\AIOrchestratorPolicyGuardrail::class, ExampleAIOrchestratorPolicyGuardrailImplementation::class);
 ```
 
+<!-- example: contract Capell\AIOrchestrator\Contracts\AIProviderCallGuard -->
+
+```php
+<?php
+declare(strict_types=1);
+final class ExampleAIProviderCallGuardImplementation implements \Capell\AIOrchestrator\Contracts\AIProviderCallGuard
+{
+    public function denialFor(string $model, int|string|null $userId): ?string
+    {
+        throw new LogicException('Implement this package contract for the calling site.');
+    }
+}
+
+app()->bind(\Capell\AIOrchestrator\Contracts\AIProviderCallGuard::class, ExampleAIProviderCallGuardImplementation::class);
+```
+
 <!-- example: contract Capell\AIOrchestrator\Contracts\AiActionContextInterface -->
 
 ```php

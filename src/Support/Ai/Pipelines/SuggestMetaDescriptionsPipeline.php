@@ -13,6 +13,7 @@ use Capell\AIOrchestrator\Support\Ai\AiResponse;
 use Capell\AIOrchestrator\Support\Ai\AiResponseParser;
 use Capell\AIOrchestrator\Support\Ai\Concerns\NormalizesAiValues;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
+use Capell\AIOrchestrator\Support\Ai\PromptData;
 use Capell\AIOrchestrator\Support\Ai\PromptRepository;
 use Illuminate\Pipeline\Pipeline;
 use InvalidArgumentException;
@@ -73,7 +74,7 @@ class SuggestMetaDescriptionsPipeline
     private function checkRateLimit(array $payload, callable $next): array
     {
         $options = $this->aiArray($payload['options'] ?? null);
-        $identifier = $this->aiString($options['user_id'] ?? 'global') ?: 'global';
+        $identifier = $this->aiString($options['user_id'] ?? '') ?: null;
         $this->rateLimiter->checkLimit($identifier, 'meta_suggestions');
 
         return $next($payload);
@@ -93,14 +94,14 @@ class SuggestMetaDescriptionsPipeline
         $keywords = $context->getKeywords();
 
         $userMessage = strtr($this->aiString($prompt['user_template'] ?? ''), [
-            '{{content}}' => $content,
-            '{{keywords}}' => $keywords,
+            '{{content}}' => PromptData::block('content', $content),
+            '{{keywords}}' => PromptData::block('keywords', $keywords),
         ]);
 
         $params = [
             'model' => $this->aiString($prompt['model'] ?? config('capell-ai-orchestrator.prism.model')),
             'messages' => [
-                ['role' => 'system', 'content' => $this->aiString($prompt['system'] ?? '')],
+                ['role' => 'system', 'content' => PromptData::harden($this->aiString($prompt['system'] ?? ''))],
                 ['role' => 'user', 'content' => $userMessage . "\nPlease provide 3 meta description options as a simple bullet list."],
             ],
             'max_tokens' => config('capell-ai-orchestrator.prism.max_tokens', 128),

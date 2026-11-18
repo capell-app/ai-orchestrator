@@ -8,9 +8,12 @@ use Capell\Admin\Contracts\Extenders\ResourceHeaderActionExtender;
 use Capell\Admin\Filament\Resources\Pages\Pages\EditPage;
 use Capell\AIOrchestrator\Actions\QueueAiAssistantGenerationAction;
 use Capell\AIOrchestrator\Data\AiAssistantGenerationData;
+use Capell\AIOrchestrator\Data\AIOrchestratorRuntimeSettingsData;
 use Capell\AIOrchestrator\Enums\AiAssistantFieldEnum;
 use Capell\AIOrchestrator\Enums\AiGenerationRequestStatus;
+use Capell\AIOrchestrator\Enums\AiProviderProblem;
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
+use Capell\AIOrchestrator\Support\Ai\AiProviderConfiguration;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
@@ -62,7 +65,9 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
                 ->action(function (array $data, mixed $livewire): void {
                     $this->applySelections($livewire, $data);
                 })
-                ->visible(fn (): bool => $this->anyCapabilityEnabled()),
+                ->visible(fn (): bool => $this->anyCapabilityEnabled())
+                ->disabled(fn (): bool => $this->providerProblems() !== [])
+                ->tooltip(fn (): ?string => $this->unavailableReason()),
         ];
     }
 
@@ -633,6 +638,21 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
         }
 
         return $enabledFields;
+    }
+
+    /** @return list<AiProviderProblem> */
+    private function providerProblems(): array
+    {
+        return (new AiProviderConfiguration(resolve(AIOrchestratorRuntimeSettingsData::class)))->problems();
+    }
+
+    private function unavailableReason(): ?string
+    {
+        $problems = $this->providerProblems();
+
+        return $problems === []
+            ? null
+            : (string) __('capell-ai-orchestrator::package.assist_unavailable', ['problems' => implode(' ', array_map(static fn (AiProviderProblem $problem): string => $problem->message(), $problems))]);
     }
 
     private function anyCapabilityEnabled(): bool

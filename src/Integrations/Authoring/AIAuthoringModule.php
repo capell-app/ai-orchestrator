@@ -8,6 +8,7 @@ use Capell\AIOrchestrator\Contracts\AIOrchestratorModule;
 use Capell\AIOrchestrator\Data\AIOrchestratorCapabilityData;
 use Capell\AIOrchestrator\Enums\AIOrchestratorApprovalLevel;
 use Capell\AIOrchestrator\Integrations\Authoring\Capabilities\GenerateContentCapabilityAction;
+use Capell\AIOrchestrator\Integrations\Authoring\Capabilities\RewriteContentCapabilityAction;
 use Capell\AIOrchestrator\Integrations\Authoring\Capabilities\SuggestMetaDescriptionCapabilityAction;
 use Capell\AIOrchestrator\Integrations\Authoring\Capabilities\SuggestTitleCapabilityAction;
 
@@ -48,6 +49,13 @@ class AIAuthoringModule implements AIOrchestratorModule
                 label: 'Suggest meta description',
                 description: 'Suggest a meta description from the current content.',
                 actionClass: SuggestMetaDescriptionCapabilityAction::class,
+                approvalLevel: AIOrchestratorApprovalLevel::Draft,
+            ),
+            new AIOrchestratorCapabilityData(
+                key: 'rewrite-content',
+                label: 'Rewrite content',
+                description: 'Shorten, expand, fix or restyle fields in the site brand voice, one field at a time for review.',
+                actionClass: RewriteContentCapabilityAction::class,
                 approvalLevel: AIOrchestratorApprovalLevel::Draft,
             ),
         ];

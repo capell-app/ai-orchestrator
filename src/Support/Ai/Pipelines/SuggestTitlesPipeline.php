@@ -13,6 +13,7 @@ use Capell\AIOrchestrator\Support\Ai\AiResponse;
 use Capell\AIOrchestrator\Support\Ai\AiResponseParser;
 use Capell\AIOrchestrator\Support\Ai\Concerns\NormalizesAiValues;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
+use Capell\AIOrchestrator\Support\Ai\PromptData;
 use Capell\AIOrchestrator\Support\Ai\PromptRepository;
 use Illuminate\Pipeline\Pipeline;
 use InvalidArgumentException;
@@ -84,7 +85,7 @@ class SuggestTitlesPipeline
     private function checkRateLimit(array $payload, callable $next): array
     {
         $options = $this->aiArray($payload['options'] ?? null);
-        $identifier = $this->aiString($options['user_id'] ?? 'global') ?: 'global';
+        $identifier = $this->aiString($options['user_id'] ?? '') ?: null;
         $this->rateLimiter->checkLimit($identifier, 'title_suggestions');
 
         return $next($payload);
@@ -103,13 +104,13 @@ class SuggestTitlesPipeline
         $keywords = $context->getKeywords();
 
         $userMessage = strtr($this->aiString($prompt['user_template'] ?? ''), [
-            '{{content}}' => $content,
-            '{{keywords}}' => $keywords,
-            '{{current_title}}' => $this->aiString($options['current_title'] ?? ''),
+            '{{content}}' => PromptData::block('content', $content),
+            '{{keywords}}' => PromptData::block('keywords', $keywords),
+            '{{current_title}}' => PromptData::block('current_title', $this->aiString($options['current_title'] ?? '')),
         ]);
 
         $messages = [
-            ['role' => 'system', 'content' => $this->aiString($prompt['system'] ?? '')],
+            ['role' => 'system', 'content' => PromptData::harden($this->aiString($prompt['system'] ?? ''))],
             ['role' => 'user', 'content' => $userMessage . "\nPlease provide 5 distinct title options as a simple bullet list."],
         ];
 

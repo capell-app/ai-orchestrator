@@ -19,43 +19,65 @@ class AiRateLimiter
         protected array $config,
     ) {}
 
-    public function checkLimit(string $identifier = 'global', ?string $feature = null): void
+    /**
+     * Count one request against the global, per-user and per-feature buckets.
+     *
+     * Each bucket has its own limit. A missing user id gets no user bucket rather than
+     * sharing the global one. Every bucket is incremented atomically; when any bucket
+     * is over its limit the hits already taken are given back and the request is refused.
+     */
+    public function checkLimit(?string $identifier = null, ?string $feature = null): void
     {
         if (! ($this->config['enabled'] ?? false)) {
             return;
         }
 
         $perMinute = $this->intConfig('requests_per_minute', 60);
-        $limits = [
-            'global' => $perMinute,
-            'user:' . $identifier => $perMinute,
-            'feature:' . $feature => $perMinute,
-        ];
-        foreach ($limits as $key => $limit) {
-            throw_unless($this->canExecute($key, $limit), RuntimeException::class, 'AI rate limit exceeded for ' . $key);
+        $limits = ['global' => $this->intConfig('global_requests_per_minute', $perMinute)];
+
+        if ($identifier !== null && $identifier !== '' && $identifier !== 'global') {
+            $limits['user:' . $identifier] = $perMinute;
         }
 
-        foreach (array_keys($limits) as $key) {
-            $this->incrementCounter($key);
+        if ($feature !== null && $feature !== '') {
+            $limits['feature:' . $feature] = $this->intConfig('feature_requests_per_minute', $perMinute);
+        }
+
+        $window = $this->intConfig('window_seconds', 60);
+        $taken = [];
+
+        foreach ($limits as $key => $limit) {
+            $cacheKey = $this->cache->keyFor($key);
+            $taken[] = $cacheKey;
+
+            if ($this->cache->hit($cacheKey, $window) > $limit) {
+                foreach ($taken as $takenKey) {
+                    $this->cache->giveBack($takenKey);
+                }
+
+                throw new RuntimeException('AI rate limit exceeded for ' . $key);
+            }
         }
     }
 
     public function getRemainingRequests(string $identifier = 'global'): int
     {
-        $cacheKey = 'ai_rate_limit_' . $identifier;
+        $cacheKey = $this->cache->keyFor($identifier);
         $current = $this->cache->counter($cacheKey);
-        $limit = $this->intConfig('requests_per_minute', 60);
+        $limit = $identifier === 'global'
+            ? $this->intConfig('global_requests_per_minute', $this->intConfig('requests_per_minute', 60))
+            : $this->intConfig('requests_per_minute', 60);
 
         return max(0, $limit - $current['count']);
     }
 
     public function resetLimit(string $identifier = 'global'): void
     {
-        $this->cache->forget('ai_rate_limit_' . $identifier);
+        $this->cache->forget($this->cache->keyFor($identifier));
         Log::info('Rate limit reset', ['identifier' => $identifier]);
     }
 
-    public function allow(string $identifier = 'global'): bool
+    public function allow(?string $identifier = null): bool
     {
         try {
             $this->checkLimit($identifier);
@@ -64,23 +86,6 @@ class AiRateLimiter
         } catch (Throwable) {
             return false;
         }
-    }
-
-    protected function canExecute(string $key, int $limit): bool
-    {
-        $cacheKey = 'ai_rate_limit_' . $key;
-        $current = $this->cache->counter($cacheKey);
-
-        return $current['count'] < $limit;
-    }
-
-    protected function incrementCounter(string $key): void
-    {
-        $cacheKey = 'ai_rate_limit_' . $key;
-        $current = $this->cache->counter($cacheKey);
-        $current['count']++;
-        $ttl = $this->intConfig('window_seconds', 60);
-        $this->cache->put($cacheKey, $current, $ttl);
     }
 
     private function intConfig(string $key, int $default): int

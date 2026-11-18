@@ -6,10 +6,12 @@ namespace Capell\AIOrchestrator\Actions\Ai;
 
 use Capell\AIOrchestrator\Models\AIGenerationHistory;
 use Capell\AIOrchestrator\Models\AiGenerationRequest;
+use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Lorisleiva\Actions\Concerns\AsFake;
 use Lorisleiva\Actions\Concerns\AsObject;
+use Throwable;
 
 /** @method static int run(?int $retentionDays = null) */
 final class PruneAiGenerationPayloadsAction
@@ -49,6 +51,14 @@ final class PruneAiGenerationPayloadsAction
     {
         $value = config('capell-ai-orchestrator.retention.generation_payload_days', 30);
 
-        return is_numeric($value) ? (int) $value : 30;
+        try {
+            $saved = resolve(AIOrchestratorSettings::class)->prompts['retention_generation_payload_days'] ?? null;
+        } catch (Throwable) {
+            $saved = null;
+        }
+
+        $days = is_numeric($saved) && (int) $saved > 0 ? $saved : $value;
+
+        return is_numeric($days) ? (int) $days : 30;
     }
 }

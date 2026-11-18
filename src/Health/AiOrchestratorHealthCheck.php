@@ -6,9 +6,12 @@ namespace Capell\AIOrchestrator\Health;
 
 use Capell\AIOrchestrator\Contracts\AIOrchestratorModule;
 use Capell\AIOrchestrator\Data\AIOrchestratorCapabilityData;
+use Capell\AIOrchestrator\Data\AIOrchestratorRuntimeSettingsData;
 use Capell\AIOrchestrator\Enums\AIOrchestratorApprovalLevel;
+use Capell\AIOrchestrator\Enums\AiProviderProblem;
 use Capell\AIOrchestrator\Integrations\LayoutBuilder\PreviewLayoutBuilderLayoutPlanAction;
 use Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider;
+use Capell\AIOrchestrator\Support\Ai\AiProviderConfiguration;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\Core\Contracts\Extensions\ChecksExtensionHealth;
 use Capell\Core\Data\Diagnostics\DoctorCheckResultData;
@@ -39,6 +42,7 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
             $check->layoutBuilderModuleCheck(),
             $check->duplicateCapabilityProtectionCheck(),
             $check->runnableCapabilityActionsCheck(),
+            $check->providerConfigurationCheck(),
         ]);
     }
 
@@ -48,19 +52,35 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
             ->every(static fn (DoctorCheckResultData $result): bool => $result->passed);
     }
 
+    public function providerConfigurationCheck(): DoctorCheckResultData
+    {
+        $problems = (new AiProviderConfiguration(resolve(AIOrchestratorRuntimeSettingsData::class)))->problems();
+        $passed = $problems === [];
+
+        return new DoctorCheckResultData(
+            label: $this->translate('capell-ai-orchestrator::package.health_provider_configuration_label'),
+            passed: $passed,
+            message: $passed
+                ? $this->translate('capell-ai-orchestrator::package.health_provider_configuration_passed')
+                : implode(' ', array_map(static fn (AiProviderProblem $problem): string => $problem->message(), $problems)),
+            remediation: $passed ? null : $this->translate('capell-ai-orchestrator::package.health_provider_configuration_remediation'),
+            id: 'ai.orchestrator.provider_configuration',
+        );
+    }
+
     public function packageInstalledCheck(): DoctorCheckResultData
     {
         $installed = CapellCore::isPackageInstalled(AIOrchestratorServiceProvider::$packageName);
 
         return new DoctorCheckResultData(
-            label: $this->translation('capell-ai-orchestrator::package.health_package_installed_label'),
+            label: $this->translate('capell-ai-orchestrator::package.health_package_installed_label'),
             passed: $installed,
             message: $installed
-                ? $this->translation('capell-ai-orchestrator::package.health_package_installed_passed')
-                : $this->translation('capell-ai-orchestrator::package.health_package_installed_failed'),
+                ? $this->translate('capell-ai-orchestrator::package.health_package_installed_passed')
+                : $this->translate('capell-ai-orchestrator::package.health_package_installed_failed'),
             remediation: $installed
                 ? null
-                : $this->translation('capell-ai-orchestrator::package.health_package_installed_remediation'),
+                : $this->translate('capell-ai-orchestrator::package.health_package_installed_remediation'),
             id: 'legacy.ai.orchestrator.installation',
         );
     }
@@ -70,14 +90,14 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
         $bound = $this->registryBindingIsHealthy();
 
         return new DoctorCheckResultData(
-            label: $this->translation('capell-ai-orchestrator::package.health_registry_binding_label'),
+            label: $this->translate('capell-ai-orchestrator::package.health_registry_binding_label'),
             passed: $bound,
             message: $bound
-                ? $this->translation('capell-ai-orchestrator::package.health_registry_binding_passed')
-                : $this->translation('capell-ai-orchestrator::package.health_registry_binding_failed'),
+                ? $this->translate('capell-ai-orchestrator::package.health_registry_binding_passed')
+                : $this->translate('capell-ai-orchestrator::package.health_registry_binding_failed'),
             remediation: $bound
                 ? null
-                : $this->translation('capell-ai-orchestrator::package.health_registry_binding_remediation'),
+                : $this->translate('capell-ai-orchestrator::package.health_registry_binding_remediation'),
             id: 'legacy.ai.orchestrator.registry.binding',
         );
     }
@@ -87,14 +107,14 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
         $moduleCount = $this->moduleCount();
 
         return new DoctorCheckResultData(
-            label: $this->translation('capell-ai-orchestrator::package.health_module_registry_label'),
+            label: $this->translate('capell-ai-orchestrator::package.health_module_registry_label'),
             passed: $moduleCount > 0,
             message: $moduleCount > 0
-                ? $this->translation('capell-ai-orchestrator::package.health_module_registry_passed', ['count' => (string) $moduleCount])
-                : $this->translation('capell-ai-orchestrator::package.health_module_registry_failed'),
+                ? $this->translate('capell-ai-orchestrator::package.health_module_registry_passed', ['count' => (string) $moduleCount])
+                : $this->translate('capell-ai-orchestrator::package.health_module_registry_failed'),
             remediation: $moduleCount > 0
                 ? null
-                : $this->translation('capell-ai-orchestrator::package.health_module_registry_remediation'),
+                : $this->translate('capell-ai-orchestrator::package.health_module_registry_remediation'),
             id: 'legacy.ai.orchestrator.registered.modules',
         );
     }
@@ -104,14 +124,14 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
         $available = $this->layoutBuilderModuleIsAvailable();
 
         return new DoctorCheckResultData(
-            label: $this->translation('capell-ai-orchestrator::package.health_layout_builder_module_label'),
+            label: $this->translate('capell-ai-orchestrator::package.health_layout_builder_module_label'),
             passed: $available,
             message: $available
-                ? $this->translation('capell-ai-orchestrator::package.health_layout_builder_module_passed')
-                : $this->translation('capell-ai-orchestrator::package.health_layout_builder_module_failed'),
+                ? $this->translate('capell-ai-orchestrator::package.health_layout_builder_module_passed')
+                : $this->translate('capell-ai-orchestrator::package.health_layout_builder_module_failed'),
             remediation: $available
                 ? null
-                : $this->translation('capell-ai-orchestrator::package.health_layout_builder_module_remediation'),
+                : $this->translate('capell-ai-orchestrator::package.health_layout_builder_module_remediation'),
             id: 'legacy.ai.orchestrator.layout.builder.module',
         );
     }
@@ -121,14 +141,14 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
         $protected = $this->duplicateCapabilityProtectionIsHealthy();
 
         return new DoctorCheckResultData(
-            label: $this->translation('capell-ai-orchestrator::package.health_duplicate_capability_label'),
+            label: $this->translate('capell-ai-orchestrator::package.health_duplicate_capability_label'),
             passed: $protected,
             message: $protected
-                ? $this->translation('capell-ai-orchestrator::package.health_duplicate_capability_passed')
-                : $this->translation('capell-ai-orchestrator::package.health_duplicate_capability_failed'),
+                ? $this->translate('capell-ai-orchestrator::package.health_duplicate_capability_passed')
+                : $this->translate('capell-ai-orchestrator::package.health_duplicate_capability_failed'),
             remediation: $protected
                 ? null
-                : $this->translation('capell-ai-orchestrator::package.health_duplicate_capability_remediation'),
+                : $this->translate('capell-ai-orchestrator::package.health_duplicate_capability_remediation'),
             id: 'legacy.ai.orchestrator.duplicate.capability.protection',
         );
     }
@@ -138,14 +158,14 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
         $notRunnableCapabilities = $this->notRunnableCapabilities();
 
         return new DoctorCheckResultData(
-            label: $this->translation('capell-ai-orchestrator::package.health_runnable_actions_label'),
+            label: $this->translate('capell-ai-orchestrator::package.health_runnable_actions_label'),
             passed: $notRunnableCapabilities === [],
             message: $notRunnableCapabilities === []
-                ? $this->translation('capell-ai-orchestrator::package.health_runnable_actions_passed')
-                : $this->translation('capell-ai-orchestrator::package.health_runnable_actions_failed', ['capabilities' => implode(', ', $notRunnableCapabilities)]),
+                ? $this->translate('capell-ai-orchestrator::package.health_runnable_actions_passed')
+                : $this->translate('capell-ai-orchestrator::package.health_runnable_actions_failed', ['capabilities' => implode(', ', $notRunnableCapabilities)]),
             remediation: $notRunnableCapabilities === []
                 ? null
-                : $this->translation('capell-ai-orchestrator::package.health_runnable_actions_remediation'),
+                : $this->translate('capell-ai-orchestrator::package.health_runnable_actions_remediation'),
             id: 'legacy.ai.orchestrator.runnable.actions',
         );
     }
@@ -241,13 +261,13 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
             $registry = app()->make(AIOrchestratorModuleRegistry::class);
         } catch (Throwable) {
             return [
-                $this->translation('capell-ai-orchestrator::package.health_runnable_actions_registry_missing'),
+                $this->translate('capell-ai-orchestrator::package.health_runnable_actions_registry_missing'),
             ];
         }
 
         if (! $registry instanceof AIOrchestratorModuleRegistry) {
             return [
-                $this->translation('capell-ai-orchestrator::package.health_runnable_actions_registry_missing'),
+                $this->translate('capell-ai-orchestrator::package.health_runnable_actions_registry_missing'),
             ];
         }
 
@@ -269,7 +289,7 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
     /**
      * @param  array<string, string>  $replace
      */
-    private function translation(string $key, array $replace = []): string
+    private function translate(string $key, array $replace = []): string
     {
         $translation = resolve(Translator::class)->get($key, $replace);
 

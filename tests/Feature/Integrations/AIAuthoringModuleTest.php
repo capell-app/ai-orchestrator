@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Capell\AIOrchestrator\Actions\ListAIOrchestratorCapabilitiesAction;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 
-it('registers the authoring module with three capabilities', function (): void {
+it('registers the authoring module with its four capabilities', function (): void {
     $registry = app(AIOrchestratorModuleRegistry::class);
 
     $modules = $registry->modules();
@@ -17,10 +17,10 @@ it('registers the authoring module with three capabilities', function (): void {
         ->all();
 
     expect($authoringCapabilityKeys)
-        ->toHaveCount(3)
+        ->toHaveCount(4)
         ->toContain('suggest-title')
         ->toContain('generate-content')
-        ->toContain('suggest-meta-description');
+        ->toContain('suggest-meta-description')->toContain('rewrite-content');
 
     $allCapabilityKeys = collect(ListAIOrchestratorCapabilitiesAction::run())
         ->pluck('key')
@@ -29,5 +29,5 @@ it('registers the authoring module with three capabilities', function (): void {
     expect($allCapabilityKeys)
         ->toContain('suggest-title')
         ->toContain('generate-content')
-        ->toContain('suggest-meta-description');
+        ->toContain('suggest-meta-description')->toContain('rewrite-content');
 });

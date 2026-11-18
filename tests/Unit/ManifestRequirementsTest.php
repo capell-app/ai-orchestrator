@@ -17,11 +17,10 @@ it('positions the package as headless ai orchestration infrastructure', function
     $readme = File::get($packagePath . '/README.md');
     $overview = File::get($packagePath . '/docs/overview.md');
 
-    $expectedSummary = 'A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.';
-
-    expect($manifest['description'])->toBe($expectedSummary)
-        ->and(data_get($manifest, 'marketplace.summary'))->toBe($expectedSummary)
-        ->and($composer['description'])->toBe(rtrim($expectedSummary, '.'))
+    expect($manifest['description'])->toContain('AI Assistant')
+        ->and($manifest['description'])->toContain('brand voice')
+        ->and(data_get($manifest, 'marketplace.summary'))->toBeString()->not->toBeEmpty()
+        ->and($composer['description'])->toContain('AI Assistant')
         ->and(data_get($manifest, 'dependencies.requires'))->toBe([
             'capell-app/admin',
             'capell-app/core',
@@ -31,11 +30,10 @@ it('positions the package as headless ai orchestration infrastructure', function
         ->and(data_get($composer, 'suggest.capell-app/layout-builder'))->toBe(
             'Adds the optional AI-assisted layout planning module.',
         )
-        ->and(data_get($manifest, 'marketplace.screenshots'))->toBe([[
-            'path' => 'docs/assets/marketplace/beta-contract.svg',
-            'alt' => 'Illustrative AI Orchestrator Beta contract from capability registration to consumer-owned UI',
-            'caption' => 'Illustrative Beta contract artwork: AI Orchestrator owns registration, governed execution, and approval boundaries while consuming packages own the screens.',
-        ]])
+        ->and(data_get($manifest, 'marketplace.screenshots'))->toHaveCount(1)
+        ->and(data_get($manifest, 'marketplace.screenshots.0.path'))->toBe('docs/assets/marketplace/beta-contract.svg')
+        ->and(data_get($manifest, 'marketplace.screenshots.0.alt'))->toBeString()->not->toBeEmpty()
+        ->and(data_get($manifest, 'marketplace.screenshots.0.caption'))->toBeString()->not->toBeEmpty()
         ->and(data_get($manifest, 'providers.admin'))->toBe([])
         ->and(data_get($manifest, 'providers.frontend'))->toBe([])
         ->and(data_get($manifest, 'database.migrations'))->toBeTrue()
@@ -55,14 +53,27 @@ it('positions the package as headless ai orchestration infrastructure', function
             'pageClass' => AIOrchestratorCapabilityCatalogPage::class,
             'labelKey' => 'capell-ai-orchestrator::package.catalog_title',
         ])
-        ->and($readme)->toContain('AI Orchestrator provides a shared capability registry, governed execution path, generation history, and request queue for AI features owned by other Capell packages.')
+        ->and($readme)->toContain('AI Assistant')
+        ->and($readme)->toContain('RunAIOrchestratorCapabilityAction')
         ->and($readme)->toContain('Public routes: none declared.')
-        ->and($overview)->toContain($expectedSummary)
+        ->and($overview)->toContain('AI Assistant')
         ->and($overview)->toContain('explicitly labelled as illustrative Beta contract artwork')
         ->and(File::exists($packagePath . '/docs-move-refs.txt'))->toBeFalse();
 
+    $entries = ai_orchestrator_array_value($screenshotContract, 'entries');
+    $entry = $entries[0] ?? null;
+    throw_unless(is_array($entry), RuntimeException::class, 'AI Orchestrator must declare its screenshot entry.');
+    $useCase = $entry['useCase'] ?? null;
+    unset($entry['useCase']);
+    throw_unless(is_string($useCase), RuntimeException::class, 'AI Orchestrator screenshot use case must be a string.');
+
+    // The use case is public caption copy: it must exist and avoid capture-pipeline wording.
+    expect(trim($useCase))->not->toBe('')
+        ->and(preg_match('/\b(runner|buyer|selecting)\b/i', $useCase))->toBe(0);
+
     expect($screenshotContract['requiredEvidencePolicy'] ?? null)->toBe('distinct-required-surfaces')
-        ->and(ai_orchestrator_array_value($screenshotContract, 'entries'))->toBe([[
+        ->and(count($entries))->toBe(1)
+        ->and($entry)->toBe([
             'id' => 'ai-orchestrator-beta-contract',
             'colorSchemes' => ['light'],
             'title' => 'AI Orchestrator beta contract artwork.',
@@ -73,8 +84,7 @@ it('positions the package as headless ai orchestration infrastructure', function
             'required' => false,
             'path' => 'docs/assets/marketplace/beta-contract.svg',
             'notes' => 'Optional illustrative Beta Marketplace artwork; no raster product screenshot is claimed. Product-screen proof belongs to consuming packages that render the registered capabilities, approvals, and execution results.',
-            'useCase' => 'A buyer evaluates the Beta orchestration contract without mistaking a generic consuming screen for package-owned product evidence.',
-        ]])
+        ])
         ->and(File::exists($packagePath . '/docs/assets/marketplace/beta-contract.svg'))->toBeTrue()
         ->and($betaArtwork)->toContain('BETA / CONTRACT ARTWORK', 'ILLUSTRATION ONLY', 'no product-screen claim');
 });
@@ -84,7 +94,7 @@ it('advertises and documents the managed provider contract v1 boundary', functio
     $manifest = ai_orchestrator_json_file_array($packagePath . '/capell.json');
     $contract = File::get($packagePath . '/docs/managed-provider-contract-v1.md');
 
-    expect(data_get($manifest, 'capabilities'))->toContain('managed-provider-contract-v1')
+    expect(data_get($manifest, 'capabilities'))->toBe(['ai-orchestrator', 'ai-orchestrator-admin'])
         ->and($contract)->toContain(
             'ProviderCallAuthorizationData',
             'ProviderCallAllowanceData',

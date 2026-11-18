@@ -19,7 +19,7 @@
             "required": false,
             "path": "docs/assets/marketplace/beta-contract.svg",
             "notes": "Optional illustrative Beta Marketplace artwork; no raster product screenshot is claimed. Product-screen proof belongs to consuming packages that render the registered capabilities, approvals, and execution results.",
-            "useCase": "A buyer evaluates the Beta orchestration contract without mistaking a generic consuming screen for package-owned product evidence."
+            "useCase": "The AI Orchestrator extension card, marked Beta."
         }
     ]
 }

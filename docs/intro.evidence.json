@@ -1,0 +1,77 @@
+[
+    {
+        "claim": "The AI Assistant button lets editors pick fields, add keywords and keep working while drafting runs in the background",
+        "evidence": [
+            "src/Support/Admin/AiAssistantPageResourceExtender.php",
+            "src/Actions/QueueAiAssistantGenerationAction.php",
+            "resources/lang/en/package.php"
+        ]
+    },
+    {
+        "claim": "Nothing reaches the live site until the editor reviews and saves",
+        "evidence": ["src/Support/Admin/AiAssistantPageResourceExtender.php"]
+    },
+    {
+        "claim": "An administrator picks the AI service, key, allowed models and brand voice",
+        "evidence": ["src/Filament/Settings/AIOrchestratorSettingsSchema.php"]
+    },
+    {
+        "claim": "Brand voice holds a tone, words to avoid and examples, and guides suggestions",
+        "evidence": [
+            "src/Support/Ai/BrandVoice.php",
+            "src/Support/Ai/PromptRepository.php",
+            "src/Providers/AIOrchestratorServiceProvider.php"
+        ]
+    },
+    {
+        "claim": "Works with your own account or a self-hosted Ollama",
+        "evidence": ["src/Filament/Settings/AIOrchestratorSettingsSchema.php"]
+    },
+    {
+        "claim": "Background processing has to be running",
+        "evidence": [
+            "src/Actions/QueueAiAssistantGenerationAction.php",
+            "config/capell-ai-orchestrator.php"
+        ]
+    },
+    {
+        "claim": "Emails and phone numbers are masked by default, names and addresses are not",
+        "evidence": [
+            "src/Support/Ai/Redaction/RegexPromptRedactor.php",
+            "config/capell-ai-orchestrator.php",
+            "src/Filament/Settings/AIOrchestratorSettingsSchema.php"
+        ]
+    },
+    {
+        "claim": "Title and description options and a content draft come back in the chosen language version",
+        "evidence": ["src/Support/Admin/AiAssistantPageResourceExtender.php"]
+    },
+    {
+        "claim": "Providers are OpenAI, Anthropic, Google Gemini and Ollama",
+        "evidence": ["src/Filament/Settings/AIOrchestratorSettingsSchema.php"]
+    },
+    {
+        "claim": "Prompt templates are editable and can each be switched on or off",
+        "evidence": ["src/Filament/Settings/AIOrchestratorSettingsSchema.php"]
+    },
+    {
+        "claim": "The key is stored encrypted and never shown again",
+        "evidence": [
+            "src/Settings/AIOrchestratorSettings.php",
+            "src/Filament/Settings/AIOrchestratorSettingsSchema.php"
+        ]
+    },
+    {
+        "claim": "Request and result text is cleared after 30 days and a usage record stays",
+        "evidence": [
+            "config/capell-ai-orchestrator.php",
+            "src/Actions/Ai/PruneAiGenerationPayloadsAction.php"
+        ]
+    },
+    {
+        "claim": "A read-only catalogue screen lists AI features under System",
+        "evidence": [
+            "src/Filament/Pages/AIOrchestratorCapabilityCatalogPage.php"
+        ]
+    }
+]

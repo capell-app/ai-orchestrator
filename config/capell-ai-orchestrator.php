@@ -18,6 +18,13 @@ return [
         'max_prompt_chars' => 32_000,
         'require_queue_for_web' => true,
         'max_tokens' => 4096,
+        // When not empty, only these models can be called. Add EU-hosted model names here to keep data in the EU.
+        'allowed_models' => [],
+        // Emails and phone numbers are masked in every provider request. Sites listed here are sent unmasked.
+        'redact_personal_data' => true,
+        'redaction_disabled_site_ids' => [],
+        // false leaves masked values masked in the output; true puts the originals back.
+        'restore_redacted_output' => false,
         'image_provider' => env('AI_IMAGE_PROVIDER', 'openai'),
         'image_model' => env('AI_IMAGE_MODEL', 'dall-e-3'),
         'image_size' => env('AI_IMAGE_SIZE', '1024x1024'),
@@ -38,6 +45,10 @@ return [
         'content_generation' => [
             'system' => 'You are a helpful ai-orchestrator that writes engaging, accessible, and SEO-friendly HTML page content. Prefer short paragraphs, meaningful headings (h2/h3), and occasional lists. Keep tone friendly and informative.',
             'user_template' => 'Generate or refactor content. Title: {{current_title}}. Keywords: {{keywords}}. Existing content: {{content}}. Target length: {{target_length}} words. Refactor existing: {{refactor}}. Output clean HTML only (paragraphs, h2/h3 headings, lists). Include a concise call to action where appropriate. Avoid scripts, styles, iframes, and external links.',
+        ],
+        'rewrite_content' => [
+            'system' => 'You are a careful copy editor. You rewrite the supplied text as asked and change nothing else. Keep the meaning, the facts, and the language of the original. Output clean HTML only (paragraphs, headings and lists that were already there).',
+            'user_template' => 'Task: {{mode}}. Extra instruction: {{instruction}}. Text to rewrite: {{content}}. Avoid scripts, styles, iframes, and external links.',
         ],
         'ai_content_brief' => [
             'system' => <<<'PROMPT'
@@ -130,7 +141,10 @@ PROMPT,
     ],
     'rate_limiting' => [
         'enabled' => true,
+        // Each bucket has its own limit per window: one user, one feature, and everyone together.
         'requests_per_minute' => 60,
+        'feature_requests_per_minute' => 120,
+        'global_requests_per_minute' => 600,
     ],
     'features' => [
         'title_generation' => [

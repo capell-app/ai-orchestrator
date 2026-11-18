@@ -22,10 +22,34 @@ class RateLimitCache
      */
     public function counter(string $key): array
     {
-        $value = $this->get($key, ['count' => 0]);
-        $count = is_array($value) ? ($value['count'] ?? 0) : 0;
+        $value = $this->get($key, 0);
+        $count = is_array($value) ? ($value['count'] ?? 0) : $value;
 
         return ['count' => is_numeric($count) ? (int) $count : 0];
+    }
+
+    /**
+     * Atomically add one hit to a counter and return the new total.
+     *
+     * Cache::add only creates the key when it is missing, so the window starts on
+     * the first hit and concurrent callers never overwrite each other's count.
+     */
+    public function hit(string $key, int $seconds): int
+    {
+        $store = Cache::driver($this->driver);
+        $store->add($key, 0, $seconds);
+
+        $value = $store->increment($key);
+
+        return is_int($value) ? $value : 1;
+    }
+
+    /**
+     * Give back a hit that was counted for an attempt that was then refused.
+     */
+    public function giveBack(string $key): void
+    {
+        Cache::driver($this->driver)->decrement($key);
     }
 
     public function put(string $key, mixed $value, int $seconds): void

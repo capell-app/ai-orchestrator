@@ -1,8 +1,8 @@
 ## What it does
 
-A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.
+A shared AI capability registry and execution contract for Capell packages, designed for governed prompts and package-owned AI workflows.
 
-AI Orchestrator provides the shared AI capability layer used by other Capell packages, such as AI Creator, Blog, Layout Builder, Media AI, SEO Suite, and Translation Manager. Those packages own the editor-facing actions that create, suggest, or apply content.
+AI Orchestrator provides the shared AI capability layer used by other Capell packages, such as AI Creator, Blog, Layout Builder, Media AI, SEO Checks, and Translation Manager. Those packages own the editor-facing actions that create, suggest, or apply content.
 
 Its marketplace diagram is explicitly labelled as illustrative Beta contract artwork, not a product-screen claim.
 

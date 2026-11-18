@@ -12,8 +12,10 @@ use Filament\Notifications\Notification;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Queue\Queueable;
+use RuntimeException;
 use Throwable;
 
 final class RunAiAssistantGenerationJob implements ShouldBeUnique, ShouldQueue
@@ -35,16 +37,22 @@ final class RunAiAssistantGenerationJob implements ShouldBeUnique, ShouldQueue
 
     public function handle(): void
     {
+        // Only a queued row is claimed. A Failed row is terminal, so a job retry never re-runs a
+        // provider call that already failed; a Running row is reclaimed only once its worker has
+        // gone quiet for longer than the job timeout, which means the worker died.
         $claimed = AiGenerationRequest::query()
             ->whereKey($this->requestId)
-            ->whereIn('status', [
-                AiGenerationRequestStatus::Queued,
-                AiGenerationRequestStatus::Running,
-                AiGenerationRequestStatus::Failed,
-            ])
+            ->where(function (Builder $query): void {
+                $query->where('status', AiGenerationRequestStatus::Queued)
+                    ->orWhere(function (Builder $stale): void {
+                        $stale->where('status', AiGenerationRequestStatus::Running)
+                            ->where('updated_at', '<=', now()->subSeconds($this->timeout + 30));
+                    });
+            })
             ->update([
                 'status' => AiGenerationRequestStatus::Running,
                 'error_message' => null,
+                'updated_at' => now(),
             ]);
 
         if ($claimed !== 1) {
@@ -71,13 +79,44 @@ final class RunAiAssistantGenerationJob implements ShouldBeUnique, ShouldQueue
 
             $this->notify($data->actor, 'ai_assistant_generation_completed', true);
         } catch (Throwable $exception) {
-            $request->update([
-                'status' => AiGenerationRequestStatus::Failed,
-                'error_message' => mb_substr($exception->getMessage(), 0, 2_000),
-            ]);
-            $this->notify($this->actor($request->payload), 'ai_assistant_generation_failed', false);
+            // The failure is recorded and reported once; the row is terminal, so the job does not
+            // rethrow into a queue retry that would pay for the same provider call again.
+            $this->markFailed($request, $exception);
+        }
+    }
 
-            throw $exception;
+    /**
+     * Called by the queue when the job times out or runs out of attempts, for example when the
+     * worker was killed, so no request is left Running with nobody working on it.
+     */
+    public function failed(?Throwable $exception): void
+    {
+        $request = AiGenerationRequest::query()->find($this->requestId);
+
+        if ($request instanceof AiGenerationRequest && $request->status === AiGenerationRequestStatus::Running) {
+            $this->markFailed($request, $exception ?? new RuntimeException('The AI generation worker stopped before finishing.'));
+        }
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function backoff(): array
+    {
+        return [10, 60];
+    }
+
+    private function markFailed(AiGenerationRequest $request, Throwable $exception): void
+    {
+        $updated = AiGenerationRequest::query()
+            ->whereKey($request->getKey())
+            ->where('status', AiGenerationRequestStatus::Running)
+            ->update(['status' => AiGenerationRequestStatus::Failed]);
+
+        if ($updated === 1) {
+            // Written through the model because error_message is an encrypted attribute.
+            $request->forceFill(['error_message' => mb_substr($exception->getMessage(), 0, 2_000)])->save();
+            $this->notify($this->actor($request->payload), 'ai_assistant_generation_failed', false);
         }
     }
 

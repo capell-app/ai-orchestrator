@@ -6,7 +6,7 @@
     "kind": "package",
     "capellApiVersion": "^1.0",
     "version": "2.0.0",
-    "description": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
+    "description": "Sets up the AI service, key and brand voice that Capell's AI features share, and adds an AI Assistant button to the page editor.",
     "product": {
         "group": "Capell AI",
         "tier": "free",
@@ -78,11 +78,7 @@
     },
     "settings": ["Capell\\AIOrchestrator\\Settings\\AIOrchestratorSettings"],
     "permissions": [],
-    "capabilities": [
-        "ai-orchestrator",
-        "ai-orchestrator-admin",
-        "managed-provider-contract-v1"
-    ],
+    "capabilities": ["ai-orchestrator", "ai-orchestrator-admin"],
     "security": {
         "riskTier": "standard",
         "publicSurface": {
@@ -108,7 +104,13 @@
                 "Capell\\AIOrchestrator\\Models\\ManagedProviderCall::$terminal_result"
             ],
             "hashedTokenFields": [],
-            "redactedOutputClasses": [],
+            "redactedOutputClasses": [
+                "Capell\\AIOrchestrator\\Actions\\ResolveAIOrchestratorRuntimeSettingsAction",
+                "Capell\\AIOrchestrator\\Filament\\Settings\\AIOrchestratorSettingsSchema",
+                "Capell\\AIOrchestrator\\Support\\Ai\\PrismProvider",
+                "Capell\\AIOrchestrator\\Support\\Ai\\Redaction\\RedactionResultData",
+                "Capell\\AIOrchestrator\\Support\\Ai\\Redaction\\RegexPromptRedactor"
+            ],
             "plaintextJustifications": []
         },
         "publicOutput": {
@@ -155,30 +157,49 @@
         "privateDocsRequested": true
     },
     "marketplace": {
-        "summary": "A shared AI capability registry and execution contract for Capell packages, designed for governed prompts, approvals, and package-owned AI workflows.",
-        "problem": "Our package developers need consistent approval and execution boundaries for AI workflows.",
-        "outcome": "AI-assisted packages share a governed execution and recording boundary.",
+        "summary": "Connect your own AI service once, then let editors draft titles, descriptions and text for review.",
+        "description": "For administrators who want AI help in the page editor with their own account and controls. Choose from OpenAI, Anthropic, Google Gemini or a self-hosted Ollama. Edit the prompt templates for titles, meta descriptions and content, and switch each one on or off. The key is stored encrypted and never shown again. The text of each request and result is cleared after 30 days by default, and a usage record stays. A read-only catalogue screen under System lists the AI features that other packages have registered. Spend limits are not included.",
+        "problem": "You want AI help with titles and descriptions without pasting your content into a random website.",
+        "outcome": "Editors get reviewable AI suggestions in the page editor, guided by your brand voice.",
         "faq": [
             {
-                "question": "Who owns the approval screens?",
-                "answer": "Consuming packages retain ownership of their editor actions and approval screens."
+                "question": "Can AI-written text go live without my editors checking it?",
+                "answer": "No. Suggestions are drafts. Nothing reaches the live site until an editor reviews a suggestion and saves the page."
             },
             {
-                "question": "What can administrators inspect?",
-                "answer": "The capability catalogue shows registered capability metadata."
+                "question": "Do I need my own account with an AI service?",
+                "answer": "Yes. You need your own account with an AI service, or a self-hosted Ollama, and the site's background processing has to be running. An administrator adds your key and lists the models that are allowed."
             },
             {
-                "question": "How are AI capabilities governed?",
-                "answer": "The shared execution path enforces runnable actions, authorisation and policy guardrails."
+                "question": "Does my visitors' or customers' personal information go to the AI service?",
+                "answer": "By default, emails and phone numbers are swapped for placeholders before text is sent. Names and addresses are not, so keep them out of anything you ask the assistant to work on."
+            },
+            {
+                "question": "Can I make the drafts sound like my organisation?",
+                "answer": "Yes. An administrator can set a brand voice with a tone, words to avoid and examples. Drafts come back in the language version the editor picked."
             }
         ],
         "screenshots": [
             {
                 "path": "docs/assets/marketplace/beta-contract.svg",
-                "alt": "Illustrative AI Orchestrator Beta contract from capability registration to consumer-owned UI",
-                "caption": "Illustrative Beta contract artwork: AI Orchestrator owns registration, governed execution, and approval boundaries while consuming packages own the screens."
+                "alt": "Dark illustration of four linked steps, register, govern, approve and show, marked as artwork and not a product screen.",
+                "caption": "An illustration of the flow from setup through human review to the screen where the result appears."
             }
         ],
         "categories": ["admin", "commercial"]
+    },
+    "contributionTraceability": {
+        "contributions": [
+            {
+                "type": "setting",
+                "key": "settings-class:ai-orchestrator",
+                "providerBucket": "runtime"
+            },
+            {
+                "type": "setting",
+                "key": "settings-schema:ai-orchestrator:AIOrchestratorSettingsSchema",
+                "providerBucket": "runtime"
+            }
+        ]
     }
 }

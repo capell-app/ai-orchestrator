@@ -4,10 +4,10 @@
     "scenarios": {
         "default": {
             "source": {
-                "ref": "c92ce184be4d91c372f35ca125ea25f6c1308599",
-                "commit": "c92ce184be4d91c372f35ca125ea25f6c1308599",
+                "ref": "7b71cb98ca3b2d5e857be115ba12ce58cd53f83d",
+                "commit": "7b71cb98ca3b2d5e857be115ba12ce58cd53f83d",
                 "providers": {
-                    "Providers/AIOrchestratorServiceProvider.php": "efeebee63e8378535536ff7ba9a829b4930d828726c98f05183f80209c8f664f",
+                    "Providers/AIOrchestratorServiceProvider.php": "b62e279c6c595dc6eba1dfc91c31a0de0a298ddf94944cf093841513ed64c310",
                     "Providers/MigrationMetadataServiceProvider.php": "a0b4f780698e64c734add0ddcc74da295c398b78b5ed1061de9d3208b3d4de20"
                 },
                 "configure": null
@@ -109,7 +109,7 @@
                     "Capell\\AIOrchestrator\\Support\\Ai\\PromptRepository": {
                         "concrete": [
                             "<package>/src/Providers/AIOrchestratorServiceProvider.php",
-                            "Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider(Illuminate\\Contracts\\Foundation\\Application $app):Capell\\AIOrchestrator\\Support\\Ai\\PromptRepository bound=Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider source=d715b07a25bbaf7d470c9a110b41dda5",
+                            "Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider(Illuminate\\Contracts\\Foundation\\Application $app):Capell\\AIOrchestrator\\Support\\Ai\\PromptRepository bound=Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider source=808a56da9ea5cf1dd58c29310687df70",
                             []
                         ],
                         "shared": true
@@ -136,6 +136,7 @@
                         "features.title_generation.enabled": true,
                         "features.title_generation.handler": "Capell\\Admin\\Actions\\AI\\GeneratePageTitleAction",
                         "features.title_generation.model": "gpt-4o",
+                        "prism.allowed_models": [],
                         "prism.connect_timeout_seconds": 5,
                         "prism.image_model": "dall-e-3",
                         "prism.image_provider": "openai",
@@ -145,7 +146,10 @@
                         "prism.max_tokens": "<secret>",
                         "prism.model": "gpt-4o",
                         "prism.provider": "openai",
+                        "prism.redact_personal_data": true,
+                        "prism.redaction_disabled_site_ids": [],
                         "prism.require_queue_for_web": true,
+                        "prism.restore_redacted_output": false,
                         "prism.retry_delay_ms": 500,
                         "prism.timeout_seconds": 30,
                         "prompts.ai_content_brief.max_tokens": "<secret>",
@@ -162,11 +166,15 @@
                         "prompts.content_generation.user_template": "Generate or refactor content. Title: {{current_title}}. Keywords: {{keywords}}. Existing content: {{content}}. Target length: {{target_length}} words. Refactor existing: {{refactor}}. Output clean HTML only (paragraphs, h2/h3 headings, lists). Include a concise call to action where appropriate. Avoid scripts, styles, iframes, and external links.",
                         "prompts.meta_description.system": "You are a helpful ai-orchestrator that writes accurate and engaging meta descriptions.",
                         "prompts.meta_description.user_template": "Write an SEO meta description (max 160 characters) for: {{content}}. Keywords: {{keywords}}.",
+                        "prompts.rewrite_content.system": "You are a careful copy editor. You rewrite the supplied text as asked and change nothing else. Keep the meaning, the facts, and the language of the original. Output clean HTML only (paragraphs, headings and lists that were already there).",
+                        "prompts.rewrite_content.user_template": "Task: {{mode}}. Extra instruction: {{instruction}}. Text to rewrite: {{content}}. Avoid scripts, styles, iframes, and external links.",
                         "prompts.title_generation.system": "You are a helpful ai-orchestrator that writes concise, SEO-friendly page titles.",
                         "prompts.title_generation.user_template": "Generate a compelling page title for the following content: {{content}}. Current title: {{current_title}}. Keywords: {{keywords}}. Limit to 70 characters.",
                         "queue.connection": null,
                         "queue.name": "ai",
                         "rate_limiting.enabled": true,
+                        "rate_limiting.feature_requests_per_minute": 120,
+                        "rate_limiting.global_requests_per_minute": 600,
                         "rate_limiting.requests_per_minute": 60,
                         "retention.generation_payload_days": 30
                     }
@@ -197,6 +205,7 @@
                     "capell-ai-orchestrator.features.title_generation.handler",
                     "capell-ai-orchestrator.features.title_generation.model",
                     "capell-ai-orchestrator.prism",
+                    "capell-ai-orchestrator.prism.allowed_models",
                     "capell-ai-orchestrator.prism.connect_timeout_seconds",
                     "capell-ai-orchestrator.prism.image_model",
                     "capell-ai-orchestrator.prism.image_provider",
@@ -206,7 +215,10 @@
                     "capell-ai-orchestrator.prism.max_tokens",
                     "capell-ai-orchestrator.prism.model",
                     "capell-ai-orchestrator.prism.provider",
+                    "capell-ai-orchestrator.prism.redact_personal_data",
+                    "capell-ai-orchestrator.prism.redaction_disabled_site_ids",
                     "capell-ai-orchestrator.prism.require_queue_for_web",
+                    "capell-ai-orchestrator.prism.restore_redacted_output",
                     "capell-ai-orchestrator.prism.retry_delay_ms",
                     "capell-ai-orchestrator.prism.timeout_seconds",
                     "capell-ai-orchestrator.prompts",
@@ -230,6 +242,9 @@
                     "capell-ai-orchestrator.prompts.meta_description",
                     "capell-ai-orchestrator.prompts.meta_description.system",
                     "capell-ai-orchestrator.prompts.meta_description.user_template",
+                    "capell-ai-orchestrator.prompts.rewrite_content",
+                    "capell-ai-orchestrator.prompts.rewrite_content.system",
+                    "capell-ai-orchestrator.prompts.rewrite_content.user_template",
                     "capell-ai-orchestrator.prompts.title_generation",
                     "capell-ai-orchestrator.prompts.title_generation.system",
                     "capell-ai-orchestrator.prompts.title_generation.user_template",
@@ -238,6 +253,8 @@
                     "capell-ai-orchestrator.queue.name",
                     "capell-ai-orchestrator.rate_limiting",
                     "capell-ai-orchestrator.rate_limiting.enabled",
+                    "capell-ai-orchestrator.rate_limiting.feature_requests_per_minute",
+                    "capell-ai-orchestrator.rate_limiting.global_requests_per_minute",
                     "capell-ai-orchestrator.rate_limiting.requests_per_minute",
                     "capell-ai-orchestrator.retention",
                     "capell-ai-orchestrator.retention.generation_payload_days"
@@ -435,7 +452,7 @@
                     "Capell\\AIOrchestrator\\Support\\Ai\\PromptRepository": {
                         "concrete": [
                             "<package>/src/Providers/AIOrchestratorServiceProvider.php",
-                            "Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider(Illuminate\\Contracts\\Foundation\\Application $app):Capell\\AIOrchestrator\\Support\\Ai\\PromptRepository bound=Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider source=d715b07a25bbaf7d470c9a110b41dda5",
+                            "Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider(Illuminate\\Contracts\\Foundation\\Application $app):Capell\\AIOrchestrator\\Support\\Ai\\PromptRepository bound=Capell\\AIOrchestrator\\Providers\\AIOrchestratorServiceProvider source=808a56da9ea5cf1dd58c29310687df70",
                             []
                         ],
                         "shared": true
@@ -462,6 +479,7 @@
                         "features.title_generation.enabled": true,
                         "features.title_generation.handler": "Capell\\Admin\\Actions\\AI\\GeneratePageTitleAction",
                         "features.title_generation.model": "gpt-4o",
+                        "prism.allowed_models": [],
                         "prism.connect_timeout_seconds": 5,
                         "prism.image_model": "dall-e-3",
                         "prism.image_provider": "openai",
@@ -471,7 +489,10 @@
                         "prism.max_tokens": "<secret>",
                         "prism.model": "gpt-4o",
                         "prism.provider": "openai",
+                        "prism.redact_personal_data": true,
+                        "prism.redaction_disabled_site_ids": [],
                         "prism.require_queue_for_web": true,
+                        "prism.restore_redacted_output": false,
                         "prism.retry_delay_ms": 500,
                         "prism.timeout_seconds": 30,
                         "prompts.ai_content_brief.max_tokens": "<secret>",
@@ -488,11 +509,15 @@
                         "prompts.content_generation.user_template": "Generate or refactor content. Title: {{current_title}}. Keywords: {{keywords}}. Existing content: {{content}}. Target length: {{target_length}} words. Refactor existing: {{refactor}}. Output clean HTML only (paragraphs, h2/h3 headings, lists). Include a concise call to action where appropriate. Avoid scripts, styles, iframes, and external links.",
                         "prompts.meta_description.system": "You are a helpful ai-orchestrator that writes accurate and engaging meta descriptions.",
                         "prompts.meta_description.user_template": "Write an SEO meta description (max 160 characters) for: {{content}}. Keywords: {{keywords}}.",
+                        "prompts.rewrite_content.system": "You are a careful copy editor. You rewrite the supplied text as asked and change nothing else. Keep the meaning, the facts, and the language of the original. Output clean HTML only (paragraphs, headings and lists that were already there).",
+                        "prompts.rewrite_content.user_template": "Task: {{mode}}. Extra instruction: {{instruction}}. Text to rewrite: {{content}}. Avoid scripts, styles, iframes, and external links.",
                         "prompts.title_generation.system": "You are a helpful ai-orchestrator that writes concise, SEO-friendly page titles.",
                         "prompts.title_generation.user_template": "Generate a compelling page title for the following content: {{content}}. Current title: {{current_title}}. Keywords: {{keywords}}. Limit to 70 characters.",
                         "queue.connection": null,
                         "queue.name": "ai",
                         "rate_limiting.enabled": true,
+                        "rate_limiting.feature_requests_per_minute": 120,
+                        "rate_limiting.global_requests_per_minute": 600,
                         "rate_limiting.requests_per_minute": 60,
                         "retention.generation_payload_days": 30
                     }
@@ -523,6 +548,7 @@
                     "capell-ai-orchestrator.features.title_generation.handler",
                     "capell-ai-orchestrator.features.title_generation.model",
                     "capell-ai-orchestrator.prism",
+                    "capell-ai-orchestrator.prism.allowed_models",
                     "capell-ai-orchestrator.prism.connect_timeout_seconds",
                     "capell-ai-orchestrator.prism.image_model",
                     "capell-ai-orchestrator.prism.image_provider",
@@ -532,7 +558,10 @@
                     "capell-ai-orchestrator.prism.max_tokens",
                     "capell-ai-orchestrator.prism.model",
                     "capell-ai-orchestrator.prism.provider",
+                    "capell-ai-orchestrator.prism.redact_personal_data",
+                    "capell-ai-orchestrator.prism.redaction_disabled_site_ids",
                     "capell-ai-orchestrator.prism.require_queue_for_web",
+                    "capell-ai-orchestrator.prism.restore_redacted_output",
                     "capell-ai-orchestrator.prism.retry_delay_ms",
                     "capell-ai-orchestrator.prism.timeout_seconds",
                     "capell-ai-orchestrator.prompts",
@@ -556,6 +585,9 @@
                     "capell-ai-orchestrator.prompts.meta_description",
                     "capell-ai-orchestrator.prompts.meta_description.system",
                     "capell-ai-orchestrator.prompts.meta_description.user_template",
+                    "capell-ai-orchestrator.prompts.rewrite_content",
+                    "capell-ai-orchestrator.prompts.rewrite_content.system",
+                    "capell-ai-orchestrator.prompts.rewrite_content.user_template",
                     "capell-ai-orchestrator.prompts.title_generation",
                     "capell-ai-orchestrator.prompts.title_generation.system",
                     "capell-ai-orchestrator.prompts.title_generation.user_template",
@@ -564,6 +596,8 @@
                     "capell-ai-orchestrator.queue.name",
                     "capell-ai-orchestrator.rate_limiting",
                     "capell-ai-orchestrator.rate_limiting.enabled",
+                    "capell-ai-orchestrator.rate_limiting.feature_requests_per_minute",
+                    "capell-ai-orchestrator.rate_limiting.global_requests_per_minute",
                     "capell-ai-orchestrator.rate_limiting.requests_per_minute",
                     "capell-ai-orchestrator.retention",
                     "capell-ai-orchestrator.retention.generation_payload_days"

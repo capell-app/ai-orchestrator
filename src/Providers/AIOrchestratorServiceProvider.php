@@ -133,7 +133,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
             $app->make(ManagedProviderCallRepository::class),
         ));
 
-        $this->app->singleton(PromptRepository::class, fn (Application $app): PromptRepository => new PromptRepository($app->make(AIOrchestratorRuntimeSettingsData::class)->prompts));
+        $this->app->singleton(PromptRepository::class, fn (Application $app): PromptRepository => new PromptRepository($app->make(AIOrchestratorRuntimeSettingsData::class)->prompts, $app->make(AIOrchestratorRuntimeSettingsData::class)->brandVoice));
 
         $this->app->singleton(AiResponseParser::class, fn (): AiResponseParser => new AiResponseParser);
 
