@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Capell\AIOrchestrator\Data\AIOrchestratorRuntimeSettingsData;
 use Capell\AIOrchestrator\Health\AiOrchestratorHealthCheck;
-use Capell\AIOrchestrator\Integrations\LayoutBuilder\PreviewLayoutBuilderLayoutPlanAction;
+use Capell\AIOrchestrator\Integrations\Authoring\Capabilities\SuggestTitleCapabilityAction;
 use Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\AIOrchestrator\Tests\Fixtures\Autoload\AIOrchestratorModuleFixture;
@@ -12,20 +12,15 @@ use Capell\AIOrchestrator\Tests\Fixtures\Autoload\NotRunnableAIOrchestratorActio
 use Capell\Core\Data\Diagnostics\DoctorCheckResultData;
 use Capell\Core\Facades\CapellCore;
 
-beforeEach(function (): void {
-    CapellCore::forcePackageInstalled('capell-app/layout-builder', false);
-});
-
 it('runs real ai orchestrator health diagnostics', function (): void {
     CapellCore::forcePackageInstalled(AIOrchestratorServiceProvider::$packageName);
-    CapellCore::forcePackageInstalled('capell-app/layout-builder');
     (new AIOrchestratorServiceProvider(app()))->registeringPackage();
     app()->instance(AIOrchestratorRuntimeSettingsData::class, new AIOrchestratorRuntimeSettingsData(['provider' => 'openai', 'model' => 'gpt-4o', 'api_key' => 'test-key'], [], []));
 
     $results = AiOrchestratorHealthCheck::runDiagnostics();
     $check = new AiOrchestratorHealthCheck;
 
-    expect($results)->toHaveCount(7)
+    expect($results)->toHaveCount(6)
         ->and($results->every(static fn (mixed $result): bool => $result instanceof DoctorCheckResultData))->toBeTrue()
         ->and($results
             ->filter(static fn (DoctorCheckResultData $result): bool => ! $result->passed)
@@ -35,7 +30,6 @@ it('runs real ai orchestrator health diagnostics', function (): void {
         ->and(AiOrchestratorHealthCheck::passed())->toBeTrue()
         ->and($check->registryBindingIsHealthy())->toBeTrue()
         ->and($check->moduleCount())->toBeGreaterThan(0)
-        ->and($check->layoutBuilderModuleIsAvailable())->toBeTrue()
         ->and($check->duplicateCapabilityProtectionIsHealthy())->toBeTrue()
         ->and($check->notRunnableCapabilities())->toBe([])
         ->and($results->first()?->label)->toBe(__('capell-ai-orchestrator::package.health_package_installed_label'));
@@ -62,7 +56,6 @@ it('fails health when the registry binding is broken', function (): void {
     expect($check->registryBindingIsHealthy())->toBeFalse()
         ->and($check->registryBindingCheck()->passed)->toBeFalse()
         ->and($check->moduleCount())->toBe(0)
-        ->and($check->layoutBuilderModuleIsAvailable())->toBeTrue()
         ->and($check->notRunnableCapabilities())->toBe([
             __('capell-ai-orchestrator::package.health_runnable_actions_registry_missing'),
         ])
@@ -75,7 +68,6 @@ it('fails health when no modules are registered', function (): void {
     $check = new AiOrchestratorHealthCheck;
 
     expect($check->moduleRegistryCheck()->passed)->toBeFalse()
-        ->and($check->layoutBuilderModuleCheck()->passed)->toBeTrue()
         ->and(AiOrchestratorHealthCheck::passed())->toBeFalse();
 });
 
@@ -103,7 +95,7 @@ it('confirms duplicate capability protection without mutating the runtime regist
 
     expect($check->duplicateCapabilityProtectionIsHealthy())->toBeTrue()
         ->and($registry->modules())->toHaveCount($moduleCount)
-        ->and(class_exists(PreviewLayoutBuilderLayoutPlanAction::class))->toBeTrue();
+        ->and(class_exists(SuggestTitleCapabilityAction::class))->toBeTrue();
 });
 
 it('reports a missing key, an unknown model and a provider mismatch from the doctor check', function (array $provider, array $messages): void {

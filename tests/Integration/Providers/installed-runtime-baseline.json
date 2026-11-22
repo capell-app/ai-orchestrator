@@ -4,10 +4,10 @@
     "scenarios": {
         "default": {
             "source": {
-                "ref": "7b71cb98ca3b2d5e857be115ba12ce58cd53f83d",
-                "commit": "7b71cb98ca3b2d5e857be115ba12ce58cd53f83d",
+                "ref": "HEAD",
+                "commit": "a4469817484489e6c84be0f327d7f039ec925535",
                 "providers": {
-                    "Providers/AIOrchestratorServiceProvider.php": "b62e279c6c595dc6eba1dfc91c31a0de0a298ddf94944cf093841513ed64c310",
+                    "Providers/AIOrchestratorServiceProvider.php": "2d25f13f9383d5f7ac4ca86558f6450054f9df52e5ee1d48a95aa16ad12f9666",
                     "Providers/MigrationMetadataServiceProvider.php": "a0b4f780698e64c734add0ddcc74da295c398b78b5ed1061de9d3208b3d4de20"
                 },
                 "configure": null
@@ -124,9 +124,12 @@
                         "features.ai_content_brief.enabled": true,
                         "features.ai_content_brief.handler": null,
                         "features.ai_content_brief.model": "gpt-4o",
+                        "features.ai_creator.draft_authorization_seconds": 300,
+                        "features.ai_creator.draft_input_budget": 12000,
                         "features.ai_creator.enabled": true,
                         "features.ai_creator.handler": null,
                         "features.ai_creator.model": "gpt-4o",
+                        "features.ai_creator.schema_mode": true,
                         "features.content_generation.enabled": true,
                         "features.content_generation.handler": "Capell\\AIOrchestrator\\Actions\\Ai\\GeneratorPageContentAction",
                         "features.content_generation.model": "gpt-4o",
@@ -189,9 +192,12 @@
                     "capell-ai-orchestrator.features.ai_content_brief.handler",
                     "capell-ai-orchestrator.features.ai_content_brief.model",
                     "capell-ai-orchestrator.features.ai_creator",
+                    "capell-ai-orchestrator.features.ai_creator.draft_authorization_seconds",
+                    "capell-ai-orchestrator.features.ai_creator.draft_input_budget",
                     "capell-ai-orchestrator.features.ai_creator.enabled",
                     "capell-ai-orchestrator.features.ai_creator.handler",
                     "capell-ai-orchestrator.features.ai_creator.model",
+                    "capell-ai-orchestrator.features.ai_creator.schema_mode",
                     "capell-ai-orchestrator.features.content_generation",
                     "capell-ai-orchestrator.features.content_generation.enabled",
                     "capell-ai-orchestrator.features.content_generation.handler",
@@ -305,7 +311,7 @@
                                 []
                             ],
                             "layout-builder": [
-                                "Capell\\AIOrchestrator\\Integrations\\LayoutBuilder\\LayoutBuilderAIOrchestratorModule",
+                                "Capell\\LayoutBuilder\\Bridges\\AiOrchestrator\\LayoutBuilderAIOrchestratorModule",
                                 []
                             ]
                         }
@@ -467,9 +473,12 @@
                         "features.ai_content_brief.enabled": true,
                         "features.ai_content_brief.handler": null,
                         "features.ai_content_brief.model": "gpt-4o",
+                        "features.ai_creator.draft_authorization_seconds": 300,
+                        "features.ai_creator.draft_input_budget": 12000,
                         "features.ai_creator.enabled": true,
                         "features.ai_creator.handler": null,
                         "features.ai_creator.model": "gpt-4o",
+                        "features.ai_creator.schema_mode": true,
                         "features.content_generation.enabled": true,
                         "features.content_generation.handler": "Capell\\AIOrchestrator\\Actions\\Ai\\GeneratorPageContentAction",
                         "features.content_generation.model": "gpt-4o",
@@ -532,9 +541,12 @@
                     "capell-ai-orchestrator.features.ai_content_brief.handler",
                     "capell-ai-orchestrator.features.ai_content_brief.model",
                     "capell-ai-orchestrator.features.ai_creator",
+                    "capell-ai-orchestrator.features.ai_creator.draft_authorization_seconds",
+                    "capell-ai-orchestrator.features.ai_creator.draft_input_budget",
                     "capell-ai-orchestrator.features.ai_creator.enabled",
                     "capell-ai-orchestrator.features.ai_creator.handler",
                     "capell-ai-orchestrator.features.ai_creator.model",
+                    "capell-ai-orchestrator.features.ai_creator.schema_mode",
                     "capell-ai-orchestrator.features.content_generation",
                     "capell-ai-orchestrator.features.content_generation.enabled",
                     "capell-ai-orchestrator.features.content_generation.handler",
@@ -613,6 +625,14 @@
                     "settings.repositories.ai-orchestrator.type": "Capell\\AIOrchestrator\\Settings\\AIOrchestratorSettingsRepository"
                 },
                 "registries": {
+                    "Capell\\AIOrchestrator\\Support\\AIOrchestratorModuleRegistry": {
+                        "modules": {
+                            "layout-builder": [
+                                "Capell\\LayoutBuilder\\Bridges\\AiOrchestrator\\LayoutBuilderAIOrchestratorModule",
+                                []
+                            ]
+                        }
+                    },
                     "Capell\\Core\\Support\\Migration\\MigrationRootRegistry": {
                         "roots": {
                             "capell-app/ai-orchestrator": [

@@ -1,7 +1,8 @@
 {
     "package": "ai-orchestrator",
     "composerName": "capell-app/ai-orchestrator",
-    "generatedFor": "deployment-screenshot-runner",
+    "generatedFor": "shared-capell-screenshot-runner",
+    "provenancePolicy": "runner-only-v1",
     "requiresInstalledPackage": true,
     "auditStatus": "visual-exempt",
     "auditReason": "AI Orchestrator is a headless capability registry and execution contract. The optional Marketplace asset is explicitly illustrative; product-screen proof belongs to consuming packages that render registered capabilities, approvals, and execution results.",

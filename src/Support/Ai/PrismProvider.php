@@ -16,6 +16,7 @@ use Capell\AIOrchestrator\Enums\Ai\ProviderAttemptOutcome;
 use Capell\AIOrchestrator\Enums\Ai\RetryClassification;
 use Capell\AIOrchestrator\Exceptions\AiContractRefusedException;
 use Capell\AIOrchestrator\Exceptions\AIOrchestratorPolicyGuardrailException;
+use Capell\AIOrchestrator\Exceptions\AiProviderOutputTruncatedException;
 use Capell\AIOrchestrator\Exceptions\ManagedProviderDispatchInterruptedException;
 use Capell\AIOrchestrator\Exceptions\ManagedProviderPersistenceException;
 use Capell\AIOrchestrator\Exceptions\ManagedProviderResultCommittedException;
@@ -31,10 +32,14 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
 use LogicException;
+use Prism\Prism\Enums\FinishReason;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Exceptions\PrismProviderOverloadedException;
 use Prism\Prism\Exceptions\PrismRateLimitedException;
 use Prism\Prism\Facades\Prism;
+use Prism\Prism\Schema\RawSchema;
+use Prism\Prism\Structured\Response as PrismStructuredResponse;
+use Prism\Prism\Text\Response as PrismTextResponse;
 use RuntimeException;
 use Throwable;
 
@@ -155,6 +160,11 @@ class PrismProvider
             // Two inputs that differ only in masked values must not share an authorisation.
             'redaction' => $redaction instanceof RedactionResultData ? hash('sha256', json_encode($redaction->replacements, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)) : null,
         ];
+        // Added only in schema mode, so digests issued before schema mode existed stay valid.
+        $schema = $this->responseSchema($params);
+        if ($schema !== null) {
+            $identity['response_schema'] = $this->schemaDigest($schema);
+        }
 
         return hash('sha256', json_encode($identity, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     }
@@ -274,6 +284,7 @@ class PrismProvider
         $providerName = $this->scalarString($this->config['provider'] ?? 'openai');
         $maxTokens = isset($params['max_tokens']) ? $this->intFrom($params['max_tokens']) : $this->intConfig('max_tokens', 512);
         $temperature = isset($params['temperature']) ? $this->floatFrom($params['temperature']) : 0.7;
+        $responseSchema = $this->responseSchema($params);
         $maximumAttempts = min($this->maxRetries, $authorization->allowance->requestCount);
         $leaseSeconds = $this->managedLeaseSeconds();
         $recoverySeconds = max(3600, $this->intConfig('managed_recovery_seconds', 2_592_000));
@@ -309,18 +320,7 @@ class PrismProvider
             }
 
             try {
-                $response = Prism::text()
-                    ->using($this->resolveProvider($providerName), $model)
-                    ->withSystemPrompt($systemPrompt)
-                    ->withPrompt($userMessage)
-                    ->withMaxTokens($maxTokens)
-                    ->usingTemperature($temperature)
-                    ->withClientOptions([
-                        'timeout' => max(1, $this->intConfig('timeout_seconds', 30)),
-                        'connect_timeout' => max(1, $this->intConfig('connect_timeout_seconds', 5)),
-                        'headers' => ['Idempotency-Key' => $authorization->providerHeaderIdentity()->value],
-                    ])
-                    ->asText();
+                $response = $this->sendPrism($providerName, $model, $systemPrompt, $userMessage, $maxTokens, $temperature, $authorization->providerHeaderIdentity()->value, $responseSchema);
                 $usageValue = $this->usageFromResponse($response);
                 if ($usageValue === null) {
                     $attemptEvidence = new ProviderAttemptEvidenceData($authorization->providerCallIdempotencyKey, $attemptNumber, ProviderAttemptOutcome::InvalidUsage, RetryClassification::Terminal, null, ContractRefusal::MissingUsage->value);
@@ -338,6 +338,9 @@ class PrismProvider
                     $usage->assertWithin($authorization);
                 } catch (AiContractRefusedException $exception) {
                     return $this->persistManagedResult($repository, $authorization, $leaseToken, ProviderExecutionResultData::refused($authorization->providerCallIdempotencyKey, $exception->refusal, $this->errorCode($exception), RetryClassification::Terminal, $attempts), $recoverySeconds);
+                }
+                if ($responseSchema !== null && $response->finishReason === FinishReason::Length) {
+                    return $this->persistManagedResult($repository, $authorization, $leaseToken, new ProviderExecutionResultData($authorization->providerCallIdempotencyKey, ExecutionValidity::Invalid, null, null, RetryClassification::Terminal, ContractRefusal::OutputTruncated, ContractRefusal::OutputTruncated->value, null, null, false, $attempts), $recoverySeconds);
                 }
                 try {
                     $validatedOutput = $outputValidator->validate($validatedOutputIdentity, $this->restoredOutput($response->text, $redaction));
@@ -469,6 +472,10 @@ class PrismProvider
             'site_id' => $siteId,
             'redaction' => $redaction instanceof RedactionResultData ? hash('sha256', json_encode($redaction->replacements, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)) : null,
         ];
+        $responseSchema = $this->responseSchema($params);
+        if ($responseSchema !== null) {
+            $requestIdentity['response_schema'] = $this->schemaDigest($responseSchema);
+        }
         $cacheKey = $this->generationCache?->keyForRequest($requestIdentity);
 
         if ($cacheKey !== null) {
@@ -500,18 +507,11 @@ class PrismProvider
 
         while ($attempt < $this->maxRetries) {
             try {
-                $response = Prism::text()
-                    ->using($this->resolveProvider($providerName), $model)
-                    ->withSystemPrompt($systemPrompt)
-                    ->withPrompt($userMessage)
-                    ->withMaxTokens($maxTokens)
-                    ->usingTemperature($temperature)
-                    ->withClientOptions([
-                        'timeout' => max(1, $this->intConfig('timeout_seconds', 30)),
-                        'connect_timeout' => max(1, $this->intConfig('connect_timeout_seconds', 5)),
-                        'headers' => ['Idempotency-Key' => $idempotencyKey],
-                    ])
-                    ->asText();
+                $response = $this->sendPrism($providerName, $model, $systemPrompt, $userMessage, $maxTokens, $temperature, $idempotencyKey, $responseSchema);
+                if ($responseSchema !== null && $response->finishReason === FinishReason::Length) {
+                    // Not retryable: a second request would be cut off at the same limit.
+                    throw new AiProviderOutputTruncatedException($model);
+                }
 
                 $duration = microtime(true) - $startTime;
                 $this->resetCircuitBreaker($model);
@@ -582,6 +582,76 @@ class PrismProvider
         }
 
         throw $lastException ?? new RuntimeException('Unknown AI provider error');
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $params
+     * @return array<string, mixed>|null
+     */
+    private function responseSchema(array $params): ?array
+    {
+        $schema = $params['response_schema'] ?? null;
+
+        if (! is_array($schema) || $schema === []) {
+            return null;
+        }
+
+        $normalised = [];
+        foreach ($schema as $key => $value) {
+            $normalised[(string) $key] = $value;
+        }
+
+        return $normalised;
+    }
+
+    /** @param array<string, mixed> $schema */
+    private function schemaDigest(array $schema): string
+    {
+        return hash('sha256', json_encode($schema, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * One request to Prism, as plain text or, when a JSON Schema is given, as a structured request
+     * so the provider is asked for the schema's shape rather than prose we then parse.
+     *
+     * @param  array<string, mixed>|null  $responseSchema
+     */
+    private function sendPrism(
+        string $providerName,
+        string $model,
+        string $systemPrompt,
+        string $userMessage,
+        int $maxTokens,
+        float $temperature,
+        string $idempotencyKey,
+        ?array $responseSchema,
+    ): PrismTextResponse|PrismStructuredResponse {
+        $clientOptions = [
+            'timeout' => max(1, $this->intConfig('timeout_seconds', 30)),
+            'connect_timeout' => max(1, $this->intConfig('connect_timeout_seconds', 5)),
+            'headers' => ['Idempotency-Key' => $idempotencyKey],
+        ];
+
+        if ($responseSchema === null) {
+            return Prism::text()
+                ->using($this->resolveProvider($providerName), $model)
+                ->withSystemPrompt($systemPrompt)
+                ->withPrompt($userMessage)
+                ->withMaxTokens($maxTokens)
+                ->usingTemperature($temperature)
+                ->withClientOptions($clientOptions)
+                ->asText();
+        }
+
+        return Prism::structured()
+            ->using($this->resolveProvider($providerName), $model)
+            ->withSchema(new RawSchema('capell_response', $responseSchema))
+            ->withSystemPrompt($systemPrompt)
+            ->withPrompt($userMessage)
+            ->withMaxTokens($maxTokens)
+            ->usingTemperature($temperature)
+            ->withClientOptions($clientOptions)
+            ->asStructured();
     }
 
     private function currentFailures(?string $model = null): int

@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Capell\AIOrchestrator\Tests\Fixtures;
 
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 
-final class AiAssistantFormHost extends Component implements HasSchemas
+final class AiAssistantFormHost extends Component implements HasActions, HasSchemas
 {
+    use InteractsWithActions;
     use InteractsWithSchemas;
 
     /** @var array<string, mixed> */

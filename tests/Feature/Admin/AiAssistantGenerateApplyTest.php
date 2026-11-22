@@ -8,6 +8,12 @@ use Capell\AIOrchestrator\Models\AiGenerationRequest;
 use Capell\AIOrchestrator\Support\Admin\AiAssistantPageResourceExtender;
 use Capell\AIOrchestrator\Support\Ai\AiResponse;
 use Capell\AIOrchestrator\Support\Ai\PrismProvider;
+use Capell\AIOrchestrator\Tests\Fixtures\AiAssistantFormHost;
+use Capell\Core\Actions\Ai\HasUnreviewedAiContentAction;
+use Capell\Core\Enums\AiDisclosure;
+use Capell\Core\Models\AiProvenance;
+use Capell\Core\Models\Page;
+use Capell\Tests\Fixtures\Models\User;
 use Capell\Tests\Support\SchemaStateHarness;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
@@ -216,4 +222,58 @@ it('applies nothing when no translation matches the target language', function (
 
     expect(asArray($translations['uuid-en'] ?? null)['title'])->toBe('Old EN')
         ->and(asArray($translations['uuid-fr'] ?? null)['title'])->toBe('Old FR');
+});
+
+/** @param array<string, mixed> $data */
+function applyAiAssistantSelectionsToPage(Page $page, array $data): AiAssistantFormHost
+{
+    $host = new AiAssistantFormHost;
+    $host->record = $page;
+    $host->data = ['translations' => applyFormTranslations()];
+    resolve(AiAssistantPageResourceExtender::class)->actions()[0]->livewire($host)->call(['data' => $data]);
+
+    return $host;
+}
+
+it('records each applied field as unreviewed AI content, so the page cannot publish until a person reviews it', function (): void {
+    config()->set('capell-ai-orchestrator.prism.provider', 'openai');
+    config()->set('capell-ai-orchestrator.prism.model', 'gpt-4o-mini');
+    $editor = User::factory()->create();
+    $this->actingAs($editor);
+    $page = Page::factory()->create();
+
+    expect(HasUnreviewedAiContentAction::run($page))->toBeFalse();
+
+    $host = applyAiAssistantSelectionsToPage($page, [
+        'targetLanguageId' => 2,
+        'fields' => ['title', 'meta'],
+        'apply' => ['title' => 'New FR Title', 'meta' => 'New FR Meta', 'content' => 'Not selected'],
+    ]);
+
+    $rows = AiProvenance::query()
+        ->where('pageable_type', $page->getMorphClass())
+        ->where('pageable_id', $page->getKey())
+        ->orderBy('field')
+        ->get();
+
+    expect(asArray(asArray($host->data['translations'] ?? null)['uuid-fr'] ?? null)['title'])->toBe('New FR Title')
+        ->and($rows->map(fn (AiProvenance $row): array => [$row->field, $row->language_id, $row->disclosure, $row->capability, $row->provider, $row->model, $row->actor_id])->all())
+        ->toBe([
+            ['meta.description', 2, AiDisclosure::Generated, 'ai-orchestrator.assistant.meta', 'openai', 'gpt-4o-mini', $editor->getKey()],
+            ['title', 2, AiDisclosure::Generated, 'ai-orchestrator.assistant.title', 'openai', 'gpt-4o-mini', $editor->getKey()],
+        ])
+        ->and(HasUnreviewedAiContentAction::run($page))->toBeTrue();
+});
+
+it('records nothing when no assistant output reached the page', function (): void {
+    $page = Page::factory()->create();
+
+    applyAiAssistantSelectionsToPage($page, [
+        'targetLanguageId' => 99,
+        'fields' => ['title'],
+        'apply' => ['title' => 'Should not land'],
+    ]);
+
+    expect(AiProvenance::query()->count())->toBe(0)
+        ->and(HasUnreviewedAiContentAction::run($page))->toBeFalse();
 });

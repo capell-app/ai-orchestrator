@@ -171,6 +171,14 @@ PROMPT,
             'enabled' => true,
             'model' => 'gpt-4o',
             'handler' => null,
+            // Ask the provider for the site-spec JSON Schema instead of parsing prose. Turn off
+            // only for a provider or model without structured output.
+            'schema_mode' => true,
+            // Editor drafts (block copy, SEO metadata, page from prompt) are off unless the owner
+            // has configured a provider key. These are the limits for one draft on a self-hosted
+            // install, which spends the owner's own key and no credits.
+            'draft_input_budget' => 12000,
+            'draft_authorization_seconds' => 300,
         ],
     ],
     'cache' => [

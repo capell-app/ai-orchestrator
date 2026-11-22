@@ -25,11 +25,10 @@ it('positions the package as headless ai orchestration infrastructure', function
             'capell-app/admin',
             'capell-app/core',
         ])
-        ->and(data_get($manifest, 'dependencies.supports'))->toContain('capell-app/layout-builder')
+        // Layout Builder owns its AI module bridge, so AI Orchestrator no longer names it.
+        ->and(data_get($manifest, 'dependencies.supports'))->not->toContain('capell-app/layout-builder')
         ->and(data_get($composer, 'require.capell-app/layout-builder'))->toBeNull()
-        ->and(data_get($composer, 'suggest.capell-app/layout-builder'))->toBe(
-            'Adds the optional AI-assisted layout planning module.',
-        )
+        ->and(data_get($composer, 'suggest.capell-app/layout-builder'))->toBeNull()
         ->and(data_get($manifest, 'marketplace.screenshots'))->toHaveCount(1)
         ->and(data_get($manifest, 'marketplace.screenshots.0.path'))->toBe('docs/assets/marketplace/beta-contract.svg')
         ->and(data_get($manifest, 'marketplace.screenshots.0.alt'))->toBeString()->not->toBeEmpty()

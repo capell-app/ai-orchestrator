@@ -12,7 +12,6 @@ use Capell\AIOrchestrator\Events\Ai\AiGenerationCompleted;
 use Capell\AIOrchestrator\Events\Ai\AiGenerationFailed;
 use Capell\AIOrchestrator\Filament\Settings\AIOrchestratorSettingsSchema;
 use Capell\AIOrchestrator\Integrations\Authoring\AIAuthoringModule;
-use Capell\AIOrchestrator\Integrations\LayoutBuilder\LayoutBuilderAIOrchestratorModule;
 use Capell\AIOrchestrator\Listeners\Ai\LogAiGeneration;
 use Capell\AIOrchestrator\Listeners\Ai\NotifyAiFailure;
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
@@ -29,7 +28,6 @@ use Capell\AIOrchestrator\Support\Ai\PrismProvider;
 use Capell\AIOrchestrator\Support\Ai\PromptRepository;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
 use Capell\AIOrchestrator\Support\AIOrchestratorPolicyGuardrailRegistry;
-use Capell\Core\Facades\CapellCore;
 use Capell\Core\Support\Packages\AbstractPackageServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -203,17 +201,7 @@ final class AIOrchestratorServiceProvider extends AbstractPackageServiceProvider
 
     private function registerOrchestratorModules(AIOrchestratorModuleRegistry $registry): void
     {
-        $this->registerLayoutBuilderModule($registry);
         $this->registerAuthoringModule($registry);
-    }
-
-    private function registerLayoutBuilderModule(AIOrchestratorModuleRegistry $registry): void
-    {
-        if (! CapellCore::isPackageInstalled('capell-app/layout-builder')) {
-            return;
-        }
-
-        $registry->register(new LayoutBuilderAIOrchestratorModule);
     }
 
     private function registerAuthoringModule(AIOrchestratorModuleRegistry $registry): void

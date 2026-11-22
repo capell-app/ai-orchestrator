@@ -9,7 +9,7 @@ use Capell\AIOrchestrator\Data\AIOrchestratorCapabilityData;
 use Capell\AIOrchestrator\Data\AIOrchestratorRuntimeSettingsData;
 use Capell\AIOrchestrator\Enums\AIOrchestratorApprovalLevel;
 use Capell\AIOrchestrator\Enums\AiProviderProblem;
-use Capell\AIOrchestrator\Integrations\LayoutBuilder\PreviewLayoutBuilderLayoutPlanAction;
+use Capell\AIOrchestrator\Integrations\Authoring\Capabilities\SuggestTitleCapabilityAction;
 use Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider;
 use Capell\AIOrchestrator\Support\Ai\AiProviderConfiguration;
 use Capell\AIOrchestrator\Support\AIOrchestratorModuleRegistry;
@@ -39,7 +39,6 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
             $check->packageInstalledCheck(),
             $check->registryBindingCheck(),
             $check->moduleRegistryCheck(),
-            $check->layoutBuilderModuleCheck(),
             $check->duplicateCapabilityProtectionCheck(),
             $check->runnableCapabilityActionsCheck(),
             $check->providerConfigurationCheck(),
@@ -119,23 +118,6 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
         );
     }
 
-    public function layoutBuilderModuleCheck(): DoctorCheckResultData
-    {
-        $available = $this->layoutBuilderModuleIsAvailable();
-
-        return new DoctorCheckResultData(
-            label: $this->translate('capell-ai-orchestrator::package.health_layout_builder_module_label'),
-            passed: $available,
-            message: $available
-                ? $this->translate('capell-ai-orchestrator::package.health_layout_builder_module_passed')
-                : $this->translate('capell-ai-orchestrator::package.health_layout_builder_module_failed'),
-            remediation: $available
-                ? null
-                : $this->translate('capell-ai-orchestrator::package.health_layout_builder_module_remediation'),
-            id: 'legacy.ai.orchestrator.layout.builder.module',
-        );
-    }
-
     public function duplicateCapabilityProtectionCheck(): DoctorCheckResultData
     {
         $protected = $this->duplicateCapabilityProtectionIsHealthy();
@@ -192,19 +174,6 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
         }
     }
 
-    public function layoutBuilderModuleIsAvailable(): bool
-    {
-        if (! CapellCore::isPackageInstalled('capell-app/layout-builder')) {
-            return true;
-        }
-
-        try {
-            return array_key_exists('layout-builder', app()->make(AIOrchestratorModuleRegistry::class)->modules());
-        } catch (Throwable) {
-            return false;
-        }
-    }
-
     public function duplicateCapabilityProtectionIsHealthy(): bool
     {
         try {
@@ -230,14 +199,14 @@ final class AiOrchestratorHealthCheck implements ChecksExtensionHealth
                             key: 'duplicate',
                             label: 'Duplicate',
                             description: 'First duplicate capability.',
-                            actionClass: PreviewLayoutBuilderLayoutPlanAction::class,
+                            actionClass: SuggestTitleCapabilityAction::class,
                             approvalLevel: AIOrchestratorApprovalLevel::Draft,
                         ),
                         new AIOrchestratorCapabilityData(
                             key: 'duplicate',
                             label: 'Duplicate',
                             description: 'Second duplicate capability.',
-                            actionClass: PreviewLayoutBuilderLayoutPlanAction::class,
+                            actionClass: SuggestTitleCapabilityAction::class,
                             approvalLevel: AIOrchestratorApprovalLevel::Draft,
                         ),
                     ];

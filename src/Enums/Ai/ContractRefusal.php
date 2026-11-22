@@ -20,4 +20,5 @@ enum ContractRefusal: string
     case RecoveryExpired = 'recovery_expired';
     case RetryExhausted = 'retry_exhausted';
     case ProviderOutcomeUnknown = 'provider_outcome_unknown';
+    case OutputTruncated = 'output_truncated';
 }

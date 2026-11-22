@@ -8,9 +8,9 @@ AI Orchestrator is the shared setup behind that button. An administrator picks t
 
 You need your own account with an AI service, or a self-hosted Ollama, and the site's background processing has to be running. By default, emails and phone numbers are swapped for placeholders before text is sent, but names and addresses are not. What comes back is a set of title and description options to choose from and a content draft to edit, in the language version the editor picked.
 
-- **Price and availability:** Check current availability and price on the [Capell Marketplace listing](https://capell.app/extensions/ai-orchestrator).
-- **Licence:** Check the licence terms on the [Capell Marketplace listing](https://capell.app/extensions/ai-orchestrator).
-- **Requires:** `PHP ^8.4`, `capell-app/admin ^1.0`, `capell-app/core ^1.0.75`, `lorisleiva/laravel-actions ^2.8`, `prism-php/prism ^0.100`, `spatie/laravel-data ^4.5`, `spatie/laravel-package-tools ^1.14.1`.
+- **Price and availability:** Check current availability and price on the [Capell Marketplace listing](https://capell.app/marketplace/extensions/ai-orchestrator).
+- **Licence:** Check the licence terms on the [Capell Marketplace listing](https://capell.app/marketplace/extensions/ai-orchestrator).
+- **Requires:** `PHP ^8.4`, `capell-app/admin ^1.0.78`, `capell-app/core ^1.0.79`, `lorisleiva/laravel-actions ^2.8`, `prism-php/prism ^0.100`, `spatie/laravel-data ^4.5`, `spatie/laravel-package-tools ^1.14.1`.
 - **Install:** `composer require capell-app/ai-orchestrator`.
 
 ## Quick Start
@@ -30,7 +30,7 @@ Packages implement AIOrchestratorModule and register typed capabilities, while R
 
 ## Limits And Pitfalls
 
-- Install the required Capell packages at the versions in `composer.json`: `capell-app/admin ^1.0`, `capell-app/core ^1.0.75`.
+- Install the required Capell packages at the versions in `composer.json`: `capell-app/admin ^1.0.78`, `capell-app/core ^1.0.79`.
 - Run migrations before opening package resources or public routes.
 - Keep the host Laravel scheduler running so package-registered schedules can execute: `capell:ai-orchestrator:prune-generation-payloads (daily; package registered)`.
 
@@ -86,6 +86,6 @@ Read [CHANGELOG.md](CHANGELOG.md) before upgrading.
 - [Capell content language plan](../../docs/CONTENT_LANGUAGE_PLAN.md)
 - [Capell documentation design system](../../docs/DESIGN_SYSTEM.md)
 - [Capell and package ERD notes](../../docs/erd/capell-and-package-erds.md)
-- Related packages: [AI Creator](../ai-creator/README.md), [Content Sections](../content-sections/README.md), [Layout Builder](../layout-builder/README.md), [Media AI](../media-ai/README.md), [SEO Checks](../seo-suite/README.md), [Translation Manager](../translation-manager/README.md).
+- Related packages: [AI Creator](../ai-creator/README.md), [Content Sections](../content-sections/README.md), [Media AI](../media-ai/README.md), [SEO Checks](../seo-suite/README.md), [Translation Manager](../translation-manager/README.md).
 
 <!-- prettier-ignore-end -->

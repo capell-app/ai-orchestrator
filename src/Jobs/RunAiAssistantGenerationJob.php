@@ -8,6 +8,8 @@ use Capell\AIOrchestrator\Actions\GenerateAiAssistantFieldsAction;
 use Capell\AIOrchestrator\Data\AiAssistantGenerationData;
 use Capell\AIOrchestrator\Enums\AiGenerationRequestStatus;
 use Capell\AIOrchestrator\Models\AiGenerationRequest;
+use Capell\AIOrchestrator\Providers\AIOrchestratorServiceProvider;
+use Capell\Core\Actions\Extensions\RunUnderPackageAdmissionAction;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -35,7 +37,37 @@ final class RunAiAssistantGenerationJob implements ShouldBeUnique, ShouldQueue
         return (string) $this->requestId;
     }
 
+    /**
+     * A job queued before AI Orchestrator was disabled makes no provider call and claims no
+     * request: the row stays queued, so nothing is billed while the package is off.
+     */
     public function handle(): void
+    {
+        RunUnderPackageAdmissionAction::run(AIOrchestratorServiceProvider::$packageName, $this->generate(...));
+    }
+
+    /**
+     * Called by the queue when the job times out or runs out of attempts, for example when the
+     * worker was killed, so no request is left Running with nobody working on it.
+     */
+    public function failed(?Throwable $exception): void
+    {
+        $request = AiGenerationRequest::query()->find($this->requestId);
+
+        if ($request instanceof AiGenerationRequest && $request->status === AiGenerationRequestStatus::Running) {
+            $this->markFailed($request, $exception ?? new RuntimeException('The AI generation worker stopped before finishing.'));
+        }
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function backoff(): array
+    {
+        return [10, 60];
+    }
+
+    private function generate(): void
     {
         // Only a queued row is claimed. A Failed row is terminal, so a job retry never re-runs a
         // provider call that already failed; a Running row is reclaimed only once its worker has
@@ -83,27 +115,6 @@ final class RunAiAssistantGenerationJob implements ShouldBeUnique, ShouldQueue
             // rethrow into a queue retry that would pay for the same provider call again.
             $this->markFailed($request, $exception);
         }
-    }
-
-    /**
-     * Called by the queue when the job times out or runs out of attempts, for example when the
-     * worker was killed, so no request is left Running with nobody working on it.
-     */
-    public function failed(?Throwable $exception): void
-    {
-        $request = AiGenerationRequest::query()->find($this->requestId);
-
-        if ($request instanceof AiGenerationRequest && $request->status === AiGenerationRequestStatus::Running) {
-            $this->markFailed($request, $exception ?? new RuntimeException('The AI generation worker stopped before finishing.'));
-        }
-    }
-
-    /**
-     * @return list<int>
-     */
-    public function backoff(): array
-    {
-        return [10, 60];
     }
 
     private function markFailed(AiGenerationRequest $request, Throwable $exception): void

@@ -14,6 +14,9 @@ use Capell\AIOrchestrator\Enums\AiGenerationRequestStatus;
 use Capell\AIOrchestrator\Enums\AiProviderProblem;
 use Capell\AIOrchestrator\Settings\AIOrchestratorSettings;
 use Capell\AIOrchestrator\Support\Ai\AiProviderConfiguration;
+use Capell\Core\Actions\Ai\RecordAiProvenanceAction;
+use Capell\Core\Data\Ai\AiProvenanceRecordData;
+use Capell\Core\Enums\AiDisclosure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
@@ -43,6 +46,17 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
         'title' => 'title_generation',
         'content' => 'content_generation',
         'meta' => 'meta_description',
+    ];
+
+    /**
+     * Assistant field => the translation field Core records its provenance under.
+     *
+     * @var array<string, string>
+     */
+    private const array PROVENANCE_FIELDS = [
+        'title' => 'title',
+        'content' => 'content',
+        'meta' => 'meta.description',
     ];
 
     public function supports(string $pageClass): bool
@@ -347,6 +361,7 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
         $apply = is_array($formState['apply'] ?? null) ? $formState['apply'] : [];
         $data = $livewire->data;
         $appliedCount = 0;
+        $appliedFields = [];
 
         foreach ([
             'title' => "translations.{$translationKey}.title",
@@ -364,15 +379,49 @@ final class AiAssistantPageResourceExtender implements ResourceHeaderActionExten
             }
 
             data_set($data, $path, $value);
+            $appliedFields[] = $field;
             $appliedCount++;
         }
 
         $livewire->data = $data;
+        $this->recordProvenance($this->resolveRecord($livewire), $appliedFields, $targetLanguageId);
 
         Notification::make()
             ->title(trans_choice('capell-ai-orchestrator::package.ai_assistant_applied', $appliedCount, ['count' => $appliedCount]))
             ->success()
             ->send();
+    }
+
+    /**
+     * Mark each applied field as AI-generated on the page, so Core holds the page back
+     * from publishing until a person has reviewed it. Recorded when the text enters the
+     * editor rather than on save: an unsaved apply can leave a review request behind,
+     * but a saved one can never go public unreviewed.
+     *
+     * @param  list<string>  $fields
+     */
+    private function recordProvenance(?Model $record, array $fields, ?int $languageId): void
+    {
+        if (! $record instanceof Model || ! $record->exists || $fields === [] || $languageId === null) {
+            return;
+        }
+
+        $actorId = Auth::id();
+        $provider = config('capell-ai-orchestrator.prism.provider');
+        $model = config('capell-ai-orchestrator.prism.model');
+
+        foreach ($fields as $field) {
+            RecordAiProvenanceAction::run(new AiProvenanceRecordData(
+                pageable: $record,
+                field: self::PROVENANCE_FIELDS[$field],
+                disclosure: AiDisclosure::Generated,
+                languageId: $languageId,
+                capability: 'ai-orchestrator.assistant.' . $field,
+                provider: is_string($provider) && $provider !== '' ? $provider : null,
+                model: is_string($model) && $model !== '' ? $model : null,
+                actorId: is_numeric($actorId) ? (int) $actorId : null,
+            ));
+        }
     }
 
     /**

@@ -19,7 +19,6 @@
         "supports": [
             "capell-app/ai-creator",
             "capell-app/content-sections",
-            "capell-app/layout-builder",
             "capell-app/media-ai",
             "capell-app/seo-suite",
             "capell-app/translation-manager"

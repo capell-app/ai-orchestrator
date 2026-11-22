@@ -17,15 +17,12 @@
     ],
     "require": {
         "php": "^8.4",
-        "capell-app/admin": "^1.0",
-        "capell-app/core": "^1.0.75",
+        "capell-app/admin": "^1.0.78",
+        "capell-app/core": "^1.0.79",
         "lorisleiva/laravel-actions": "^2.8",
         "prism-php/prism": "^0.100",
         "spatie/laravel-data": "^4.5",
         "spatie/laravel-package-tools": "^1.14.1"
-    },
-    "suggest": {
-        "capell-app/layout-builder": "Adds the optional AI-assisted layout planning module."
     },
     "autoload": {
         "psr-4": {
