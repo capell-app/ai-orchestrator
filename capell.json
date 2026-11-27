@@ -6,6 +6,7 @@
     "kind": "package",
     "capellApiVersion": "^1.0",
     "version": "2.0.0",
+    "launchStatus": "preview",
     "description": "Sets up the AI service, key and brand voice that Capell's AI features share, and adds an AI Assistant button to the page editor.",
     "product": {
         "group": "Capell AI",
